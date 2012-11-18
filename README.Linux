@@ -1,0 +1,221 @@
+
+================
+README SDR Linux
+================
+
+SDR Recording Module
+
+Operating Systems    : RedHat Entreprise Linux 5.x+ 32/64bit
+                       Ubuntu Server Edition 10.04+ 32/64bit
+
+Kernel               : Linux 2.6+ i386/X86_64 (32/64bit)
+
+
+1.Prerequisites
+===============
+
+CHKCONFIG:
+    Make sure your system has installed chkconfig. It is not 
+    mandatory but highly recommended.
+
+For Ubuntu/Debian based systems enable cron:
+    # update-rc.d cron defaults
+    # chkconfig --list cron
+
+
+KSH93:
+    Make sure you have installed ksh93 on your Linux distribution.
+    Example for Ubuntu/Debian systems, 64bit:
+     apt-get install ksh , this will install ksh93 pkg 
+     (ksh_93t+20100309-1_amd64.deb)
+   
+ 
+JAVA:
+    If you would like to use webrec, make sure you have downloaded
+    from your vendor, Oracle JDK 1.5 or 1.6 versions. webrec will
+    require at least Java 5. Example for Java 6:
+
+     * Ubuntu/Debian/RedHat:
+      # mkdir /opt/java
+      # cd java
+      # sh jdk-6u23-linux-x64.bin
+      # ln -s jdk1.6.0_23 current
+
+
+
+2.Install SDR package
+=====================
+
+ 2.1 User/Group
+
+    SDR software should be configured to run as sdr user, if possible.
+    If not, we can run all recorders as superuser and we can transport
+    all sdrd files as sdr user. This way we can separate between super
+    user and sdr user.
+
+    Create a specific username/group for SDR. Select 'sdr'
+    for a default installation:
+
+     # groupadd -g 500 sdr
+     # useradd -u 500 -d /home/sdr -g sdr -m sdr
+
+    Note: sdr username should be part of the system accounts.
+     
+ 2.2 64bit Package installation
+
+    SDR ships as a standard tar archive. Place the
+    installation somewhere under /opt !
+    
+     # cd /opt
+     # bzcat sdr-0735-linux-x64.tar.bz2 | tar xvf -
+
+
+3.SDR Configuration
+===================
+
+    All SDR recorders do have their own startup scripts under
+    /opt/sdr/etc and do not use any centralized configuration 
+    management file. The reason is simple: to minimize the 
+    memory usage and keep things simple.
+
+    On the other hand the transport utilities, raw2day and sender
+    use sdr.conf, a XML based type of configuration which defines
+    certain system properties important how and where the sdrd 
+    raw data will be delivered.
+
+    Recording element:
+
+    * private_key: if you plan to transport sdrd raw data using SSH2 
+      make sure you configure where your private key is located:
+
+      <!-- SSH Public Key -->
+      <private_key path="/opt/sdr/.ssh/id_rsa" 
+       description="The private authentication key" />
+
+    * sender: if you plan to transport sdrd raw data using instant
+      mode, transport it as soon as we have it, make sure you configure 
+      sender:
+
+      <!-- Instant Monitoring -->
+      <sender description="Sender configuration">
+        <tcp_keepalive>1</tcp_keepalive>
+        <sdrd name="sys"  description="Overall system sysrec.sdrd"  />
+        <sdrd name="cpu"  description="CPU cpurec.sdrd"  />
+        <sdrd name="disk" description="Disk diskrec.sdrd" />
+        <sdrd name="nic"  description="NIC nicrec.sdrd"  />
+        <sdrd name="net"  description="NET netrec.sdrd"  />
+      </sender>
+
+   
+    Reporting element:
+
+    * destination: define where and how you plan to transport your
+      sdrd data. Configure here the reporting hostname, the ssh2 
+      port number if it is running on a different port than 22 and
+      the credentials: username, password or public key. If you dont
+      specify a valid password automatically means we are using public
+      key.
+
+      <!-- Destination Reporting Servers -->
+        <host name="reporting" ver="0.74" description="SDR Reporting Server">
+          <ssh2port>22</ssh2port>
+          <username>sdr</username>
+          <!-- PLEASE USE SSH Public Key Based Authentication ! -->
+          <password></password>
+        </host>
+
+
+3.Startup Services
+==================
+
+ 3.1 Standard recorders
+
+    Edit startup sdr script. Enable/Disable startup 
+    services under SDR_SVC variable. Simple add or
+    remove under SDR_SVC variable the names of the
+    records you want to start/stop. Ignore the last 
+    part 'rec'.
+
+    Example: 
+     * enable sysrec, cpurec, netrec SDR_SVC="sys cpu net"
+     * enable sysrec, netrec SDR_SVC="sys net"
+   
+ 3.2 Enable sdr startup scripts
+
+     Batch vs Instant Mode
+
+     SDR can use two modes of operating: as soon as new data is available
+     we could send the updates to our dedicated backend reporting system
+     or we can make the updates once per day, for example.
+
+     Instant Mode: all updates are delivered as soon as they happen
+     Batch Mode: all updates are delivered one time per day
+   
+     # cd /etc/init.d
+     # ln -s /opt/sdr/etc/sdr .
+     # ln -s /opt/sdr/etc/sdr.instant .
+     # chkconfig --add sdr
+     # chkconfig --add sdr.instant
+     # chkconfig --list sdr
+     # chkconfig --list sdr.instant
+   
+     sdr  0:off  1:off  2:on   3:on   4:on   5:on   6:off  
+     sdr.instant  0:off  1:off  2:on   3:on   4:on   5:on   6:off
+
+    Note: On some Ubuntu based systems you need to sym link
+    insserv before using chkconfig:
+     # ln -s /usr/lib/insserv/insserv /sbin/insserv
+
+ 3.3 Start all configured services
+
+     # /etc/init.d/sdr start
+     Starting SDR services
+      sysrec service: ok
+      cpurec service: ok
+      netrec service: ok
+
+
+ 3.4 Stop all configured services
+
+     # /etc/init.d/sdr stop
+     Stopping SDR services
+      sysrec service: ok
+      cpurec service: ok
+      netrec service: ok
+
+
+4.Logrotate
+===========
+
+ 4.1 Batch mode, every 24 hours
+
+    Enable log rotation every 24hrs. Configure sdr rotation script 
+    and raw2day. Edit root's or sdr's crontab, depending what
+    is your user configuration for running SDR. Example root:
+
+     # env EDITOR=vi crontab -e
+     05 00 * * *  /usr/sbin/logrotate -f -s /opt/sdr/log/logsdr.status \
+          /opt/sdr/etc/logrotate.sdr
+     06 00 * * *  /opt/sdr/bin/raw2day
+
+    Note: We can try to rotate logs as close as possible to midnight. 
+    See below example:
+
+     59 23 * * * /usr/bin/sleep 59 && /usr/sbin/logrotate -f -s ...
+     00 00 * * * /usr/bin/sleep 30 && /opt/sdr/bin/raw2day -t sftp
+     
+    The previous example does rotate sdrd files every 23:59:59 and will
+    transport them via SFTP to a reporting backend at 00:00:30, every night !
+
+
+Notes
+=====
+
+    SDR Recording Linux supports any distribution based on Linux x86_64 kernel
+    versions 2.6 at least.  
+
+    SDR uses its own logrotate job in order to be flexible and dont conflict with
+    other operating system jobs. raw2day as well is called after the logrotation
+    has taken place ! If your installation requires to copy every night the raw
+    data to the reporting system, make sure you configure raw2day and check the
+    SDR Manual for more information.

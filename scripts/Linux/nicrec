@@ -1,0 +1,253 @@
+#!/opt/sdr/perl/bin/perl
+
+# COPYRIGHT: Copyright (c) 2012 System Data Recorder
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  (http://www.gnu.org/copyleft/gpl.html)
+
+# SDR VERSION: 0.74.1
+
+use strict;
+use warnings;
+use 5.010;
+use Getopt::Std;
+use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
+use Sys::Statistics::Linux qw(NetStats);
+use POSIX qw(pause);
+
+#
+# Command line arguments
+#
+usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
+getopts('dhi:V') or usage();
+usage()    if defined $main::opt_h;
+revision() if defined $main::opt_V;
+
+# set debug log
+my $debugmsg = defined $main::opt_d ? $main::opt_d : 0;
+
+# process [[interval [count]]
+my ( $interval, $loop_max );
+if ( defined $ARGV[0] ) {
+    $interval = $ARGV[0];
+    $loop_max = defined $ARGV[1] ? $ARGV[1] : 2**32;
+    usage() if $interval == 0;
+}
+else {
+    $interval = 1;
+    $loop_max = 1;
+}
+
+# Variables
+my $loop = 0;    # current loop number
+$main::opt_h = 0;    # help option
+$main::opt_V = 0;    # revision option
+my $tp       = 0;    # time precision
+my $int_sem  = 0;    # interface mode
+my @def_nics = ();   # default NICs
+local $| = 1;        # autoflush
+
+
+# ######### #
+# MAIN BODY #
+# ######### #
+
+# Set a timer for S::S::L object
+local $SIG{ALRM} = sub { };
+setitimer( ITIMER_REAL, .1, .1 );
+my $lxs = Sys::Statistics::Linux->new( netstats => 1 );
+### 0.1sec sleep using a timer
+pause;
+
+# how often do we trigger (seconds)?
+my $first_interval = $interval;
+
+# signal handler is empty
+local $SIG{ALRM} = sub { };
+
+# first value is the initial wait, second is the wait thereafter
+setitimer( ITIMER_REAL, $first_interval, $interval );
+
+#
+# check for interface list
+if ( defined $main::opt_i ) {
+
+    # check comma separator
+    usage() if $main::opt_i !~ /^(([a-z]*[0-9](:[1-9])?|,)*$)/;
+    $int_sem = 1;
+    @def_nics = split( /,/, $main::opt_i );
+}
+
+# Debug
+if ($debugmsg) {
+    printf "[debug NICs:" . ( " %s" x @def_nics ) . "]\n", @def_nics;
+}
+
+if ( $interval =~ /\./ ) {
+    $tp = 3;
+}
+
+while (1) {
+
+    ### Get Stats
+    my $stat = $lxs->get;
+
+    # Dump $lx variable
+    # use Data::Dumper;
+    # print Dumper($stat);
+
+    # nic stats
+    my $rKBytes = 0;
+    my $tKBytes = 0;
+    my $TKBytes = 0;
+
+    my $nic = $stat->netstats;
+
+    ### Get NICS
+    my @nics = sort $stat->netstats;
+
+    # loop over all NICS
+    foreach (@nics) {
+
+        # print "NIC: $_ \n";
+
+        # skip here the loopback interface
+        next if $_ =~ /^lo.*/;
+
+        # filter by interface
+        if ( $int_sem == 1 ) {
+            next if !( $_ ~~ @def_nics );
+        }
+
+        if (    defined( $nic->{$_}{rxbyt} )
+            and defined( $nic->{$_}{rxpcks} )
+            and defined( $nic->{$_}{rxerrs} )
+            and defined( $nic->{$_}{rxdrop} )
+            and defined( $nic->{$_}{rxfifo} )
+            and defined( $nic->{$_}{rxframe} )
+            and defined( $nic->{$_}{rxcompr} )
+            and defined( $nic->{$_}{rxmulti} )
+            and defined( $nic->{$_}{txbyt} )
+            and defined( $nic->{$_}{txpcks} )
+            and defined( $nic->{$_}{txerrs} )
+            and defined( $nic->{$_}{txdrop} )
+            and defined( $nic->{$_}{txfifo} )
+            and defined( $nic->{$_}{txcolls} )
+            and defined( $nic->{$_}{txcarr} )
+            and defined( $nic->{$_}{txcompr} )
+            and defined( $nic->{$_}{ttpcks} )
+            and defined( $nic->{$_}{ttbyt} ) )
+        {
+
+            $rKBytes = $nic->{$_}{rxbyt} / 1024;
+            $tKBytes = $nic->{$_}{txbyt} / 1024;
+            $TKBytes = $nic->{$_}{ttbyt} / 1024;
+
+            print_nicstats(
+                $_,                  $rKBytes,            $nic->{$_}{rxpcks},
+                $nic->{$_}{rxerrs},  $nic->{$_}{rxdrop},  $nic->{$_}{rxfifo},
+                $nic->{$_}{rxframe}, $nic->{$_}{rxcompr}, $nic->{$_}{rxmulti},
+                $tKBytes,            $nic->{$_}{txpcks},  $nic->{$_}{txerrs},
+                $nic->{$_}{txdrop},  $nic->{$_}{txfifo},  $nic->{$_}{txcolls},
+                $nic->{$_}{txcarr},  $nic->{$_}{txcompr}, $nic->{$_}{ttpcks},
+                $TKBytes
+            );
+        }
+
+    }
+
+    ### Check for end
+    last if ++$loop == $loop_max;
+
+    ### Interval
+    pause;
+
+}
+
+
+#
+# print_pstats - prints NIC stats
+#
+sub print_nicstats {
+
+    my (
+        $nic,     $rKB,     $rxpks,   $rxerr, $rxdrop, $rxfifo, $rxframe,
+        $rxcompr, $rxmulti, $tKB,     $txpks, $txerr,  $txdrop, $txfifo,
+        $txcolls, $txcarr,  $txcompr, $ttpks, $ttKB
+    ) = @_;
+
+    printf
+"%.${tp}f:%s:%.2f:%.f:%.f:%.f:%.f:%.f:%.f:%.f:%.2f:%.f:%.f:%.f:%.f:%.f:%.f:%.f:%.f:%.2f\n",
+      time, $nic, $rKB, $rxpks, $rxerr, $rxdrop, $rxfifo, $rxframe, $rxcompr,
+      $rxmulti,
+      $tKB, $txpks, $txerr, $txdrop, $txfifo, $txcolls, $txcarr, $txcompr,
+      $ttpks, $ttKB;
+
+    return;
+}
+
+#
+# usage - print usage and exit.
+#
+sub usage {
+
+    print STDERR <<END;
+USAGE: nicrec [-hV] [-i int[,int...]] | [interval [count]]
+OPTIONS:
+  -h         : help information
+  -V         : release version
+  -i int,... : monitor a list of interfaces with specified NIC name
+
+ e.g. nicrec 60             print every 60secs all NIC stats
+      nicrec -i wlan0 120   print every 120sec all wlan0 stats
+
+ FIELDS:
+  #01 timestamp  : seconds since Epoch
+  #02 interface  : interface name, NIC name
+  #03 rxKB       : number of KBytes received/sec, gauge
+  #04 rxpcks     : number of packets received/sec, gauge
+  #05 rxerrs     : number of errors while received packets/sec, gauge
+  #06 rxdrop     : number of packets that were dropped/sec, gauge
+  #07 rxfifo     : number of FIFO overruns on received packets/sec, gauge
+  #08 rxframe    : number of carrier errors on received packets/sec, gauge
+  #09 rxcompr    : number of compressed packets received/sec, gauge
+  #10 rxmulti    : number of multicast packets received/sec, gauge
+  #11 txKB       : number of KBytes transmitted/sec, gauge
+  #12 txpcks     : number of packets transmitted/sec, gauge
+  #13 txerrs     : number of errors transmitting packets/sec, gauge
+  #14 txdrop     : number of packets that were dropped/sec, gauge
+  #15 txfifo     : number of FIFO overruns on transmitted packets/sec, gauge
+  #16 txcolls    : number of collisions that were detected/sec, gauge
+  #17 txcarr     : number of carrier errors on transmitted packets/sec, gauge
+  #18 txcompr    : number of compressed packets transmitted/sec, gauge
+  #19 ttpcks     : number of total packets (received + transmitted)/sec, gauge
+  #20 ttKB       : number of total KBytes (received + transmitted)/sec, gauge
+
+END
+    exit 0;
+}
+
+#
+# revision - print revision and exit
+#
+sub revision {
+
+    print STDERR <<END;
+nicrec: 0.74.1, 2012-09-30
+ sdrd format: 0737 20
+END
+    exit 0;
+}

@@ -1,0 +1,148 @@
+WEBREC v0.73
+------------
+
+This is a initial release of WebRec. 
+
+
+SPECS for WEBREC
+================
+
+Purpose: Webrec is a recorder intended to be used to measure
+response times for different HTTP actions: POST, GET. A command line
+utility which can easily be started to follow one or many URLs
+and record their response times. The utility runs as long as
+the administrator is allowing it to run, in background.
+
+
+Syntax
+======
+ webrec [-s] workload_name1, workload_name2, ... , workload_nameN
+  -s spider mode
+  workload_nameN : workload name as defined under webrec.conf
+  
+
+Operating Mode
+==============
+
+ 1. The utility is a command line utility. Operates via command line
+    under a terminal, or xterm. It should support one or many options
+    as defined by the getopt interface. Check Syntax for a complete
+    description of the command line utility.
+
+    Usually the SDR utilities are installed under a POSIX like
+    operating system (Solaris, RedHat, FreeBSD):
+
+    /opt/sdr/bin/webrec
+             etc/webrec.conf
+             man/webrec.man
+             log/raw/webrec.workload.raw
+
+ 2. Options:
+
+     -s        : switches on the spider mode. No arguments. 
+                 Spiders all links, but only within the same domain.
+
+     workload  : name definition of a one workload. An ASCII string
+                 which should be matched against the webrec.conf 
+                 where the workload is defined. This should contain
+                 one or many URLs.
+
+
+
+ 3. Configuration file defintion webrec.conf
+
+    Name: webrec.conf
+    Place: sdr/etc/webrec.conf
+    Type: editable xml file, text mode
+
+    Format: as below
+
+
+   <?xml version="1.0"?>
+    <!DOCTYPE allthreads SYSTEM "webrec.dtd">
+
+      <configuration>
+      <!--
+        Log file prefix and postfix.         
+       -->
+      <logfile prefix="webrec." postfix=".raw"></logfile>
+
+      <!--
+        If HTTP connection should be kept alive (HTTPClient stale check). 
+        Default value: false      
+      -->
+      <keepHttpAlive value="false"></keepHttpAlive>
+
+      <!--
+          Interval (in seconds) to invoke workloads.
+       -->
+      <interval value="60"></interval>
+      <!--
+          Interval (in seconds) for HTTP connection timeout. 
+       -->
+      <timeout value="60"></timeout>
+      <!--
+          Proxy server for HTTP connection, if needed.
+      -->
+      <proxy>proxy.com</proxy>  
+
+
+      <workloads>
+      <!--
+          Workload defines a sequence of transactions (URLs).
+          name: name of the workload
+          delay: delay after each URL (in seconds).
+      -->
+      <workload name="record" delay="5">
+         <!--
+            transaction a URL.
+            id: unique id/name of the transaction 
+            method: GET or POST
+            url: the actual URL of request, must contain all valid URL
+          -->
+          <transaction id="cpuplayer" method="GET" url="http://www.systemdatarecorder.org/cpuplayer/"/>
+          <transaction id="main" method="GET" url="http://www.systemdatarecorder.org"/>
+          <transaction id="reporting" method="GET" url="http://systemdatarecorder.org/reporting/"/>
+      </workload>
+     </workloads>
+</configuration>
+
+
+
+ 3. Workload Mode Operation
+
+    The tool starts using xterm or your preferate terminal
+    using a valid shell: sh, ksh, csh, cmd, etc. The tool checks for
+    a master configuration file, called: webrec.conf situated under
+    etc/ director where all SDR utilities are found.
+
+    Parses the configuration file: webrec.conf and retrieve the values for
+    timeout and the name defintinions of each workload.
+
+    For each workload defines a thread and start to follow each URL recording their
+    response times. Make sure each URL is accessible via GET or POST.
+    For each URL record the time it took to obtain the response from server.
+    WebRec supports Cookies as defined in RFC 2965: http://tools.ietf.org/html/rfc2965
+
+
+ 3.1 Spider Mode
+    To be Continued and Defined
+
+
+
+
+
+ 4. Logging. The tool stores each workload results (HTTP response code must be 200) under one output file
+    per workload. 
+
+    Name: webrec.name-of-workload.raw
+    Place: sdr/log/raw/webrec.name-of-workload.raw
+    Type: Text mode
+
+
+    The workload log file has the following format:
+
+    timestamp:transactionid:response_time
+
+    where timestamp is defined as seconds since epoch
+    response_time: milliseconds, how long it took the request to be accomplished.

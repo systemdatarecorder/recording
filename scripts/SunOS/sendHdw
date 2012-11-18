@@ -1,0 +1,140 @@
+#!/bin/ksh -p
+
+# COPYRIGHT: Copyright (c) 2012 System Data Recorder
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  (http://www.gnu.org/copyleft/gpl.html)
+
+# SDR VERSION: 0.74.1
+
+# Source Global SDR Settings
+PWD=$(dirname $0)
+. ${PWD}/setenv
+
+DEST=$1
+USER=
+PASSWD=
+
+# generate here the hdw profile tag for each server
+${SDR_BIN}/hdwrec > ${SDR_LOG}/${HOSTNAME}.hdwrec.raw
+
+awk -F'|' '{print $2}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/name.html
+awk -F'|' '{print $3}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/hdw.html
+
+# here logic for RackUnits
+cat ${SDR_LOG}/hdw.html | read hdw
+case "$hdw" in
+    *X2*)
+        print "1" > ${SDR_LOG}/ru.html
+        ;;
+    
+    *V240|*T200)
+        print "2" > ${SDR_LOG}/ru.html
+        ;;
+
+    *V440|*V445)
+        print "4" > ${SDR_LOG}/ru.html
+        ;;
+
+    *)
+        print "n/a" > ${SDR_LOG}/ru.html
+        ;;
+esac
+
+awk -F'|' '{print $4}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/os.html
+awk -F'|' '{print $5}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/pcpu.html
+awk -F'|' '{print $6}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/vcpu.html
+awk -F'|' '{print $7}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/pmem.html
+awk -F'|' '{print $8}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/disks.html
+awk -F'|' '{print $9}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/nics.html
+awk -F'|' '{print $10}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/uptime.html
+awk -F'|' '{print $11}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/zones.html
+awk -F'|' '{print $12}' ${SDR_LOG}/${HOSTNAME}.hdwrec.raw > ${SDR_LOG}/jvms.html
+
+
+# #######################
+# SHIP FILE OR INDIVIDUAL
+# #######################
+
+
+# build archive from previous day
+#SHIPFILE=${HOSTNAME}.hdwrec.tar
+# cd ${SDR_LOG}
+#if [[ ! -f $SHIPFILE ]]
+#then
+#    tar cf $SHIPFILE *.html ${HOSTNAME}.hdwrec.raw
+#    if (( $? != 0 ))
+#    then
+#        print "ERROR: cannot create daily archive"
+#        exit 1
+#    fi
+#fi
+
+
+# ##########
+# CONNECTORS
+# ##########
+
+# #######################################
+# ENABLE HERE FOR STANDALONE INSTALLATION
+# #######################################
+
+#cp ${SDR_LOG}/*.html ${REPORT_DOCROOT}/${HOSTNAME}
+#cp ${SDR_LOG}/${HOSTNAME}.hdwrec.raw ${REPORT_DOCROOT}/${HOSTNAME}
+
+
+
+
+# ####################################
+# ENABLE HERE FOR NETWORK INSTALLATION
+# ####################################
+
+# #####################################
+# FTP Transfer raw data to REPORTER SDR
+# #####################################
+
+# Transfer the file to our Reporting side
+#exec 4>&1
+#ftp -nv >&4 2>&4 |&
+
+#print -p open $DEST
+#print -p user $USER $PASSWD
+#print -p binary
+#print -p put $SHIPFILE
+#print -p bye
+
+#wait
+
+# ######################################
+# SSH2 Transfer raw data to REPORTER SDR
+# ######################################
+#cd ${SDR_LOG}
+#scp -Q -pr ${HOSTNAME}.hdwrec.raw *.html destination:${REPORT_DOCROOT}/${HOSTNAME}
+
+# ######
+# CUSTOM
+# ######
+  
+
+# clean-up here
+#rm $SHIPFILE ru.html os.html pcpu.html vcpu.html pmem.html disks.html nics.html uptime.html
+#if (( $? != 0 ))
+#then
+#    print "FATAL: cannot clean-up daily archive"
+#    exit 1
+#fi
+
+

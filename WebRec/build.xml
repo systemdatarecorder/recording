@@ -1,0 +1,133 @@
+<?xml version="1.0" ?>
+
+<project name="WebRec" default="dist" basedir=".">
+
+  <property name="app.name"       value="webrec"/>
+  <property name="basedir"        value="."/>
+  <property name="distdir"        value="dist"/>
+  <property name="srcdir"         value="src"/>
+  <property name="libdir"         value="lib"/>
+  <property name="dist.src"       value="${app.name}-src.jar"/>
+  <property name="dist.program"   value="${app.name}.jar"/>
+  <property name="dist.ext"       value="${app.name}-libs.zip"/>
+  <property name="dist.program2"  value="webrec.jar"/>
+  <property name="dist.lib.apache" value="httpclient.jar"/>
+  <property name="dist.lib.twicom" value="qdparser-1.1.0.jar"/>
+  <property name="tmpdir"         value="/tmp" />
+  <property name="classdir"	      value="${distdir}/classes"/>
+  <property name="main-class"     value="Main" />
+
+ 
+  <path id="project.classpath">
+   <pathelement path="${classdir}" />
+   <pathelement location="lib/qdparser-1.1.0.jar" />
+   <pathelement location="lib/httpmime-4.0.1.jar" />
+   <pathelement location="lib/httpcore-4.0.1.jar" />
+   <pathelement location="lib/httpclient-4.0.1.jar" />
+   <pathelement location="lib/commons-logging-1.1.1.jar" />
+   <pathelement location="lib/log4j-1.2.15.jar" />
+   <pathelement location="lib/commons-codec-1.4.jar" />
+  </path>
+
+
+  <target name="prepare">
+   <mkdir dir="${classdir}" />
+   <mkdir dir="${distdir}" />
+  
+  </target>
+
+
+  <target name="clean">
+    <delete>
+      <!-- backup files -->
+      <fileset dir="${basedir}" defaultexcludes="no">
+       <patternset>
+        <include name="**/*~" />
+        <include name="**/#*#" />
+       </patternset>
+      </fileset>
+  
+      <!-- distribution directory -->
+      <fileset dir="${distdir}">
+       <patternset>
+        <include name="*" />
+       </patternset>
+      </fileset>
+
+      <fileset dir="${libdir}">
+       <patternset>
+        <include name="httpclient.jar" />
+       </patternset>
+      </fileset>
+
+
+      <!-- class files in the src directory -->
+      <fileset dir="${srcdir}">
+       <patternset>
+        <include name="**/*.class" />
+       </patternset>
+      </fileset>
+
+    </delete>
+  </target>
+
+
+
+  
+
+  <!-- compile for distribution -->
+  <target name="compiledist" depends="prepare">
+    <javac srcdir="${srcdir}" destdir="${classdir}"
+           debug="off" optimize="off" deprecation="on" source="1.5" target="1.5">
+     <classpath refid="project.classpath" />
+    </javac>
+  </target>
+
+
+  <!-- compile for development -->
+  <target name="compile" depends="prepare">
+    <javac srcdir="${srcdir}" destdir="${classdir}"
+           debug="on" optimize="off" deprecation="on" source="1.5" target="1.5">
+     <classpath refid="project.classpath" />
+    </javac>
+  </target>
+
+
+ 
+
+  <target name="all" depends="clean,compile"/>
+
+
+ 
+
+
+
+  <!-- build distribution -->
+  <target name="dist" depends="compiledist">
+
+    <jar jarfile="${distdir}/${dist.program}">
+      <fileset dir="${classdir}">
+        <include name="**/org/sdr/**/*.class"/>
+      	<include name="*.class"/>
+      	<exclude name="**/org/apache/*"/>
+      </fileset>
+        <manifest>
+                <attribute name="Main-Class" value="${main-class}"/>
+        </manifest>
+    </jar>
+
+  	<jar jarfile="${libdir}/${dist.lib.apache}">
+  	      <fileset dir="${classdir}">
+  	        <include name="**/org/apache/**/*.class"/>
+  	      </fileset>
+  	</jar>
+  	
+  	 <copy todir="${distdir}">
+  	     <fileset dir="${libdir}">
+  	       <include name="webrec.jar"/>
+  	     </fileset>
+  	 </copy>
+  	 
+  </target>
+  
+</project>
