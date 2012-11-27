@@ -1,6 +1,6 @@
 /**
  * 
- * Copyright 2010 System Data Recorder
+ * Copyright 2012 System Data Recorder
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
@@ -34,14 +34,14 @@ public class Main {
 
 	private static Hashtable<String, String> workloadsParameters = new Hashtable<String, String>();
 	static Configuration confi = new Configuration();
-	static String logs_dir = "log/raw/";
+	static String logs_dir = "log/current/";
 	
 	static Logger  logger = Logger.getLogger("org.sdr");
 
 
 	public static void main(String[] args) {
 
-		String VERSION_INFO = "webrec v0.73";
+		String VERSION_INFO = "webrec 0.74.2";
         String USAGE = "Usage: webrec workload1 ... workloadN";
  
         Date now = new Date(System.currentTimeMillis());
