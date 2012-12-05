@@ -398,7 +398,7 @@ sub connect2rep {
         }
 
     } else {
-        addlog("error: connect2rep - ssh2 connect failed: $@");
+        addlog("error: connect2rep - ssh2 connect failed: $!");
         return;
     }
 
