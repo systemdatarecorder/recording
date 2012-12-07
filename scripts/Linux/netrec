@@ -1,6 +1,6 @@
 #!/opt/sdr/perl/bin/perl
 
-# COPYRIGHT: Copyright (c) 2012 System Data Recorder
+# COPYRIGHT: Copyright (c) 2013 System Data Recorder
 #
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
@@ -119,7 +119,7 @@ END
 # revision - print revision and exit
 sub revision {
     print STDERR <<END;
-netrec: 0.74.1, 2012-09-30
+netrec: 0.74.2, 2013-01-30
  sdrd format: 0737 12
 END
     exit 0;
