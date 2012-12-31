@@ -132,7 +132,7 @@ while (1) {
       or die "Error: Cannot find proc partitions file: $!\n";
 
     while (<$DISKS>) {
-        my $disk = get_disk($_);
+        my $disk = get_part($_);
         next if ( !defined($disk) );
         push @disks, "$disk";
     }
@@ -273,16 +273,21 @@ while (1) {
 
 }
 
-sub get_disk {
+sub get_part {
     my ($entry) = @_;
     my ( $s, $maj, $min, $bks, $name );
 
     chomp $entry;
     return if $entry =~ /^major/;
     return if $entry =~ /^$/;
-    return if $entry =~ /(?:[0-9])$/;
-    ( $s, $maj, $min, $bks, $name ) = split /\s+/, $entry;
-    return $name;
+   
+    # we return any valid partition number, we skip entire disk
+    if ($entry =~ /(?:[0-9])$/) {
+        ( $s, $maj, $min, $bks, $name ) = split /\s+/, $entry;
+        return $name;
+    }
+
+    return;
 }
 
 # revision - print revision and exit
