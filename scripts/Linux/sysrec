@@ -128,8 +128,6 @@ while (1) {
     # get disks
     my $rdisks = get_disks();
 
-    print "Disks: ", scalar(@$rdisks), "\n";
-
     # loop over all disks
     foreach (@$rdisks) {
 
