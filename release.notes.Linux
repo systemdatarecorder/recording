@@ -1,10 +1,10 @@
 
 ==================
-SDR version 0.74.1
+SDR version 0.74.2
 ==================
 
 Release Date
-2012-09-30
+2013-01-30
 
 Platforms
  Linux i386, x64
@@ -14,6 +14,31 @@ Compiled by: sparvu
 
 Recording
 =========
+
+
+0.74.2
+======
+    Update perl-5.16.2
+    Update libssh2-1.4.3
+    Update curl-7.28.1
+    Update libidn-1.26
+    Update sysstat-10.1.3
+    Update Net-SSH2-0.46
+    Update XML-LibXML-2.0014
+
+Known issues:
+    Bug 172 - procrec uses additional memory over long periods of time
+    Info: procrec uses Sys::Statistics::Linux, Processes.pm to
+    extract per process statistics. It seems there is a design
+    issue within Processes.pm module which caches each
+    process id resulting in a larger RES segment over long periods 
+    of time. We are working with the author of Sys::Statistics::Linux
+    to correct this defect.
+
+    Bug 173 - jvmrec uses more memory over long periods of time
+    Info: jvmrec in extended mode, uses Sys::Statistics::Linux
+    to extract per process statistics, resulting in a similar 
+    memory usage pattern as described for procrec, Bug 172.
 
 
 0.74.1
@@ -61,7 +86,7 @@ Known issues:
     Update perl-5.16.0
     Update Net-SSH2-0.45
     Update curl-7.26.0
-    Update idn-1.25
+    Update libidn-1.25
     Update XML-LibXML-1.99
 
 Known issues:
