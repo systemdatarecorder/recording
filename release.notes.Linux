@@ -18,6 +18,9 @@ Recording
 
 0.74.2
 ======
+    Bug 224 - Use of uninitialized value $@ in concatenation
+    Bug 234 - sysrec should default to extended mode
+    Bug 253 - hdwrec does not correctly return the number of physical disks
     Update perl-5.16.2
     Update libssh2-1.4.3
     Update curl-7.28.1
