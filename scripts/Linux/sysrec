@@ -50,6 +50,7 @@ else {
 #
 #  Variables
 #
+my $sb   = "/sys/block";
 my $loop = 0;    # current loop number
 my $tp   = 0;    # time precision
 $main::opt_h = 0;    # help option
@@ -88,9 +89,6 @@ if ( $interval =~ /\./ ) {
 
 while (1) {
 
-    # disks might become available, check disks every sample
-    my @disks;
-
     my ( $readReq, $readByt, $writeReq, $writeByt, $totReq, $totByt ) = 0;
 
     # net stats
@@ -128,20 +126,12 @@ while (1) {
 
 
     # get disks
-    open my $DISKS, "<", "/proc/partitions"
-      or die "Error: Cannot find proc partitions file: $!\n";
+    my $rdisks = get_disks();
 
-    while (<$DISKS>) {
-        my $disk = get_part($_);
-        next if ( !defined($disk) );
-        push @disks, "$disk";
-    }
-
-    close $DISKS;
-
+    print "Disks: ", scalar(@$rdisks), "\n";
 
     # loop over all disks
-    foreach (@disks) {
+    foreach (@$rdisks) {
 
         #
         # print "\nDisk: $_ \n";
@@ -272,6 +262,36 @@ while (1) {
     pause;
 
 }
+
+
+sub get_disks {
+
+    my @d;
+
+    # get disks
+    opendir(my $dh, $sb) 
+        or die "Error: Cannot find block directory: $!\n";
+
+    while(readdir $dh) {
+        # discard parent dir
+        next if ($_ =~ m/^\./);
+
+        # exceptions
+        next if ($_ =~ m/^loop|^ram/);
+        next if ($_ =~ m/^fd0|^hdc/);
+        next if ($_ =~ m/^md(?:[0-9])/);
+        next if ($_ =~ m/^sr(?:[0-9])$/);
+        
+        # print disks
+        # print "Disk: $_\n";
+        push @d, "$_";
+    }
+    closedir $dh;
+
+    # return array ref
+    return \@d;
+}
+
 
 sub get_part {
     my ($entry) = @_;
