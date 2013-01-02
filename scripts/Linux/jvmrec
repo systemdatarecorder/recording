@@ -423,7 +423,7 @@ OPTIONS:
       jvmrec -f '^(?!.*?esite).*' 60 print every 60secs all non esite JVMs
 
  FIELDS:
-  #01 timestamp  : seconds since Epoch
+  #01 timestamp  : seconds since Epoch, time
   #02 name.pid   : jvm name and process id
   #03 s0pct      : survivor S0 utilization, percentage, gauge
   #04 s1pct      : survivor S1 utilization, percentage, gauge
