@@ -126,23 +126,24 @@ USAGE: cpurec [-hV] | [interval [count]]
       cpurec 1 5     print 5 times, every 1 second
 
  FIELDS:
-  #01 timestamp  : seconds since Epoch
-  #02 cpuid      : cpuid
-  #03 userpct    : cpu utilization, user space, percentage, gauge
-  #04 nicepct    : cpu utilization, user space nice priority, percentage, gauge
-  #05 syspct     : cpu utilization, system space, percentage, gauge
-  #06 idlepct    : cpu utilization, idle state, percentage, gauge
-  #07 totalpct   : total cpu utilization, percentage, gauge
-  #08 irqpct     : cpu percentage servicing interrupts, gauge
-  #09 softirqpct : cpu percentage servicing softirqs, gauge
+  #01 timestamp  : seconds since Epoch, time
+  #02 cpuid      : cpuid, number
+  #03 userpct    : cpu utilization, user space, rate
+  #04 nicepct    : cpu utilization, user space nice priority, rate
+  #05 syspct     : cpu utilization, system space, rate
+  #06 idlepct    : cpu utilization, idle state, rate
+  #07 totalpct   : total cpu utilization, rate
+  #08 irqpct     : cpu percentage servicing interrupts, rate
+  #09 softirqpct : cpu percentage servicing softirqs, rate
   #10 iowaitpct  : cpu percentage in idle state because an I/O operation 
-                   is waiting to complete, gauge
+                   is waiting to complete, rate 
   #11 stealpct   : cpu percentage of time spent in other operating systems 
-                   when running in a virtualized environment, gauge
+                   when running in a virtualized environment, rate
 
 END
     exit 0;
 }
+
 
 # revision - print revision and exit
 #

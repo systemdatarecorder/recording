@@ -215,26 +215,26 @@ OPTIONS:
       nicrec -i wlan0 120   print every 120sec all wlan0 stats
 
  FIELDS:
-  #01 timestamp  : seconds since Epoch
+  #01 timestamp  : seconds since Epoch, time
   #02 interface  : interface name, NIC name
-  #03 rxKB       : number of KBytes received/sec, gauge
-  #04 rxpcks     : number of packets received/sec, gauge
-  #05 rxerrs     : number of errors while received packets/sec, gauge
-  #06 rxdrop     : number of packets that were dropped/sec, gauge
-  #07 rxfifo     : number of FIFO overruns on received packets/sec, gauge
-  #08 rxframe    : number of carrier errors on received packets/sec, gauge
-  #09 rxcompr    : number of compressed packets received/sec, gauge
-  #10 rxmulti    : number of multicast packets received/sec, gauge
-  #11 txKB       : number of KBytes transmitted/sec, gauge
-  #12 txpcks     : number of packets transmitted/sec, gauge
-  #13 txerrs     : number of errors transmitting packets/sec, gauge
-  #14 txdrop     : number of packets that were dropped/sec, gauge
-  #15 txfifo     : number of FIFO overruns on transmitted packets/sec, gauge
-  #16 txcolls    : number of collisions that were detected/sec, gauge
-  #17 txcarr     : number of carrier errors on transmitted packets/sec, gauge
-  #18 txcompr    : number of compressed packets transmitted/sec, gauge
-  #19 ttpcks     : number of total packets (received + transmitted)/sec, gauge
-  #20 ttKB       : number of total KBytes (received + transmitted)/sec, gauge
+  #03 rxKB       : KBytes received per second, rate
+  #04 rxpcks     : packets received per second, rate
+  #05 rxerrs     : errors while received packets per second, rate
+  #06 rxdrop     : packets that were dropped per second, rate
+  #07 rxfifo     : FIFO overruns on received packets per second, rate
+  #08 rxframe    : carrier errors on received packets per second, rate
+  #09 rxcompr    : compressed packets received per second, rate
+  #10 rxmulti    : multicast packets received per second, rate
+  #11 txKB       : KBytes transmitted per second, rate
+  #12 txpcks     : packets transmitted per second, rate
+  #13 txerrs     : errors transmitting packets per second, rate
+  #14 txdrop     : packets that were dropped per second, rate
+  #15 txfifo     : FIFO overruns on transmitted packets per second, rate
+  #16 txcolls    : collisions that were detected per second, rate
+  #17 txcarr     : carrier errors on transmitted packets per second, rate
+  #18 txcompr    : compressed packets transmitted per second, rate
+  #19 ttpcks     : total packets (received + transmitted) per second, rate 
+  #20 ttKB       : total KBytes (received + transmitted) per second, rate
 
 END
     exit 0;

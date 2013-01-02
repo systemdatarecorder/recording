@@ -329,61 +329,60 @@ USAGE: sysrec [-hV] | [interval [count]]
 
  FIELDS:
   CPU
-   #01 timestamp  : seconds since Epoch
-   #02 cpupct     : cpu utilization, across all cpus, percentage, gauge
-   #03 sumpct     : sum of all cpus utilization, percentage, gauge
-   #04 headpct    : headroom cpu available, all cpus, percentage, gauge
-   #05 userpct    : cpu utilization, user space in percent, gauge
-   #06 nicepct    : cpu utilization, user space with nice priority, gauge
-   #07 sysct      : cpu utilization, system space, gauge
-   #08 idlepct    : cpu utilization, idle state, gauge
+   #01 timestamp  : seconds since Epoch, time
+   #02 cpupct     : cpu utilization, across all cpus, rate
+   #03 sumpct     : sum of all cpus utilization, rate
+   #04 headpct    : headroom cpu available, all cpus, rate
+   #05 userpct    : cpu utilization, user space in percent, rate
+   #06 nicepct    : cpu utilization, user space with nice priority, rate
+   #07 sysct      : cpu utilization, system space, rate
+   #08 idlepct    : cpu utilization, idle state, rate
    #09 iowaitcpt  : cpu percentage in idle state because an I/O operation 
-                     is waiting to complete, gauge
-   #10 irqpct     : cpu percentage servicing interrupts, gauge
-   #11 softirqpct : cpu percentage servicing softirqs, gauge
+                     is waiting to complete, rate 
+   #10 irqpct     : cpu percentage servicing interrupts, rate
+   #11 softirqpct : cpu percentage servicing softirqs, rate 
    #12 stealpct   : cpu percentage of time spent in other operating systems
-                    when running in a virtualized environment, gauge
-   #13 runqsz     : run queue length, number of tasks waiting for run time
-   #14 plistsz    : number of tasks in the task list
+                    when running in a virtualized environment, rate
+   #13 runqsz     : run queue length, tasks waiting for run time, number
+   #14 plistsz    : tasks in the task list, number
 
   MEM
-   #15 memusedpct : size of used memory in percent, gauge
-   #16 memused    : size of used memory in kilobytes, gauge
-   #17 memfree    : size of free memory in kilobytes, gauge
-   #18 memtotal   : size of memory in kilobytes, gauge
-   #19 buffers    : size of buffers used from memory in kilobytes, gauge
-   #20 cached     : size of cached memory in kilobytes, gauge
-   #21 realfree   : size of memory is real free, gauge 
+   #15 memusedpct : size of used memory in percent, rate
+   #16 memused    : size of used memory in kilobytes, rate
+   #17 memfree    : size of free memory in kilobytes, rate
+   #18 memtotal   : size of memory in kilobytes, rate
+   #19 buffers    : size of buffers used from memory in kilobytes, rate 
+   #20 cached     : size of cached memory in kilobytes, rate
+   #21 realfree   : size of memory is real free, rate
                      (memfree+buffers+cached)
-   #22 realfreepct: size of memory is real free in percent of total memory,
-                     gauge
-   #23 swapusedpct: size of used swap space in percent, gauge
-   #24 swapused   : size of swap space is used is kilobytes, gauge
-   #25 swapfree   : size of swap space is free in kilobytes, gauge
-   #26 swaptotal  : size of swap space in kilobytes, gauge
+   #22 realfreepct: size of memory real free in percent of total memory, rate
+   #23 swapusedpct: size of used swap space in percent, rate
+   #24 swapused   : size of swap space is used is kilobytes, rate
+   #25 swapfree   : size of swap space is free in kilobytes, rate
+   #26 swaptotal  : size of swap space in kilobytes, rate
    #27 swapcached : memory that once was swapped out, is swapped back in 
-                     but still also is in the swapfile, gauge
+                     but still also is in the swapfile, rate
 
   DISK
-   #28 readReq    : disk read requests, gauge
-   #29 writeReq   : disk write requests, gauge
-   #30 totReq     : disk read+write requests, gauge
-   #31 readByt    : read bytes/sec, in KB, gauge
-   #32 writeByt   : write bytes/sec, in KB, gauge
-   #33 totByt     : read+write bytes/sec, in KB, gauge
+   #28 readReq    : disk read requests per second, rate
+   #29 writeReq   : disk write requests per second, rate
+   #30 totReq     : disk read+write requests per second, rate
+   #31 readByt    : read bytes per second, in KB, rate
+   #32 writeByt   : write bytes per second, in KB, rate
+   #33 totByt     : read+write bytes per second, in KB, rate
 
   NET
-   #34 rxByt      : received bytes/sec, in KB, gauge
-   #35 txByt      : transmitted bytes/sec, in KB, gauge
-   #36 ntByt      : received + transmitted bytes /sec, in KB, gauge
-   #37 rxerr      : number of errors that happend while received pkt/sec
-   #38 txerr      : number of errors that happend while transmitting pkt/sec
-   #39 rxdrp      : number of rx packets that were dropped per second
-   #40 txdrp      : number of tx packets that were dropped per second
+   #34 rxByt      : received bytes per seccond, in KB, rate
+   #35 txByt      : transmitted bytes per second, in KB, rate 
+   #36 ntByt      : received + transmitted bytes per second, in KB, rate
+   #37 rxerr      : number of errors while received pkt per second, rate
+   #38 txerr      : number of errors while transmitting pkt per second, rate
+   #39 rxdrp      : number of rx packets that were dropped per second, rate
+   #40 txdrp      : number of tx packets that were dropped per second, rate
  
-   #41 avg_1      : LA of the last minute
-   #42 avg_5      : LA of the last 5 minutes
-   #43 avg_15     : LA of the last 15 minutes
+   #41 avg_1      : LA of the last minute, rate
+   #42 avg_5      : LA of the last 5 minutes, rate
+   #43 avg_15     : LA of the last 15 minutes, rate
 
 END
     exit 0;

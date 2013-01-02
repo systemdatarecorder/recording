@@ -18,7 +18,7 @@
 #
 #  (http://www.gnu.org/copyleft/gpl.html)
 
-# SDR VERSION: 0.74.1
+# SDR VERSION: 0.74.2
 
 use strict;
 use warnings;
@@ -99,18 +99,18 @@ USAGE: netrec [-hV] | [interval [count]]
       netrec 1 5     print 5 times, every 1 second
 
  FIELDS:
-  #01 timestamp  : seconds since Epoch
-  #02 active     : TCP active connections, counter
-  #03 passive    : TCP passive connections, counter
-  #04 failed     : TCP failed connection attempts, counter
-  #05 recv_rst   : TCP connection resets received, counter
-  #06 est        : TCP connections established, gauge
-  #07 sent_rst   : TCP resets sent, counter
-  #08 upks_recv  : UDP packets received, counter
-  #09 upks_sent  : UDP packets sent, counter
-  #10 fast_retr  : fast retransmits, counter
-  #11 fwd_retr   : forward retransmits, counter
-  #12 slow_retr  : retransmits in slow start, counter
+  #01 timestamp  : seconds since Epoch, time
+  #02 active     : TCP active connections, number
+  #03 passive    : TCP passive connections, number
+  #04 failed     : TCP failed connection attempts, number
+  #05 recv_rst   : TCP connection resets received, number
+  #06 est        : TCP connections established, rate
+  #07 sent_rst   : TCP resets sent, number
+  #08 upks_recv  : UDP packets received, number
+  #09 upks_sent  : UDP packets sent, number
+  #10 fast_retr  : fast retransmits, number
+  #11 fwd_retr   : forward retransmits, number
+  #12 slow_retr  : retransmits in slow start, number
 
 END
     exit 0;
