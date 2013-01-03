@@ -128,17 +128,17 @@ USAGE: cpurec [-hV] | [interval [count]]
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
   #02 cpuid      : cpuid, number
-  #03 userpct    : cpu utilization, user space, rate
-  #04 nicepct    : cpu utilization, user space nice priority, rate
-  #05 syspct     : cpu utilization, system space, rate
-  #06 idlepct    : cpu utilization, idle state, rate
-  #07 totalpct   : total cpu utilization, rate
-  #08 irqpct     : cpu percentage servicing interrupts, rate
-  #09 softirqpct : cpu percentage servicing softirqs, rate
+  #03 userpct    : cpu utilization, user space, number
+  #04 nicepct    : cpu utilization, user space nice priority, number
+  #05 syspct     : cpu utilization, system space, number
+  #06 idlepct    : cpu utilization, idle state, number
+  #07 totalpct   : total cpu utilization, number
+  #08 irqpct     : cpu percentage servicing interrupts, number
+  #09 softirqpct : cpu percentage servicing softirqs, number
   #10 iowaitpct  : cpu percentage in idle state because an I/O operation 
-                   is waiting to complete, rate 
+                   is waiting to complete, number
   #11 stealpct   : cpu percentage of time spent in other operating systems 
-                   when running in a virtualized environment, rate
+                   when running in a virtualized environment, number
 
 END
     exit 0;

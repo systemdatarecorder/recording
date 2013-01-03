@@ -104,7 +104,7 @@ USAGE: netrec [-hV] | [interval [count]]
   #03 passive    : TCP passive connections, number
   #04 failed     : TCP failed connection attempts, number
   #05 recv_rst   : TCP connection resets received, number
-  #06 est        : TCP connections established, rate
+  #06 est        : TCP connections established, number
   #07 sent_rst   : TCP resets sent, number
   #08 upks_recv  : UDP packets received, number
   #09 upks_sent  : UDP packets sent, number
