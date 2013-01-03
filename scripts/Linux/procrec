@@ -364,33 +364,36 @@ OPTIONS:
                              which contain regex 'pts.[0-2]'
 
  FIELDS:
-  #01 timestamp  : seconds since Epoch
-  #02 pid        : the process id of the process
+  #01 timestamp  : seconds since Epoch, time
+  #02 pid        : the process id of the process, number
   #03 cmd        : command of the process
   #04 owner      : the owner of the process
   #05 state      : the status of the process
-  #06 nice       : the nice level of the process
-  #07 prior      : the priority of the process (+15)
-  #08 nlwp       : number of light weight processes by this process
-  #09 fds        : number of open file descriptors
-  #10 minflt     : number of minor faults the process made
-  #11 mayflt     : number of major faults the process made
-  #12 utime      : number of jiffies proc have beed in user mode
-  #13 stime      : number of jiffies proc have beed in kernel mode
-  #14 ttime      : number of jiffies proc have beed (user + kernel)
-  #15 cutime     : number of jiffies proc waited for childs in user mode
-  #16 cstime     : number of jiffies proc waited for childs in kernel mode
-  #17 cpu        : the cpuid the process was last executed on
-  #18 size       : the total program size of the process, in bytes
-  #19 resident   : the resident set size(the text, data, stack), in bytes
-  #20 nswap      : the size of swap space of the process
-  #21 cnswap     : the size of swap space of the childrens of the process
-  #22 syscr      : number of read syscalls
-  #23 rchar      : bytes read from storage (might have been from pagecache)
-  #24 read_bytes : bytes really fetched from storage layer
-  #25 syscw      : number of write syscalls
-  #26 wchar      : bytes written
-  #27 write_bytes: bytes sent to the storage layer
+  #06 nice       : the nice level of the process, number
+  #07 prior      : the priority of the process (+15), number
+  #08 nlwp       : light weight processes by this process, number
+  #09 fds        : open file descriptors, number
+  #10 minflt     : minor faults the process made, number
+  #11 mayflt     : major faults the process made, number
+  #12 utime      : jiffies proc have beed in user mode, number
+  #13 stime      : jiffies proc have beed in kernel mode, number
+  #14 ttime      : jiffies proc have beed (user + kernel), number
+  #15 cutime     : jiffies proc waited for childs in user mode, number
+  #16 cstime     : jiffies proc waited for childs in kernel mode, number
+  #17 cpu        : the cpuid the process was last executed on, number
+  #18 size       : the total program size of the process, bytes, number
+  #19 resident   : the resident set size(the text, data, stack), 
+                   bytes, number
+  #20 nswap      : the size of swap space of the process, number
+  #21 cnswap     : the size of swap space of the childrens of the 
+                   process, number
+  #22 syscr      : read syscalls, number
+  #23 rchar      : bytes read from storage (might have been from pagecache),
+                   number
+  #24 read_bytes : bytes really fetched from storage layer, number
+  #25 syscw      : number of write syscalls, number
+  #26 wchar      : bytes written, number
+  #27 write_bytes: bytes sent to the storage layer, number
   #28 cmdline    : command line of the process (ext)
 
 END

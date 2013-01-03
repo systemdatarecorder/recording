@@ -425,27 +425,28 @@ OPTIONS:
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
   #02 name.pid   : jvm name and process id
-  #03 s0pct      : survivor S0 utilization, percentage, gauge
-  #04 s1pct      : survivor S1 utilization, percentage, gauge
-  #05 edenpct    : eden space utilization, percentage, gauge
-  #06 oldpct     : old space utilization, percentage, gauge
-  #07 permpct    : permanent space utilization, percentage, gauge
-  #08 mGC        : number of young generation GC events
-  #09 tmGC       : young generation garbage collection time, secs
-  #10 MGC        : number of full GC events
-  #11 tMGC       : full garbage collection time, secs
-  #12 totalGC    : total garbage collection time, secs
-  #13 utime      : number of jiffies scheduled in user mode
-  #14 stime      : number of jiffies scheduled in kernel mode
-  #15 size       : total program size of the process
-  #16 resident   : resident set size, the text, data and stack space
-  #17 nswap      : size of swap space of the process
-  #18 syscr      : number of read syscalls
+  #03 s0pct      : survivor S0 utilization, number
+  #04 s1pct      : survivor S1 utilization, number
+  #05 edenpct    : eden space utilization, number
+  #06 oldpct     : old space utilization, number
+  #07 permpct    : permanent space utilization, number
+  #08 mGC        : number of young generation GC events, number
+  #09 tmGC       : young generation garbage collection time, time
+  #10 MGC        : number of full GC events, number
+  #11 tMGC       : full garbage collection time, time
+  #12 totalGC    : total garbage collection time, time
+  #13 utime      : number of jiffies scheduled in user mode, number
+  #14 stime      : number of jiffies scheduled in kernel mode, number
+  #15 size       : total program size of the process, number
+  #16 resident   : resident set size, the text, data and stack space, number
+  #17 nswap      : size of swap space of the process, number
+  #18 syscr      : number of read syscalls, number
   #19 rchar      : bytes read from storage (might have been from pagecache)
-  #20 read_bytes : bytes really fetched from storage layer
-  #21 syscw      : number of write syscalls
-  #22 wchar      : bytes written
-  #23 write_bytes: bytes sent to the storage layer
+                   number
+  #20 read_bytes : bytes really fetched from storage layer, number
+  #21 syscw      : number of write syscalls, number
+  #22 wchar      : bytes written, number
+  #23 write_bytes: bytes sent to the storage layer, number
 
 NOTES:
  JDK_PATH: Make sure you have defined JDK_PATH variable to point
