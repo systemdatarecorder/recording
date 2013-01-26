@@ -246,7 +246,7 @@ END
 sub revision {
 
     print STDERR <<END;
-nicrec: 0.74.2, 2013-01-30
+nicrec: 0.74.2, 2013-03-31
  sdrd format: 0737 20
 END
     exit 0;
