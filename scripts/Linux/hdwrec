@@ -94,6 +94,20 @@ while (1) {
     my $host = hostname;
     $host =~ s/\..*$// if $host =~ /\./;
 
+    # hypervisor type
+    my $hypervisor = "NA";
+
+    if (-e "/sys/hypervisor/type") {
+        open my $hv, "<", "/sys/hypervisor/type"
+            or die "error: cannot find hypervisor type file: $!\n";
+        while (<$hv>) {
+                chomp;
+                $hypervisor = $_;
+            }
+            close $hv;
+        
+    }
+ 
     # disks might become available, check disks every sample
     my $num_disk = 0;
 
@@ -156,8 +170,8 @@ while (1) {
     $num_jvm = "NA" if ($num_jvm == 0);
 
     # print metrics
-    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%d:%d:%s:%s:%d:%d:%s:%s\n",
-      time, $host, $si->{arch}, $os, $codename, $distid, 
+    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%d:%s:%s:%d:%d:%s:%s\n",
+      time, $host, $si->{arch}, $hypervisor, $os, $codename, $distid, 
       $si->{kernel} . " " . $si->{release},
       $si->{pcpucount}, $si->{tcpucount},
       $si->{memtotal}, $si->{swaptotal}, 
@@ -221,18 +235,19 @@ USAGE: hdwrec [-hV] | [interval [count]]
   #01 timestamp  : seconds since Epoch, time
   #02 hostname   : hostname
   #03 platform   : name of the hardware platform
-  #04 os         : name of the operating system
-  #05 codename   : codename of the operating system
-  #06 distributor: name of the operating system distributor
-  #07 kernel     : kernel version and release number
-  #08 pcpu       : number of physical installed CPUs, number
-  #09 vcpu       : number of virtual CPUs, number
-  #10 memtotal   : total physical memory installed, number
-  #11 swaptotal  : total physical swap installed, number
-  #12 disks      : total number of disks, number
-  #13 nics       : total number of NICs, number
-  #14 jvms       : total number of running JVMs, number
-  #15 uptime     : how long the system has been running, number 
+  #04 hypervisor : name of the hypervisor
+  #05 os         : name of the operating system
+  #06 codename   : codename of the operating system
+  #07 distributor: name of the operating system distributor
+  #08 kernel     : kernel version and release number
+  #09 pcpu       : number of physical installed CPUs, number
+  #10 vcpu       : number of virtual CPUs, number
+  #11 memtotal   : total physical memory installed, number
+  #12 swaptotal  : total physical swap installed, number
+  #13 disks      : total number of disks, number
+  #14 nics       : total number of NICs, number
+  #15 jvms       : total number of running JVMs, number
+  #16 uptime     : how long the system has been running, number 
 
 END
     exit 0;
