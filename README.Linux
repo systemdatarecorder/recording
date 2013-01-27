@@ -201,8 +201,8 @@ JAVA:
     Note: We can try to rotate logs as close as possible to midnight. 
     See below example:
 
-     59 23 * * * /usr/bin/sleep 59 && /usr/sbin/logrotate -f -s ...
-     00 00 * * * /usr/bin/sleep 30 && /opt/sdr/bin/raw2day -t sftp
+     59 23 * * * /bin/sleep 59 && /usr/sbin/logrotate -f -s ...
+     00 00 * * * /bin/sleep 30 && /opt/sdr/bin/raw2day -t sftp
      
     The previous example does rotate sdrd files every 23:59:59 and will
     transport them via SFTP to a reporting backend at 00:00:30, every night !
