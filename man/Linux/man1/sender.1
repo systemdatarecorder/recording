@@ -1,4 +1,4 @@
-.TH sender 1  "September 30, 2012" "USER COMMANDS"
+.TH sender 1  "April 30, 2013" "USER COMMANDS"
 .SH NAME
 sender \- sdrd raw data transport utility. Uses perl
 
@@ -8,14 +8,26 @@ sender \- sdrd raw data transport utility. Uses perl
 .SH DESCRIPTION
 sender is responsible for sending sdrd raw data updates to a backend 
 reporting system for instant monitoring: updates, plotting. It uses
-SSH2 for a secure transport between each recording host and the 
-backend reporting server.
+two types of transport protocols: HTTP or SSH2. By default sender
+uses HTTP.
 .PP
 During its start, sender, will look for the main SDR configuration file, 
 sdr.conf to fetch what sdrd raw data files will look after and where to 
 transport the changes. Make sure you have a single backend reporting server 
 defined currently under sdr.conf ! Currently the last definition of the
-reporting host will be used.
+reporting host will be used. It will then check what transport protocol
+will be used: HTTP or SSH2. At last sender will loop over a number of
+sdrd raw data files, waiting for any changes and will select the change
+and trasport this set of data to the reporting backend system.
+
+.SH HTTP transport
+By default sender uses HTTP transport protocol to send all sdrd raw data
+updates over to reporting system. The HTTP protocol is suitable for most
+installations where the targets sit on Internet, on different networks.
+As well this transport can be used if a number of targets are placed
+on a private network.
+
+.SH SSH2 transport
 .PP
 The utility uses SSH2 transport libraries to create a connection from
 each recording host to a backend reporting system and send all updates via
@@ -24,7 +36,9 @@ SSH2 connections and start sending the updates again. If for some reasons
 the backend system wont answer in a proper time, sender will wait until 
 the reporting will allow connections or comeback alive. In case of a fatal 
 connection failure sender will wait permanentely for the backend reporting 
-server.
+server. The SSH2 transport mode is suitable where all your hosts sit on a
+private network within your domain.
+
 .PP
 By default, sender will output all its messages and errors under 
 prefix/log/sender.log log file.

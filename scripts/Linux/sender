@@ -157,6 +157,23 @@ foreach my $node (@sdrd_childs) {
 # check errors
 @dbs = @recs if ($schilds == 0);
 
+# transport modes
+my ($ssh2trans, $httptrans) = 0;
+
+given($trans) {
+
+    when(/ssh2/) { $ssh2trans=1; }
+
+    when(/http/) { $httptrans=1; }
+
+    default      { $httptrans=1; }
+}
+
+
+
+}
+
+
 # Reporting XML Configuration
 # XPATH Method
 my @res = $conf -> findnodes('//host');
@@ -215,6 +232,9 @@ foreach (@dbs) {
                                  maxinterval => $interval,
                                  ignore_nonexistant => 1 ));
 }
+
+
+# transport SSH2 
 
 # Connect here to SDR Reporting backend
 my $s2 = connect2rep($dest, $ssh2port, $user, $pass);
@@ -312,6 +332,8 @@ while (1) {
 
 # Subroutines
 
+
+## add log message
 sub addlog {
 
     my ($logbuf) = @_;
@@ -326,6 +348,7 @@ sub addlog {
 }
 
 
+## send payload to SDR Reporting
 sub send2report {
 
     my ($s, $id, $payload) = @_;
@@ -360,6 +383,7 @@ sub send2report {
 }
 
 
+## connect to SDR Reporting
 sub connect2rep {
 
     my ($dest, $ssh2port, $user, $pass) = @_;
@@ -418,7 +442,28 @@ sub connect2rep {
 }
 
 
-# Open XML configuration file
+## NIST SHA-256 message digest for sdrd raw data
+sub sha256sdrd {
+    my ($sdrd) = @_;
+
+    # split up the sdrd data
+    my @fields = split(/:/, $sdrd);
+
+    # compute SHA-256
+    my $state = Digest::SHA->new(256);
+    for (@fields) {
+        $state->add($_);
+    }
+
+    my $digest = $state->hexdigest;
+
+    $sdrd = $sdrd . ":$digest";
+
+    return $sdrd;
+}
+
+
+## open XML configuration file
 sub open_conf {
 
     my ($conf) = @_;
@@ -452,9 +497,7 @@ sub open_conf {
 }
 
 
-#
-# usage - print usage and exit.
-#
+## usage - print usage and exit.
 sub usage {
     print STDERR <<END;
 USAGE: sender [-t secs] [-hV] | [interval]
