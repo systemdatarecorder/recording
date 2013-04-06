@@ -400,11 +400,12 @@ END
     exit 0;
 }
 
+
 # revision - print revision and exit
 sub revision {
 
     print STDERR <<END;
-procrec: 0.74.2, 2013-03-31
+procrec: 0.74.2, 2013-04-30
  sdrd format: 0737 28
 END
     exit 0;

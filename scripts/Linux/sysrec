@@ -308,15 +308,6 @@ sub get_part {
     return;
 }
 
-# revision - print revision and exit
-#
-sub revision {
-    print STDERR <<END;
-sysrec: 0.74.2, 2013-03-31
- sdrd format: 0737 43
-END
-    exit 0;
-}
 
 # usage - print usage and exit.
 #
@@ -388,3 +379,13 @@ END
     exit 0;
 }
 
+
+# revision - print revision and exit
+#
+sub revision {
+    print STDERR <<END;
+sysrec: 0.74.2, 2013-04-30
+ sdrd format: 0737 43
+END
+    exit 0;
+}

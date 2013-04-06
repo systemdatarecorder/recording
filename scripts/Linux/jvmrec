@@ -456,12 +456,13 @@ END
     exit 0;
 }
 
+
 # revision - print revision and exit
 #
 sub revision {
 
     print STDERR <<END;
-jvmrec: 0.74.2, 2013-03-31
+jvmrec: 0.74.2, 2013-04-30
  sdrd format: 0737 23
 END
     exit 0;

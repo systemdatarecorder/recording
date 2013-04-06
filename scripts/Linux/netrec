@@ -116,14 +116,6 @@ END
     exit 0;
 }
 
-# revision - print revision and exit
-sub revision {
-    print STDERR <<END;
-netrec: 0.74.2, 2013-03-31
- sdrd format: 0737 12
-END
-    exit 0;
-}
 
 sub get_param {
     my ($entry) = @_;
@@ -197,4 +189,14 @@ sub get_netstat {
 
     @stat = join( ":", @stat );
     return @stat;
+}
+
+
+# revision - print revision and exit
+sub revision {
+    print STDERR <<END;
+netrec: 0.74.2, 2013-04-30
+ sdrd format: 0737 12
+END
+    exit 0;
 }

@@ -217,7 +217,7 @@ if (Proc::PID::File->running( { dir => "$sdr_baselog" } )) {
 
 
 # Log basic information
-addlog ("info: main - tcp_keepalive=$tcpka, destination=$dest, ssh2port=$ssh2port, user=$user");
+addlog ("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2port=$ssh2port");
 
 
 # cd raw data directory
@@ -526,7 +526,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-sender: 0.74.2, 2013-03-31
+sender: 0.74.2, 2013-04-30
 END
     exit 0;
 }
