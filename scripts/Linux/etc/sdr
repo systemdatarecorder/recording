@@ -26,12 +26,13 @@ OS_NAME=`uname -s`
 SDR_ROOT="/opt/sdr"
 SDR_ETC=${SDR_ROOT}/etc
 SDR_LOG=${SDR_ROOT}/log
-RECORDERS="sys cpu nic"
+RECORDERS="sys cpu nic hdw"
 
 # std recorders
 test -f ${SDR_ETC}/sysrec.start  || exit 0
 test -f ${SDR_ETC}/cpurec.start  || exit 0
 test -f ${SDR_ETC}/nicrec.start  || exit 0
+test -f ${SDR_ETC}/hdwrec.start  || exit 0
 
 
 start() {
