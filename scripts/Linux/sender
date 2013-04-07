@@ -171,8 +171,6 @@ given($trans) {
 
 
 
-}
-
 
 # Reporting XML Configuration
 # XPATH Method
@@ -184,21 +182,29 @@ foreach my $node (@res) {
     # destination
     $dest = $node -> getAttribute ('name');
 
-    # http port
-    if ($node -> getElementsByTagName('httpport')) {
-        $httpport = $node -> getElementsByTagName('httpport');
+    if ($node -> getElementsByTagName('http')) {
+        print "we have http";
     }
 
+
+    #http port
+    #if ($node -> getElementsByTagName('httpport')) {
+    #     $httpport = $node -> getElementsByTagName('httpport');
+    #}
+
     # ssh2 port
-    if ($node -> getElementsByTagName('ssh2port')) {
-        $ssh2port = $node -> getElementsByTagName('ssh2port');
-    }
+    # if ($node -> getElementsByTagName('ssh2port')) {
+    #     $ssh2port = $node -> getElementsByTagName('ssh2port');
+    #}
     
     # username, password
     $user = $node -> getElementsByTagName('username');
     $pass = $node -> getElementsByTagName('password');
 }
 
+
+# break here for testing
+exit 0;
 
 # Daemonize
 eval { Proc::Daemon::Init( { child_STDOUT => "+>>$slog",

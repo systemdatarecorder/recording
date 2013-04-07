@@ -30,6 +30,7 @@ Recording
     Bug 253 - hdwrec does not correctly return the number of physical disks
     Bug 255 - hdwrec should report hypervisor type
     Bug 262 - sender support for http transport
+    Bug 271 - sender should be able to select a specific reporting server
     Update perl-5.16.3
     Update libssh2-1.4.3
     Update curl-7.29.0
