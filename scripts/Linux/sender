@@ -70,10 +70,12 @@ my $xmlcnf     = 'sdr.conf';  # sdr configuration
 my $conf;
 my (@files, @dbs);
 my ($sdr_baselog, $sdr_curlog, $pkey);
-my $httpport = 80;
-my $ssh2port = 22;
+my $hport = 80;
+my ($hproxy, $hproxyport);
+my $sport = 22;
 my $tcpka = 0;
 my $trans = "http";
+my $dr;
 my ($dest, $user, $pass);
 local $|       = 1;
 
@@ -138,6 +140,11 @@ my $schilds = 0;
 
 foreach my $node (@sdrd_childs) {
 
+    # destination
+    if ($node -> nodeName() =~ /destination/) {
+        $dr = $node -> textContent();
+    }
+
     # transport mode
     if ($node -> nodeName() =~ /transport/) {
         $trans = $node -> textContent();
@@ -154,12 +161,16 @@ foreach my $node (@sdrd_childs) {
     $schilds++;
 }
 
+die "error: cannot find destination, check sdr.conf\n"
+    if (!$dr);
+
 # check errors
 @dbs = @recs if ($schilds == 0);
 
 # transport modes
 my ($ssh2trans, $httptrans) = 0;
 
+# transport
 given($trans) {
 
     when(/ssh2/) { $ssh2trans=1; }
@@ -168,8 +179,6 @@ given($trans) {
 
     default      { $httptrans=1; }
 }
-
-
 
 
 # Reporting XML Configuration
@@ -182,26 +191,52 @@ foreach my $node (@res) {
     # destination
     $dest = $node -> getAttribute ('name');
 
-    if ($node -> getElementsByTagName('http')) {
-        print "we have http";
+    if ($dr eq $dest) {
+        if ($node -> getElementsByTagName('http')) {
+            my @http_transport =
+             get_transport($conf, "/sdr/reporting/host[\@name=\"$dr\"]/http/*");
+
+            given($#http_transport) {
+
+                when(0) { $hport=$http_transport[0];      }
+
+                when(1) { $hport=$http_transport[0];
+                          $hproxy=$http_transport[1];     }
+
+                when(2) { $hport=$http_transport[0]; 
+                          $hproxy=$http_transport[1];
+                          $hproxyport=$http_transport[2]; }
+            }
+        }
+
+        if ($node -> getElementsByTagName('ssh2')) {
+            my @ssh2_transport =
+             get_transport($conf, "/sdr/reporting/host[\@name=\"$dr\"]/ssh2/*");
+
+            given($#ssh2_transport) {
+
+                when(0) { $sport=$ssh2_transport[0]; }
+            }
+
+        }
     }
-
-
-    #http port
-    #if ($node -> getElementsByTagName('httpport')) {
-    #     $httpport = $node -> getElementsByTagName('httpport');
-    #}
-
-    # ssh2 port
-    # if ($node -> getElementsByTagName('ssh2port')) {
-    #     $ssh2port = $node -> getElementsByTagName('ssh2port');
-    #}
     
     # username, password
     $user = $node -> getElementsByTagName('username');
     $pass = $node -> getElementsByTagName('password');
 }
 
+if ($ssh2trans) {
+    print("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2 port=$sport\n");
+} else {
+    if ($httptrans) {
+        if ($hproxy and $hproxyport) {
+            print ("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, http port=$hport proxy=$hproxy proxyport=$hproxyport\n");
+        } else {
+            print("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, http port=$hport\n");
+        }
+    }
+}
 
 # break here for testing
 exit 0;
@@ -223,7 +258,7 @@ if (Proc::PID::File->running( { dir => "$sdr_baselog" } )) {
 
 
 # Log basic information
-addlog ("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2port=$ssh2port");
+addlog ("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2port=$sport");
 
 
 # cd raw data directory
@@ -243,7 +278,7 @@ foreach (@dbs) {
 # transport SSH2 
 
 # Connect here to SDR Reporting backend
-my $s2 = connect2rep($dest, $ssh2port, $user, $pass);
+my $s2 = connect2rep($dest, $sport, $user, $pass);
 #die "Cannot connect $dest ...\n" if (! defined($s2));
 
 
@@ -319,7 +354,7 @@ while (1) {
                 if ($rcode == 0) {
                     addlog("error: main - no ssh2 connection available, trying again...");
                     sleep(10);
-                    $s2 = connect2rep($dest, $ssh2port, $user, $pass);
+                    $s2 = connect2rep($dest, $sport, $user, $pass);
                     next if (! defined($s2));
                     addlog("info: main - ssh2 connection re-established");
                     $rcode = send2report($s2, $dbid, $delta);
@@ -327,7 +362,7 @@ while (1) {
             } else {
                 addlog("info: main - waiting for ssh2...");
                 sleep(20);
-                $s2 = connect2rep($dest, $ssh2port, $user, $pass);
+                $s2 = connect2rep($dest, $sport, $user, $pass);
                 addlog("info: main - ssh2 connection re-established") if (defined($s2));
             }
         }
@@ -352,6 +387,42 @@ sub addlog {
 
     return;
 }
+
+
+
+sub get_transport {
+    my ($conf, $path) = @_;
+    my ($port, $proxy, $proxyport);
+    my @result;
+
+    #XPath Walking
+    my @childs = $conf -> findnodes ($path);
+
+    foreach my $node (@childs) {
+
+        given($node -> nodeName()) {
+            when(/^port$/)      { $port      = $node -> textContent();  }
+            when(/^proxy$/)     { $proxy     = $node -> textContent();  }
+            when(/^proxyport$/) { $proxyport = $node -> textContent();  }
+        }
+
+    }
+
+    if (defined($proxy) and defined($proxyport)) {
+        push @result, ($port, $proxy, $proxyport);
+    } else {
+        push @result, $port;
+    }
+
+    ## debug 
+    # print "port=$port proxy=$proxy proxyport=$proxyport \n";
+    # print "array result=@result \n";
+
+    # return array of coordinates for http or ssh2
+    return @result;
+}
+
+
 
 
 ## send payload to SDR Reporting
@@ -392,16 +463,16 @@ sub send2report {
 ## connect to SDR Reporting
 sub connect2rep {
 
-    my ($dest, $ssh2port, $user, $pass) = @_;
+    my ($dest, $sport, $user, $pass) = @_;
  
     my $ssh2 = Net::SSH2->new();
     #$ssh2->poll(1000);
     #$ssh2->debug(1);
 
-    if($ssh2->connect($dest, $ssh2port)) {
+    if($ssh2->connect($dest, $sport)) {
         #$ssh2->blocking(1);
 
-        addlog("info: connect2rep - connection established to destination=$dest ssh2port=$ssh2port")
+        addlog("info: connect2rep - connection established to destination=$dest ssh2port=$sport")
             if($verbose_flag == 1);
 
         # we have keepalive ON
