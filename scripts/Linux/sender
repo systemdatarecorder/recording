@@ -186,15 +186,18 @@ given($trans) {
 my @res = $conf -> findnodes('//host');
 
 foreach my $node (@res) {
-    # DOM Method
 
     # destination
     $dest = $node -> getAttribute ('name');
 
+    # username, password
+    $user = $node -> getElementsByTagName('username');
+    $pass = $node -> getElementsByTagName('password');
+
     if ($dr eq $dest) {
         if ($node -> getElementsByTagName('http')) {
             my @http_transport =
-             get_transport($conf, "/sdr/reporting/host[\@name=\"$dr\"]/http/*");
+             get_transport($conf, "/sdr/reporting/host[\@name=\"$dest\"]/http/*");
 
             given($#http_transport) {
 
@@ -211,7 +214,7 @@ foreach my $node (@res) {
 
         if ($node -> getElementsByTagName('ssh2')) {
             my @ssh2_transport =
-             get_transport($conf, "/sdr/reporting/host[\@name=\"$dr\"]/ssh2/*");
+             get_transport($conf, "/sdr/reporting/host[\@name=\"$dest\"]/ssh2/*");
 
             given($#ssh2_transport) {
 
@@ -219,12 +222,14 @@ foreach my $node (@res) {
             }
 
         }
-    }
     
-    # username, password
-    $user = $node -> getElementsByTagName('username');
-    $pass = $node -> getElementsByTagName('password');
+        last; 
+    }
 }
+
+die "error: main - cannot find $dr host, check sdr.conf\n" 
+    if ($dr ne $dest);
+
 
 if ($ssh2trans) {
     print("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2 port=$sport\n");
