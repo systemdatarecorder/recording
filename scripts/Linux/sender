@@ -284,17 +284,18 @@ foreach (@dbs) {
 
 
 # check transport 
+my ($s2, $http);
 
 if ($ssh2trans) {
 
     # init SSH2 transport
-    my $s2 = connect2rep($dest, $sport, $user, $pass);
+    $s2 = connect2rep($dest, $sport, $user, $pass);
     #die "Cannot connect $dest ...\n" if (! defined($s2));
 
 } else {
 
     # init HTTP transport
-    my $curl = WWW::Curl::Easy->new;
+    $http = WWW::Curl::Easy->new;
 }
 
 
@@ -385,8 +386,8 @@ while (1) {
                 }
             } else {
                 ## http transport mode
-                $hstat = 
-                    sendhttp($curl, $dest, $delta, $hport, $hproxy, $hproxyport);
+                my $hstat = 
+                    sendhttp($http, $dest, $delta, $hport, $hproxy, $hproxyport);
             }
         }
     }
