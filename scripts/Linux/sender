@@ -163,7 +163,7 @@ foreach my $node (@sdrd_childs) {
     $schilds++;
 }
 
-die "error: cannot find destination, check sdr.conf\n"
+die "error: no destination found, check sdr.conf\n"
     if (!$dr);
 
 # check errors
@@ -230,7 +230,7 @@ foreach my $node (@res) {
     }
 }
 
-die "error: main - cannot find $dr host, check sdr.conf\n" 
+die "error: main - no such \'$dr\' destination, check sdr.conf\n" 
     if ($dr ne $dest);
 
 
