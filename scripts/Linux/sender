@@ -25,6 +25,8 @@ use warnings;
 use 5.010;
 use File::Tail;
 use File::Basename;
+use WWW::Curl::Easy;
+use HTTP::Response;
 use Net::SSH2;
 use Getopt::Std;
 use XML::LibXML;
@@ -222,7 +224,8 @@ foreach my $node (@res) {
             }
 
         }
-    
+        
+        ## we found a match
         last; 
     }
 }
@@ -280,11 +283,19 @@ foreach (@dbs) {
 }
 
 
-# transport SSH2 
+# check transport 
 
-# Connect here to SDR Reporting backend
-my $s2 = connect2rep($dest, $sport, $user, $pass);
-#die "Cannot connect $dest ...\n" if (! defined($s2));
+if ($ssh2trans) {
+
+    # init SSH2 transport
+    my $s2 = connect2rep($dest, $sport, $user, $pass);
+    #die "Cannot connect $dest ...\n" if (! defined($s2));
+
+} else {
+
+    # init HTTP transport
+    my $curl = WWW::Curl::Easy->new;
+}
 
 
 # main loop
@@ -352,23 +363,30 @@ while (1) {
             print $_->{"input"} . " payload[" . $delta . "]\n" 
                 if($verbose_flag == 1);
 
+            if ($ssh2trans) {
 
-            if (defined($s2)) {
+                ## ssh2 transport mode
+                if (defined($s2)) {
 
-                $rcode = send2report($s2, $dbid, $delta);
-                if ($rcode == 0) {
-                    addlog("error: main - no ssh2 connection available, trying again...");
-                    sleep(10);
+                    $rcode = sendssh2($s2, $dbid, $delta);
+                    if ($rcode == 0) {
+                        addlog("error: main - no ssh2 connection available, trying again...");
+                        sleep(10);
+                        $s2 = connect2rep($dest, $sport, $user, $pass);
+                        next if (! defined($s2));
+                        addlog("info: main - ssh2 connection re-established");
+                        $rcode = sendssh2($s2, $dbid, $delta);
+                    }
+                } else {
+                    addlog("info: main - waiting for ssh2...");
+                    sleep(20);
                     $s2 = connect2rep($dest, $sport, $user, $pass);
-                    next if (! defined($s2));
-                    addlog("info: main - ssh2 connection re-established");
-                    $rcode = send2report($s2, $dbid, $delta);
+                    addlog("info: main - ssh2 connection re-established") if (defined($s2));
                 }
             } else {
-                addlog("info: main - waiting for ssh2...");
-                sleep(20);
-                $s2 = connect2rep($dest, $sport, $user, $pass);
-                addlog("info: main - ssh2 connection re-established") if (defined($s2));
+                ## http transport mode
+                $hstat = 
+                    sendhttp($curl, $dest, $delta, $hport, $hproxy, $hproxyport);
             }
         }
     }
@@ -428,10 +446,29 @@ sub get_transport {
 }
 
 
+## send payload over HTTP
+sub sendhttp {
+
+    my ($curl, $dest, $delta, $hport, $hproxy, $hproxyport) = @_;
+    my $response;
+
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_HEADER(), 1);
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_URL(), 'http://localhost:9001/cgi-bin/trans.cgi');
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPHEADER(), ['Content-Type: text/plain']);
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_POST(), 1);
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), "match=www&errors=0");
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response);
+
+    my $retcode = $curl->perform;
+    if ($retcode == 0) {
+        $response = HTTP::Response->parse($response);
+        my $xml = $response->decoded_content;
+    } else { print "error\n"; }
+}
 
 
 ## send payload to SDR Reporting
-sub send2report {
+sub sendssh2 {
 
     my ($s, $id, $payload) = @_;
 
@@ -439,7 +476,7 @@ sub send2report {
 
     my ( $code, $error_name, $error_string ) = $s->error();
     if ( $code ) {
-        addlog("fatal: send2report - cant init channel, code:$code error:$error_name $error_string");
+        addlog("fatal: sendssh2 - cant init channel, code:$code error:$error_name $error_string");
         return 0;
     }
 
@@ -456,7 +493,7 @@ sub send2report {
         return 1;
 
     } else {
-        addlog("error: send2report - cant operate on channel, check ssh2 backend");
+        addlog("error: sendssh2 - cant operate on channel, check ssh2 backend");
         return 0;
     }
 
