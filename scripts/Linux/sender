@@ -246,8 +246,6 @@ if ($ssh2trans) {
     }
 }
 
-# break here for testing
-exit 0;
 
 # Daemonize
 eval { Proc::Daemon::Init( { child_STDOUT => "+>>$slog",
@@ -296,6 +294,10 @@ if ($ssh2trans) {
 
     # init HTTP transport
     $http = WWW::Curl::Easy->new;
+  
+    if($tcpka) {
+        $http->setopt(WWW::Curl::Easy::CURLOPT_TCP_KEEPALIVE(), 1);
+    }
 }
 
 
@@ -415,6 +417,7 @@ sub addlog {
 
 
 sub get_transport {
+
     my ($conf, $path) = @_;
     my ($port, $proxy, $proxyport);
     my @result;
@@ -423,13 +426,11 @@ sub get_transport {
     my @childs = $conf -> findnodes ($path);
 
     foreach my $node (@childs) {
-
         given($node -> nodeName()) {
             when(/^port$/)      { $port      = $node -> textContent();  }
             when(/^proxy$/)     { $proxy     = $node -> textContent();  }
             when(/^proxyport$/) { $proxyport = $node -> textContent();  }
         }
-
     }
 
     if (defined($proxy) and defined($proxyport)) {
@@ -453,8 +454,20 @@ sub sendhttp {
     my ($curl, $dest, $delta, $hport, $hproxy, $hproxyport) = @_;
     my $response;
 
+    #URI
+    my $uri = "http://" . $dest . ":" . $hport . "/cgi-bin/trans.cgi";
+
+    # CURLOPT_PROXY CURLOPT_PROXYPORT
+    # test for HTTP proxy
+    if ($hproxy) {
+        $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXY(), $hproxy);
+        $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXYPORT(), $hproxyport);
+    } else {
+        $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXY(), '');
+    }
+
     $curl->setopt(WWW::Curl::Easy::CURLOPT_HEADER(), 1);
-    $curl->setopt(WWW::Curl::Easy::CURLOPT_URL(), 'http://localhost:9001/cgi-bin/trans.cgi');
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_URL(), $uri);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPHEADER(), ['Content-Type: text/plain']);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_POST(), 1);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), "match=www&errors=0");
@@ -464,7 +477,9 @@ sub sendhttp {
     if ($retcode == 0) {
         $response = HTTP::Response->parse($response);
         my $xml = $response->decoded_content;
-    } else { print "error\n"; }
+    } else { 
+        addlog("error: sendhttp - cant send sdrd raw data"); 
+    }
 }
 
 
