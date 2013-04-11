@@ -25,6 +25,7 @@ use warnings;
 use 5.010;
 use File::Tail;
 use File::Basename;
+use Digest::SHA;
 use WWW::Curl::Easy;
 use HTTP::Response;
 use Net::SSH2;
@@ -233,20 +234,6 @@ foreach my $node (@res) {
 die "error: main - no such \'$dr\' destination, check sdr.conf\n" 
     if ($dr ne $dest);
 
-
-if ($ssh2trans) {
-    print("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2 port=$sport\n");
-} else {
-    if ($httptrans) {
-        if ($hproxy and $hproxyport) {
-            print ("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, http port=$hport proxy=$hproxy proxyport=$hproxyport\n");
-        } else {
-            print("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, http port=$hport\n");
-        }
-    }
-}
-
-
 # Daemonize
 eval { Proc::Daemon::Init( { child_STDOUT => "+>>$slog",
                              child_STDERR => "+>>$slog" } ); };
@@ -264,7 +251,18 @@ if (Proc::PID::File->running( { dir => "$sdr_baselog" } )) {
 
 
 # Log basic information
-addlog ("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2port=$sport");
+
+if ($ssh2trans) {
+    addlog("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2 port=$sport");
+} else {
+    if ($httptrans) {
+        if ($hproxy and $hproxyport) {
+            addlog("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, http port=$hport proxy=$hproxy proxy port=$hproxyport");
+        } else {
+            addlog("info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, http port=$hport");
+        }
+    }
+}
 
 
 # cd raw data directory
@@ -454,11 +452,15 @@ sub sendhttp {
     my ($curl, $dest, $delta, $hport, $hproxy, $hproxyport) = @_;
     my $response;
 
-    #URI
+    ## uri
     my $uri = "http://" . $dest . ":" . $hport . "/cgi-bin/trans.cgi";
 
-    # CURLOPT_PROXY CURLOPT_PROXYPORT
-    # test for HTTP proxy
+    ## payload
+    my $payload = sha256sdrd($delta);
+    addlog("info: sendhttp - $payload");
+
+    ## test for HTTP proxy
+    ## CURLOPT_PROXY CURLOPT_PROXYPORT
     if ($hproxy) {
         $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXY(), $hproxy);
         $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXYPORT(), $hproxyport);
@@ -470,7 +472,7 @@ sub sendhttp {
     $curl->setopt(WWW::Curl::Easy::CURLOPT_URL(), $uri);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPHEADER(), ['Content-Type: text/plain']);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_POST(), 1);
-    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), "match=www&errors=0");
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), "$payload");
     $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response);
 
     my $retcode = $curl->perform;
@@ -592,7 +594,7 @@ sub sha256sdrd {
 
     my $digest = $state->hexdigest;
 
-    $sdrd = $sdrd . ":$digest";
+    $sdrd = "p=" . $sdrd . "&c=$digest";
 
     return $sdrd;
 }
