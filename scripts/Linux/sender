@@ -439,7 +439,8 @@ sub get_transport {
 
     ## debug 
     # print "port=$port proxy=$proxy proxyport=$proxyport \n";
-    # print "array result=@result \n";
+    print "transport id=@result \n"
+        if($verbose_flag == 1);
 
     # return array of coordinates for http or ssh2
     return @result;
@@ -457,7 +458,7 @@ sub sendhttp {
 
     ## payload
     my $payload = sha256sdrd($delta);
-    addlog("info: sendhttp - $payload");
+    addlog("info: sendhttp - $payload") if($verbose_flag == 1);
 
     ## test for HTTP proxy
     ## CURLOPT_PROXY CURLOPT_PROXYPORT
@@ -476,9 +477,12 @@ sub sendhttp {
     $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response);
 
     my $retcode = $curl->perform;
+
     if ($retcode == 0) {
-        $response = HTTP::Response->parse($response);
-        my $xml = $response->decoded_content;
+        if($verbose_flag == 1) {
+            $response = HTTP::Response->parse($response);
+            my $xml = $response->decoded_content;
+        }
     } else { 
         addlog("error: sendhttp - cant send sdrd raw data"); 
     }
