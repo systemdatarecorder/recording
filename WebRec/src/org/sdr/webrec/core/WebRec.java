@@ -21,8 +21,6 @@
 package org.sdr.webrec.core;
 
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -63,6 +61,8 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.sdr.webrec.crawler.model.Transaction;
 
+import java.io.OutputStreamWriter;
+
 
 import org.apache.log4j.Logger;
 
@@ -83,7 +83,7 @@ public class WebRec extends Thread {
 	Logger  logger = Logger.getLogger("org.sdr");
 	private BasicHttpContext context;
 	   
-	public WebRec(boolean keepConnectionAlive, File file, String name, int interval, int timeout, int delay, Object[] urls) {
+	public WebRec(boolean keepConnectionAlive, String name, int interval, int timeout, int delay, Object[] urls) {
 		super(name);
 		this.threadName = name;
 		this.timeout = timeout;
@@ -92,8 +92,8 @@ public class WebRec extends Thread {
 		this.url = urls;
 		this.delay = delay * 1000;
 		try {
-			out = new BufferedWriter(new FileWriter(file, true));
-		} catch (IOException e) {
+			out = new BufferedWriter(new OutputStreamWriter(System.out));
+		} catch (Exception e) {
 			logger.error("ERROR:" + e.getLocalizedMessage());
 			e.printStackTrace();
 		}
@@ -246,7 +246,7 @@ public class WebRec extends Thread {
 							timeLapse = timeLapse / 1000000L;
 							logger.debug("response time:" + formatter.format(timeLapse) + "ms.");
 							out.write(System.currentTimeMillis()/1000 + ":");
-							out.write( transactionName + ":" + formatter.format(timeLapse) +"\n");
+							out.write( threadName + '.' + transactionName + ":" + formatter.format(timeLapse) +"\n");
 
 
 							//content must be consumed just because 

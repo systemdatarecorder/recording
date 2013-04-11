@@ -19,7 +19,6 @@
 
 package org.sdr.webrec.core;
 
-import java.io.File;
 import java.util.LinkedList;
 
 import org.apache.log4j.Logger;
@@ -46,10 +45,8 @@ public class WebRecManager extends Thread {
 			org.sdr.webrec.core.WebRec tmp;
 			Workload oneWorkload = (Workload) workloads.get(i);
 			Object[] arrayS = oneWorkload.getTransactionsAsArray();
-			File file = new File(settings.getLogDirectory()
-					+ settings.getLogfile_prefix() + oneWorkload.getName()
-					+ settings.getLogfile_postfix());
-			tmp = new WebRec(settings.isKeepConnectionAlive(), file,
+			
+			tmp = new WebRec(settings.isKeepConnectionAlive(), 
 					oneWorkload.getName(), oneWorkload.getInterval(), oneWorkload.getTimeout(), oneWorkload.getDelay(), arrayS);
 			webrec[i] = tmp;
 

@@ -25,10 +25,6 @@ import java.util.LinkedList;
 
 public class Configuration {
 		
-		String logDirectory;
-		String logfile_prefix;
-		String logfile_postfix;
-		File logFile;
 		boolean keepConnectionAlive = false;
 		
 		
@@ -62,47 +58,15 @@ public class Configuration {
 			this.threadNumber = threadNumber;
 		}
 
-		public String getLogfile_prefix() {
-			return logfile_prefix;
-		}
-
-		public void setLogfile_prefix(String logfile_prefix) {
-			this.logfile_prefix = logfile_prefix;
-		}
-
-		public String getLogfile_postfix() {
-			return logfile_postfix;
-		}
-
-		public void setLogfile_postfix(String logfile_postfix) {
-			this.logfile_postfix = logfile_postfix;
-		}
-
-		public File getLogFile() {
-			return logFile;
-		}
-
-		public void setLogFile(File logFile) {
-			this.logFile = logFile;
-		}
-
-		public String getLogDirectory() {
-			return logDirectory;
-		}
-
-		public void setLogDirectory(String logDirectory) {
-			this.logDirectory = logDirectory;
-		}
 		
 		public String toString(){
 			 StringBuilder result = new StringBuilder();
 			 String NEW_LINE = System.getProperty("line.separator");
 			 result.append(NEW_LINE);
-			 	result.append(" KeepConnectionAlive: " + this.keepConnectionAlive + NEW_LINE);
-			    result.append(" Prefix: " + logfile_prefix + NEW_LINE);
-			    result.append(" Proxy: " + proxy + NEW_LINE);
-			    result.append(" # of threads: " + getThreadNumber() + NEW_LINE);
-			    result.append(" Workloads: " + workloads + NEW_LINE);
+			 result.append(" KeepConnectionAlive: " + this.keepConnectionAlive + NEW_LINE);
+			 result.append(" Proxy: " + proxy + NEW_LINE);
+			 result.append(" # of threads: " + getThreadNumber() + NEW_LINE);
+			 result.append(" Workloads: " + workloads + NEW_LINE);
 				      
 			    Iterator i = workloads.iterator();
 			    

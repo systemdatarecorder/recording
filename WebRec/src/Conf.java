@@ -101,12 +101,7 @@ public class Conf implements DocHandler {
 			stack.push(model);
 		}
 
-		if (tag.equals("logfile")) {
-			String prefix = (String) h.get("prefix");
-			String postfix = (String) h.get("postfix");
-			configuration.setLogfile_prefix(prefix);
-			configuration.setLogfile_postfix(postfix);
-		} else if (tag.equals("keepHttpAlive")) {
+		if (tag.equals("keepHttpAlive")) {
 			String keepAlive = (String) h.get("value");
 			configuration.setKeepConnectionAlive((new Boolean(keepAlive)
 					.booleanValue()));

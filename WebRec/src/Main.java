@@ -121,12 +121,8 @@ public class Main {
 			conf.setParameters(parameters);
 			confi = conf.readConfiguration(home, conf);
 
-			checkLogFile(home);
-
 			
-			confi.setLogDirectory(home + logs_dir);
 			logger.debug("SDR home dir:" + home);
-			logger.debug("SDR log dir:" + confi.getLogDirectory());
 			logger.debug("SDR conf dir:" + home + "etc/webrec.conf");
 			
 			
@@ -137,37 +133,5 @@ public class Main {
 
 	}
 
-	private static void checkLogFile(String homeDirectory) {
 
-		String directoryForLogs = homeDirectory + logs_dir;
-		
-		// all workloads
-		LinkedList<Workload> workloads = confi.getWorkloads();
-		for (int i = 0; i < workloads.size(); i++) {
-            Workload oneWorkload = workloads.get(i);
-			// every workload has it's own log file
-			File file = new File(directoryForLogs + confi.getLogfile_prefix()
-					+ oneWorkload.getName() + confi.getLogfile_postfix());
-
-			boolean exists = file.exists();
-			if (!exists) {
-				// It returns false if File or directory does not exist
-				
-				// Create file if it does not exist
-				try {
-					file.createNewFile();
-					confi.setLogFile(file);
-					logger.info("Set to log file:" + confi.getLogFile());
-				} catch (IOException e) {
-					logger.error("Error creating a log file." + file.getAbsolutePath());
-					System.exit(-1);
-					e.printStackTrace();
-				}
-
-			} 
-
-		}
-		
-		
-	}
 }
