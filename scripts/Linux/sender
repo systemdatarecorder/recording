@@ -387,7 +387,7 @@ while (1) {
             } else {
                 ## http transport mode
                 my $hstat = 
-                    sendhttp($http, $dest, $delta, $hport, $hproxy, $hproxyport);
+                    sendhttp($http, $dest, $dbid, $delta, $hport, $hproxy, $hproxyport);
             }
         }
     }
@@ -450,7 +450,7 @@ sub get_transport {
 ## send payload over HTTP
 sub sendhttp {
 
-    my ($curl, $dest, $delta, $hport, $hproxy, $hproxyport) = @_;
+    my ($curl, $dest, $dbid, $delta, $hport, $hproxy, $hproxyport) = @_;
     my $response;
 
     ## uri
@@ -458,7 +458,7 @@ sub sendhttp {
 
     ## payload
     my $payload = sha256sdrd($delta);
-    addlog("info: sendhttp - $payload") if($verbose_flag == 1);
+    addlog("info: sendhttp - h=$host&id=$dbid&$payload") if($verbose_flag == 1);
 
     ## test for HTTP proxy
     ## CURLOPT_PROXY CURLOPT_PROXYPORT
@@ -473,7 +473,7 @@ sub sendhttp {
     $curl->setopt(WWW::Curl::Easy::CURLOPT_URL(), $uri);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPHEADER(), ['Content-Type: text/plain']);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_POST(), 1);
-    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), $payload);
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), "h=$host&id=$dbid&$payload");
     $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response);
 
     my $retcode = $curl->perform;
@@ -484,7 +484,7 @@ sub sendhttp {
             my $xml = $response->decoded_content;
         }
     } else { 
-        addlog("error: sendhttp - cant send sdrd raw data"); 
+        addlog("error: sendhttp - cant send $dbid sdrd data, transport error"); 
     }
 }
 
