@@ -462,18 +462,18 @@ sub sendhttp {
     ## test for HTTP proxy
     ## CURLOPT_PROXY CURLOPT_PROXYPORT
     if ($hproxy) {
-        $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXY(), "$hproxy");
-        $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXYPORT(), "$hproxyport");
+        $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXY(), $hproxy);
+        $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXYPORT(), $hproxyport);
     } else {
         $curl->setopt(WWW::Curl::Easy::CURLOPT_PROXY(), '');
     }
 
     $curl->setopt(WWW::Curl::Easy::CURLOPT_HEADER(), 1);
-    $curl->setopt(WWW::Curl::Easy::CURLOPT_URL(), "$uri");
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_URL(), $uri);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPHEADER(), ['Content-Type: text/plain']);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_POST(), 1);
-    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), "$payload");
-    $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA(), "$response");
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), $payload);
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response);
 
     my $retcode = $curl->perform;
     if ($retcode == 0) {
