@@ -472,7 +472,7 @@ sub sendhttp {
     $curl->setopt(WWW::Curl::Easy::CURLOPT_URL(), $uri);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_HTTPHEADER(), ['Content-Type: text/plain']);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_POST(), 1);
-    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), "$payload");
+    $curl->setopt(WWW::Curl::Easy::CURLOPT_POSTFIELDS(), $payload);
     $curl->setopt(WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response);
 
     my $retcode = $curl->perform;
