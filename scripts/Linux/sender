@@ -407,7 +407,7 @@ sub addlog {
     my $dt = sprintf "%4d-%02d-%02d %02d:%02d:%02d", 
                $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
 
-    print "$dt $logbuf\n";
+    print "\n$dt $logbuf";
 
     return;
 }
@@ -458,7 +458,8 @@ sub sendhttp {
 
     ## payload
     my $payload = sha256sdrd($delta);
-    addlog("info: sendhttp - h=$host&id=$dbid&$payload") if($verbose_flag == 1);
+    addlog("info: sendhttp - h=$host&id=$dbid&$payload")
+        if($verbose_flag == 1);
 
     ## test for HTTP proxy
     ## CURLOPT_PROXY CURLOPT_PROXYPORT
@@ -486,6 +487,8 @@ sub sendhttp {
     } else { 
         addlog("error: sendhttp - cant send $dbid sdrd data, transport error"); 
     }
+
+    return $retcode;
 }
 
 
