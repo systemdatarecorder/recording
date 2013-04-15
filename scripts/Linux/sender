@@ -384,7 +384,7 @@ while (1) {
                 when (/hdwrec/) { $dbid = 'hdw'; }
             }
 
-            print $_->{"input"} . " payload[" . $delta . "]\n"
+            print "\n" . $_->{"input"} . " payload[" . $delta . "]"
               if ( $verbose_flag == 1 );
 
             if ($ssh2trans) {
@@ -465,8 +465,6 @@ sub get_transport {
 
     ## debug
     # print "port=$port proxy=$proxy proxyport=$proxyport \n";
-    print "transport id=@result \n"
-      if ( $verbose_flag == 1 );
 
     # return array of coordinates for http or ssh2
     return @result;
@@ -509,8 +507,9 @@ sub sendhttp {
 
     if ( $retcode == 0 ) {
         if ( $verbose_flag == 1 ) {
-            $response = HTTP::Response->parse($response);
-            my $xml = $response->decoded_content;
+            addlog("info: sendhttp - HTTP response");
+            #$response = HTTP::Response->parse($response);
+            #my $xml = $response->decoded_content;
         }
     }
     else {
