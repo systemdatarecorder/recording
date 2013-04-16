@@ -18,7 +18,7 @@ Recording
 
 0.74.2
 ======
-    Bug 224 - Use of uninitialized value $@ in concatenation
+    Bug 224 - sender use of uninitialized value $@ in concatenation
     Bug 225 - sysrec performance metrics type definition
     Bug 226 - cpurec performance metrics type definition
     Bug 227 - nicrec performance metrics type definition
