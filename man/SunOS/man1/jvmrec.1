@@ -1,4 +1,4 @@
-.TH jvmrec 1  "$Date:: 2012-05-23 #$" "USER COMMANDS"
+.TH jvmrec 1  "$Date:: 2013-04-30 #$" "USER COMMANDS"
 .SH NAME
 jvmrec \- Java Virtual Machine GC collector. Uses ksh, jstat, perl
 .SH SYNOPSIS
@@ -16,7 +16,7 @@ jstat
 and formatted for SDR analysis process. The recorder runs continuously.
 
 .SH OS
-FreeBSD, RedHat, Solaris
+Solaris
 
 .SH OPTIONS
 
@@ -108,6 +108,22 @@ dependencies. On RedHat or other Linux based operating system
 you must be sure you use Sun's HotSpot VM. Currently jvmrec 
 operates on Sun's HotSpot VM. Future versions of SDR will 
 add support for Oracle JRockit and IBM J9 VMs.
+
+.PP
+Make sure if running G1 garbage collector the main jdk
+utilities: jmap, jstat work before running jvmrec. G1 is 
+not fully supported on Java 6 therefore jvmrec might not be able 
+to record GC activity if G1 collector will be in use. There are 
+several issues with jstat and G1 on Java 6: 
+
+.TP
+6946385 : G1: jstat does not support G1 GC
+
+.TP
+7075646 : G1: fix inconsistencies in the monitoring data
+
+.TP
+6946417 : G1: Java VisualVM does not support G1 properly
 
 .PP
 .SH DOCUMENTATION

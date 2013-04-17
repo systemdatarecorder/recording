@@ -1,4 +1,4 @@
-.TH jvmrec 1  "$Date:: 2011-07-06 #$" "USER COMMANDS"
+.TH jvmrec 1  "$Date:: 2013-04-30 #$" "USER COMMANDS"
 .SH NAME
 jvmrec \- Java Virtual Machine GC collector. Uses jstat, perl
 .SH SYNOPSIS
@@ -193,6 +193,22 @@ jvmrec uses jstat utility, found as part of the
 standard Java Development Kit. You must have a valid 
 and operational jstat utility on your system. The recorder
 has been tested against Sun/Oracle's HotSpot VM. 
+
+.PP
+Make sure if running G1 garbage collector the main jdk
+utilities: jmap, jstat work before running jvmrec. G1 is 
+not fully supported on Java 6 therefore jvmrec might not be able 
+to record GC activity if G1 collector will be in use. There are 
+several issues with jstat and G1 on Java 6: 
+
+.TP
+6946385 : G1: jstat does not support G1 GC
+
+.TP
+7075646 : G1: fix inconsistencies in the monitoring data
+
+.TP
+6946417 : G1: Java VisualVM does not support G1 properly
 
 .PP
 jvmrec records 15 JVM/GC Linux OS metrics on x64 and x86 platforms !
