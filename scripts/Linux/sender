@@ -243,8 +243,11 @@ foreach my $node (@res) {
     }
 }
 
+die "error: main - no subscription defined, check sdr.conf\n"
+    if (! $sdrid);
+
 die "error: main - no such \'$dr\' destination, check sdr.conf\n"
-  if ( $dr ne $dest );
+  if ($dr ne $dest);
 
 # Daemonize
 eval {
@@ -269,22 +272,21 @@ if ( Proc::PID::File->running( { dir => "$sdr_baselog" } ) ) {
 }
 
 # Log basic information
-
 if ($ssh2trans) {
     addlog(
-"info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, ssh2 port=$sport"
+"info: main - destination=$dest, id=$sdrid, ssh2_user=$user, tcp_keepalive=$tcpka, ssh2_port=$sport"
     );
 }
 else {
     if ($httptrans) {
         if ( $hproxy and $hproxyport ) {
             addlog(
-"info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, http port=$hport proxy=$hproxy proxy port=$hproxyport"
+"info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, http_port=$hport proxy=$hproxy proxy_port=$hproxyport"
             );
         }
         else {
             addlog(
-"info: main - destination=$dest, user=$user, tcp_keepalive=$tcpka, http port=$hport"
+"info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, http_port=$hport"
             );
         }
     }
@@ -421,7 +423,7 @@ while (1) {
             else {
                 ## http transport mode
                 my $hstat =
-                  sendhttp( $http, $dest, $dbid, $delta, $hport, $hproxy,
+                  sendhttp( $http, $dest, $sdrid, $dbid, $delta, $hport, $hproxy,
                     $hproxyport );
             }
         }
@@ -479,7 +481,7 @@ sub get_transport {
 ## send payload over HTTP
 sub sendhttp {
 
-    my ( $curl, $dest, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
+    my ( $curl, $dest, $sdrid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
     my $response;
 
     ## uri
@@ -487,7 +489,7 @@ sub sendhttp {
 
     ## payload
     my $payload = sha256sdrd($delta);
-    addlog("info: sendhttp - h=$host&id=$dbid&$payload")
+    addlog("info: sendhttp - id=$sdrid&h=$host&db=$dbid&$payload")
       if ( $verbose_flag == 1 );
 
     ## test for HTTP proxy
@@ -506,7 +508,7 @@ sub sendhttp {
         ['Content-Type: text/plain'] );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
-        "h=$host&id=$dbid&$payload" );
+        "id=$sdrid&h=$host&db=$dbid&$payload" );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
 
     my $retcode = $curl->perform;
@@ -528,7 +530,7 @@ sub sendhttp {
 ## send payload to SDR Reporting
 sub sendssh2 {
 
-    my ( $s, $id, $payload ) = @_;
+    my ( $s, $sdrid, $dbid, $payload ) = @_;
 
     my $c = $s->channel();
 
@@ -543,11 +545,11 @@ sub sendssh2 {
     if ($c) {
 
         # exec method
-        $c->exec("echo $payload | /opt/sdr/report/bin/hostadm -I $id:$host\n");
+        $c->exec("echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$dbid:$host\n");
 
         # shell method
         #$c->shell();
-        # print $c "echo $payload | /opt/sdr/report/bin/hostadm -I $id:$host\n";
+        # print $c "echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$dbid:$host\n";
 
         $c->close;
 
@@ -578,7 +580,7 @@ sub connect2rep {
         #$ssh2->blocking(1);
 
         addlog(
-"info: connect2rep - connection established to destination=$dest ssh2port=$sport"
+"info: connect2rep - connection established to destination=$dest ssh2_port=$sport"
         ) if ( $verbose_flag == 1 );
 
         # we have keepalive ON
