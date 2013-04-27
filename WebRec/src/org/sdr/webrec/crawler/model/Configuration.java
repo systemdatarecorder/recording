@@ -19,34 +19,86 @@
 
 package org.sdr.webrec.crawler.model;
 
-import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import org.apache.commons.codec.binary.StringUtils;
 
 public class Configuration {
 		
 		boolean keepConnectionAlive = false;
 		
 		
-		String proxy;
+		String proxyHost;
+		int proxyPort;
+		String proxyPasswd;
+		String proxyUserName;
+		boolean proxyPasswdEncrypted;
+		
+		
+		
+		public String getProxyHost() {
+			return proxyHost;
+		}
+
+
+		public void setProxyHost(String proxyHost) {
+			this.proxyHost = proxyHost;
+		}
+
+
+		public int getProxyPort() {
+			return proxyPort;
+		}
+
+
+		public void setProxyPort(int proxyPort) {
+			this.proxyPort = proxyPort;
+		}
+
+
+		public String getProxyPasswd() {
+			return proxyPasswd;
+		}
+
+
+		public void setProxyPasswd(String proxyPasswd) {
+			this.proxyPasswd = proxyPasswd;
+		}
+
+
+		public String getProxyUserName() {
+			return proxyUserName;
+		}
+
+
+		public void setProxyUserName(String proxyUserName) {
+			this.proxyUserName = proxyUserName;
+		}
+
+
+		public boolean isProxyPasswdEncrypted() {
+			return proxyPasswdEncrypted;
+		}
+
+
+		public void setProxyPasswdEncrypted(boolean proxyPasswdEncrypted) {
+			this.proxyPasswdEncrypted = proxyPasswdEncrypted;
+		}
+
 		int threadNumber;
-		LinkedList workloads = new LinkedList();
+		LinkedList<Workload> workloads = new LinkedList<Workload>();
 		
 		public void addWorkLoad(Workload workload){
 			workloads.add(workload);
 		}
 		
 		
-		public String getProxy() {
-			return proxy;
-		}
-		public void setProxy(String proxy) {
-			this.proxy = proxy;
-		}
-		public LinkedList getWorkloads() {
+		
+		public LinkedList<Workload> getWorkloads() {
 			return workloads;
 		}
-		public void setWorkloads(LinkedList workloads) {
+		public void setWorkloads(LinkedList<Workload> workloads) {
 			this.workloads = workloads;
 		}
 
@@ -64,11 +116,11 @@ public class Configuration {
 			 String NEW_LINE = System.getProperty("line.separator");
 			 result.append(NEW_LINE);
 			 result.append(" KeepConnectionAlive: " + this.keepConnectionAlive + NEW_LINE);
-			 result.append(" Proxy: " + proxy + NEW_LINE);
+			 result.append(" Proxy: " + proxyHost +":" + proxyPort + NEW_LINE);
 			 result.append(" # of threads: " + getThreadNumber() + NEW_LINE);
 			 result.append(" Workloads: " + workloads + NEW_LINE);
 				      
-			    Iterator i = workloads.iterator();
+			    Iterator<Workload> i = workloads.iterator();
 			    
 			    while(i.hasNext())
 			    	result.append( "Workload{" + (Workload) i.next()+ "}" + NEW_LINE);

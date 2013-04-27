@@ -20,11 +20,10 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Stack;
-
-import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.apache.log4j.Logger;
 import org.sdr.webrec.crawler.model.Configuration;
@@ -55,9 +54,9 @@ public class Conf implements DocHandler {
 	private Stack nodes; // this should be FIFO
 	private boolean mode = false;
 
-	// the set of data to get for the node..
-	private DefaultMutableTreeNode current = null;
-
+	
+	private String text;
+	
 	public Conf() {
 		nodes = new Stack();
 	}
@@ -71,8 +70,7 @@ public class Conf implements DocHandler {
 
 	Logger  logger = Logger.getLogger("org.sdr");
 	
-	public Configuration readConfiguration(String home, Conf conf)
-			throws FileNotFoundException, Exception {
+	public Configuration readConfiguration(String home, Conf conf) {
 		File file = new File(home + "etc/webrec.conf");
 
 		boolean exists = file.exists();
@@ -81,26 +79,33 @@ public class Conf implements DocHandler {
 			System.exit(-1);
 
 		}
-		QDParser.parse(conf, new FileReader(home + "etc/webrec.conf"));
-
+		try {
+			QDParser.parse(conf, new FileReader(home + "etc/webrec.conf"));
+		} catch (XMLParseException e){
+			System.err.println("ERROR in parsing xml configuration file");
+			logger.error("ERROR:" + e.getLocalizedMessage());
+			e.printStackTrace();
+			System.exit(-1);
+		} catch (IOException io){
+			System.err.println("IOError reading xml configuration file");
+			logger.error("ERROR:" + io.getLocalizedMessage());
+			io.printStackTrace();
+			System.exit(-1);
+		}
 		logger.debug("Configuration:" + configuration);
 
 		return configuration;
 	}
 
-	// we aren't really doing anything with this in this
-	// example.
-	public void text(String s) {
-	}
 
-	public void startElement(String tag, Map h) {
 
-		if (stack.empty()) {
-			stack.push(model);
-		} else {
-			stack.push(model);
-		}
+	public void startElement(String tag, Map<String, String> h) {
 
+		if(stack.empty())    
+		      stack.push(model);   
+		else  
+		      stack.push(model);   
+		
 		if (tag.equals("keepHttpAlive")) {
 			String keepAlive = (String) h.get("value");
 			configuration.setKeepConnectionAlive((new Boolean(keepAlive)
@@ -151,7 +156,7 @@ public class Conf implements DocHandler {
 				workload.addTransaction(transaction);
 			}
 		}
-	}
+		}
 
 	// return to the previous object.
 	public void endElement(String name) {
@@ -196,7 +201,29 @@ public class Conf implements DocHandler {
 	}
 
 	public void endElement(String arg0, String arg1) throws XMLParseException {
-
+		 if( arg1!= null && arg1.equals("host") ) {
+            configuration.setProxyHost(text.trim());
+         } 
+		 if( arg1!= null && arg1.equals("port") && arg1.length() > 0 ) {
+			 int port = new Integer(text.trim()).intValue();
+			 configuration.setProxyPort(port);
+		 }
+		 if( arg1!= null && arg1.equals("user-name") && arg1.length() > 0 ) {
+		 	configuration.setProxyUserName(text.trim());
+		 }
+	
+		 if( arg1!= null && arg1.equals("password") && arg1.length() > 0 ) {
+				configuration.setProxyPasswd(text.trim());
+		 } 
+		 if( arg1!= null && arg1.equals("password-encrypted") && arg1.length() > 0 ) {
+				String enrypted = (text.trim());
+				if(enrypted != null) 
+					if (enrypted.equals("true") && enrypted.equals("1"))
+						configuration.setProxyPasswdEncrypted(new Boolean(enrypted).booleanValue());
+		 }
+		 
+		 
+		 text = "";
 	}
 
 	public void startElement(String arg0, String arg1,
@@ -206,14 +233,12 @@ public class Conf implements DocHandler {
 	}
 
 	public void text(String arg0, int arg1, int arg2) throws XMLParseException {
-		// TODO Auto-generated method stub
-
+		text += arg0;
 	}
 
 	public void text(String arg0, boolean arg1, int arg2, int arg3)
 			throws XMLParseException {
-		// TODO Auto-generated method stub
-
+	
 	}
 
 }

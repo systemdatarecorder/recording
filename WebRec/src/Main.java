@@ -17,18 +17,15 @@
  * 
  */
 
-import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Hashtable;
-import java.util.LinkedList;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.sdr.webrec.core.WebRecManager;
 import org.sdr.webrec.crawler.model.Configuration;
-import org.sdr.webrec.crawler.model.Workload;
+
 
 public class Main {
 
@@ -103,8 +100,7 @@ public class Main {
 
 		// Read properties file.
 		
-		try {
-
+		
 			String home = "/opt/sdr/";
 			
 			if( System.getProperty("sdr.home")!= null)
@@ -126,10 +122,7 @@ public class Main {
 			logger.debug("SDR conf dir:" + home + "etc/webrec.conf");
 			
 			
-		} catch (IOException e) {
-			logger.error("ERROR:" + e.getLocalizedMessage());
-			e.printStackTrace();
-		}
+		
 
 	}
 

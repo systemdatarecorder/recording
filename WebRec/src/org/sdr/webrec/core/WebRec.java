@@ -21,15 +21,10 @@
 package org.sdr.webrec.core;
 
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.NoSuchAlgorithmException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-
-import javax.net.ssl.SSLContext;
-
 
 
 import org.apache.http.auth.AuthScope;
@@ -38,6 +33,7 @@ import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.methods.HttpGet;
@@ -45,6 +41,7 @@ import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.params.ConnManagerParams;
+import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -59,6 +56,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.sdr.webrec.crawler.model.Configuration;
 import org.sdr.webrec.crawler.model.Transaction;
 
 import java.io.OutputStreamWriter;
@@ -77,17 +75,25 @@ public class WebRec extends Thread {
 	private int timeout; // in milliseconds
 	private int interval; // in milliseconds
 	BufferedWriter out;
-	boolean keepConnectionLive;
-
+	Configuration settings;
+	long t1, t2, tTask;
 	
+	// Create HTTP parameters
+    HttpParams params; 
+    SchemeRegistry schemeRegistry;
+    ThreadSafeClientConnManager cm;
+    HttpGet httpget;
+    DefaultHttpClient  httpclient;
+    
+    
 	Logger  logger = Logger.getLogger("org.sdr");
 	private BasicHttpContext context;
 	   
-	public WebRec(boolean keepConnectionAlive, String name, int interval, int timeout, int delay, Object[] urls) {
+	public WebRec(Configuration settings, String name, int interval, int timeout, int delay, Object[] urls) {
 		super(name);
+		this.settings = settings;
 		this.threadName = name;
 		this.timeout = timeout;
-		this.keepConnectionLive = keepConnectionAlive;
 		this.interval = interval * 1000;
 		this.url = urls;
 		this.delay = delay * 1000;
@@ -102,70 +108,12 @@ public class WebRec extends Thread {
 	public void run() {
 
 
-		long t1, t2, tTask;
-		
-		// Create and initialize HTTP parameters
-        HttpParams params = new BasicHttpParams();
-        ConnManagerParams.setMaxTotalConnections(params, 100);
-        params.setBooleanParameter("http.connection.stalecheck", keepConnectionLive);
-        //params.setIntParameter("http.connection.timeout", timeout);
-        HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-        ConnManagerParams.setTimeout(params, timeout);
-       
-        // Create and initialize scheme registry 
-        SchemeRegistry schemeRegistry = new SchemeRegistry();
-        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
-        schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
-
-        
-		// Create an HttpClient with the ThreadSafeClientConnManager.
-        // This connection manager must be used if more than one thread will
-        // be using the HttpClient.
-        ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager (params, schemeRegistry);
-        
-       
-        //ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
-        DefaultHttpClient  httpclient = new DefaultHttpClient(cm, params);
-        
-        
-        httpclient.setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
-
-            public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
-                // Honor 'keep-alive' header
-                HeaderElementIterator it = new BasicHeaderElementIterator(
-                        response.headerIterator(HTTP.CONN_KEEP_ALIVE));
-                while (it.hasNext()) {
-                    HeaderElement he = it.nextElement();
-                    String param = he.getName(); 
-                    String value = he.getValue();
-                    if (value != null && param.equalsIgnoreCase("timeout")) {
-                        try {
-                            return Long.parseLong(value);
-                        } catch(NumberFormatException ignore) {
-                        }
-                    }
-                }
-                    //otherwise keep alive for 30 seconds
-                    return 30 * 1000;  
-            }
-
-			
-            
-        });
-
-  
-		context = new BasicHttpContext();
-		HttpGet httpget = null;
-		
-		
-		// RFC 2965 cookie management spec is used per default
-        // to parse, validate, format & match cookies
-        httpclient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.RFC_2965);
-
-        String transactionName = "";
-        HttpResponse response = null;
-        
-        DecimalFormat formatter = new DecimalFormat("#####0.00");
+		initParameters();
+	
+		String transactionName = "";
+	    HttpResponse response = null;
+	    
+	    DecimalFormat formatter = new DecimalFormat("#####0.00");
         DecimalFormatSymbols dfs = formatter.getDecimalFormatSymbols();
         formatter.setMinimumFractionDigits(3);
 		formatter.setMaximumFractionDigits(3);
@@ -182,7 +130,6 @@ public class WebRec extends Thread {
 
 				for (int i = 0; i < url.length; i++) {
 
-					httpclient = new DefaultHttpClient(cm, params);
 					context = new BasicHttpContext();
 					
 					logger.debug("url:" + ((Transaction) url[i]).getUrl());
@@ -233,7 +180,7 @@ public class WebRec extends Thread {
 
 							if (header != null) {
 								//only remove stale connection time from response time if keep connection live is enabled
-								if(keepConnectionLive){
+								if(settings.isKeepConnectionAlive()){
 									timeLapse = timeLapse - (new Double(header.getValue())).doubleValue();
 								}
 								logger.debug("staletime:" + ( ((new Double(header.getValue())).doubleValue()) / 1000000L ) +"ms.");
@@ -257,7 +204,7 @@ public class WebRec extends Thread {
 							}
 					
 						} else {
-							logger.error("Status code of transaction:" + transactionName +"was not "+ HttpURLConnection.HTTP_OK+"but " + response.getStatusLine().getStatusCode());
+							logger.error("Status code of transaction:" + transactionName +" was not "+ HttpURLConnection.HTTP_OK+" but " + response.getStatusLine().getStatusCode());
 						}
 						
 					}
@@ -337,18 +284,38 @@ public class WebRec extends Thread {
 
 	
 	
-	
-	public void testURLS() {
+	private void initParameters(){
+		
 
-		// Create and initialize HTTP parameters
-        HttpParams params = new BasicHttpParams();
-        ConnManagerParams.setMaxTotalConnections(params, 100);
-        params.setBooleanParameter("http.connection.stalecheck", keepConnectionLive);
-        HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-        ConnManagerParams.setTimeout(params, timeout);
-
-        // Create and initialize scheme registry 
-        SchemeRegistry schemeRegistry = new SchemeRegistry();
+		// initialize HTTP parameters
+       params = new BasicHttpParams();
+       ConnManagerParams.setMaxTotalConnections(params, 100);
+       params.setBooleanParameter("http.connection.stalecheck", settings.isKeepConnectionAlive());
+       //params.setIntParameter("http.connection.timeout", timeout);
+       HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+       ConnManagerParams.setTimeout(params, timeout);
+       httpclient = new DefaultHttpClient(cm, params);
+       
+       
+       //set proxy if available in settings
+       if(settings.getProxyHost()!=null && settings.getProxyHost().length()> 0){
+        	HttpHost proxy = new HttpHost(settings.getProxyHost(), settings.getProxyPort());
+        	httpclient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy); 
+        		
+        	//set authentication to proxy is available is settings
+        	if(settings.getProxyUserName()!=null && settings.getProxyUserName().length()> 0
+        			&& settings.getProxyPasswd() != null){
+        		httpclient.getCredentialsProvider().setCredentials(
+                    new AuthScope(settings.getProxyHost(), settings.getProxyPort()),
+                    new UsernamePasswordCredentials(settings.getProxyUserName(), settings.getProxyPasswd()));
+        		logger.debug("autentication for proxy on");
+        	}
+      
+       }
+        
+        
+        // initialize scheme registry 
+        schemeRegistry = new SchemeRegistry();
         schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
         schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
 
@@ -356,25 +323,60 @@ public class WebRec extends Thread {
 		// Create an HttpClient with the ThreadSafeClientConnManager.
         // This connection manager must be used if more than one thread will
         // be using the HttpClient.
-        ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(params,schemeRegistry);
-        
-        DefaultHttpClient  httpclient = new DefaultHttpClient();
-        
-		HttpGet httpget = null;
+        cm = new ThreadSafeClientConnManager (params, schemeRegistry);
 		
+        httpclient.setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {
+
+            public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+                // Honor 'keep-alive' header
+                HeaderElementIterator it = new BasicHeaderElementIterator(
+                        response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+                while (it.hasNext()) {
+                    HeaderElement he = it.nextElement();
+                    String param = he.getName(); 
+                    String value = he.getValue();
+                    if (value != null && param.equalsIgnoreCase("timeout")) {
+                        try {
+                            return Long.parseLong(value);
+                        } catch(NumberFormatException ignore) {
+                        }
+                    }
+                }
+                    //otherwise keep alive for 30 seconds
+                    return 30 * 1000;  
+            }
+
+			
+            
+        });
+
+  
+		context = new BasicHttpContext();
+		httpget = null;
+		
+		httpclient = new DefaultHttpClient(cm, params);	
+			
 		
 		// RFC 2965 cookie management spec is used per default
         // to parse, validate, format & match cookies
         httpclient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.RFC_2965);
 
+		
+	}
+	
+	
+	public void testURLS() {
+
+		initParameters();
+
         String transactionName = "";
         HttpResponse response = null;
         URL siteURL = null;
 		
+        
         try {
         	
         	for (int i = 0; i < url.length; i++) {
-				httpclient = new DefaultHttpClient(cm, params);	
 				
 				Transaction transaction = (Transaction) url[i];
 				siteURL = new URL(transaction.getUrl());

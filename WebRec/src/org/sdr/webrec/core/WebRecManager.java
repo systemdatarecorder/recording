@@ -46,7 +46,7 @@ public class WebRecManager extends Thread {
 			Workload oneWorkload = (Workload) workloads.get(i);
 			Object[] arrayS = oneWorkload.getTransactionsAsArray();
 			
-			tmp = new WebRec(settings.isKeepConnectionAlive(), 
+			tmp = new WebRec(settings, 
 					oneWorkload.getName(), oneWorkload.getInterval(), oneWorkload.getTimeout(), oneWorkload.getDelay(), arrayS);
 			webrec[i] = tmp;
 
@@ -70,6 +70,7 @@ public class WebRecManager extends Thread {
 		logger.info("Started #" + webrec.length + " threads");
 	}
 
+	@SuppressWarnings("deprecation")
 	public void finalize() {
 		for (int i = 0; i < settings.getThreadNumber(); i++) {
 			logger.info("Stopping Thread : " + webrec[i].getThreadName());

@@ -38,7 +38,7 @@ public class Workload {
 			 */
 			int timeout;  //in milliseconds
 			
-			LinkedList transactions = new LinkedList();
+			LinkedList<Transaction> transactions = new LinkedList<Transaction>();
 			
 			
 			public void addTransaction(Transaction transaction){
@@ -51,7 +51,7 @@ public class Workload {
 			public void setName(String name) {
 				this.name = name;
 			}
-			public LinkedList getTransactions() {
+			public LinkedList<Transaction> getTransactions() {
 				return transactions;
 			}
 			
@@ -59,7 +59,7 @@ public class Workload {
 				return transactions.toArray();
 			}
 			
-			public void setTransactions(LinkedList transactions) {
+			public void setTransactions(LinkedList<Transaction> transactions) {
 				this.transactions = transactions;
 			}
 			public int getDelay() {
@@ -78,10 +78,9 @@ public class Workload {
 				    result.append(" Timeout: " + this.timeout + NEW_LINE);
 				    result.append(" Interval: " + this.interval + NEW_LINE);
 				    result.append(" Username: " + this.username + NEW_LINE);
-				    result.append(" Password: " + this.password + NEW_LINE);
 				    result.append(" Transactions: " + NEW_LINE);
 				    
-				    Iterator i = transactions.iterator();
+				    Iterator<Transaction> i = transactions.iterator();
 				    
 				    while(i.hasNext())
 				    	result.append( "Transaction{" + (Transaction) i.next()+ "}" + NEW_LINE);
