@@ -38,7 +38,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		String VERSION_INFO = "webrec 0.74.2";
+	String VERSION_INFO = "webrec 0.74.2";
         String USAGE = "Usage: webrec workload1 ... workloadN";
  
         Date now = new Date(System.currentTimeMillis());
@@ -48,8 +48,8 @@ public class Main {
 
         
         
-        System.out.println(formatter.format(now) + " Starting...");
-		System.out.println(VERSION_INFO);
+        //System.out.println(formatter.format(now) + " Starting...");
+	//	System.out.println(VERSION_INFO);
 		
 		
 		boolean spiderMode = false; //currently not implemented
