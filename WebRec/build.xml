@@ -50,7 +50,7 @@
       <!-- distribution directory -->
       <fileset dir="${distdir}">
        <patternset>
-        <include name="*" />
+        <include name="**/classes/**" />
        </patternset>
       </fileset>
 
@@ -65,6 +65,7 @@
       <fileset dir="${srcdir}">
        <patternset>
         <include name="**/*.class" />
+        <include name="**/webrec.jar" />
        </patternset>
       </fileset>
 
@@ -72,13 +73,10 @@
   </target>
 
 
-
-  
-
   <!-- compile for distribution -->
   <target name="compiledist" depends="prepare">
     <javac srcdir="${srcdir}" destdir="${classdir}"
-           debug="off" optimize="off" deprecation="on" source="1.5" target="1.5">
+           debug="off" optimize="off" deprecation="on" target="1.6">
      <classpath refid="project.classpath" />
     </javac>
   </target>
@@ -87,19 +85,13 @@
   <!-- compile for development -->
   <target name="compile" depends="prepare">
     <javac srcdir="${srcdir}" destdir="${classdir}"
-           debug="on" optimize="off" deprecation="on" source="1.5" target="1.5">
+           debug="on" optimize="off" deprecation="on" target="1.6">
      <classpath refid="project.classpath" />
     </javac>
   </target>
 
 
- 
-
   <target name="all" depends="clean,compile"/>
-
-
- 
-
 
 
   <!-- build distribution -->
