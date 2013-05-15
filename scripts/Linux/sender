@@ -400,7 +400,7 @@ while (1) {
                 ## ssh2 transport mode
                 if ( defined($s2) ) {
 
-                    $rcode = sendssh2( $s2, $dbid, $delta );
+                    $rcode = sendssh2( $s2, $sdrid, $dbid, $delta );
                     if ( $rcode == 0 ) {
                         addlog(
 "error: main - no ssh2 connection available, trying again..."
@@ -409,7 +409,7 @@ while (1) {
                         $s2 = connect2rep( $dest, $sport, $user, $pass );
                         next if ( !defined($s2) );
                         addlog("info: main - ssh2 connection re-established");
-                        $rcode = sendssh2( $s2, $dbid, $delta );
+                        $rcode = sendssh2( $s2, $sdrid, $dbid, $delta );
                     }
                 }
                 else {
@@ -636,8 +636,16 @@ sub connect2rep {
 sub sha256sdrd {
     my ($sdrd) = @_;
 
+    # idkey
+    my $tid = ':73:79:73:74:65:6d:64:61:74:61:72:65:63:6f:72:64:65:72';
+
+    my $tsdrd = $sdrd . $tid;
+
+    addlog("info: sha256sdrd - payload=$tsdrd")
+      if ( $verbose_flag == 1 );
+
     # split up the sdrd data
-    my @fields = split( /:/, $sdrd );
+    my @fields = split( /:/, $tsdrd );
 
     # compute SHA-256
     my $state = Digest::SHA->new(256);
