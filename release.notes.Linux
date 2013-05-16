@@ -38,6 +38,7 @@ Recording
     Bug 274 - sender should check for a subscription id
     Bug 276 - sender sendssh2 routine not aware of subscription id
     Bug 277 - sender HTTP message digest improvements
+    Bug 278 - sdr.conf clean-up and restructuring recording side
     Update perl-5.16.3
     Update libssh2-1.4.3
     Update curl-7.29.0

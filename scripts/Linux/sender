@@ -87,7 +87,7 @@ local $| = 1;
 # ######### #
 
 # Default sdrd
-my @recs = qw(sys cpu disk nic);
+my @recs = qw(sys cpu disk nic hdw);
 
 # daemon name
 my $dname = basename($0);
@@ -103,30 +103,26 @@ $conf = open_conf($xmlcnf);
 
 # Recording XML Configuration
 # check for: base_log current_log private_key
-my @rec_childs = $conf->findnodes("/sdr/recording/*");
+my @log_childs = $conf->findnodes("/sdr/recording/logs/*");
 
 my $rchilds = 0;
 
-foreach my $node (@rec_childs) {
+foreach my $node (@log_childs) {
 
-    next if $node->nodeName() !~ /base_log|current_log|private_key/;
+    next if $node->nodeName() !~ /base|current/;
 
     given ( $node->nodeName() ) {
 
         # base_log
-        when (/base_log/) {
+        when (/base/) {
             $sdr_baselog = $node->getAttribute('path');
         }
 
         # current_log
-        when (/current_log/) {
+        when (/current/) {
             $sdr_curlog = $node->getAttribute('path');
         }
 
-        # private_key
-        when (/private_key/) {
-            $pkey = $node->getAttribute('path');
-        }
     }
 
     $rchilds++;
@@ -140,10 +136,14 @@ if ( $rchilds == 0 ) {
 
 my $slog = $sdr_baselog . "/sender.log";
 
-my @sdrd_childs = $conf->findnodes("/sdr/recording/sender/*");
-my $schilds     = 0;
+my @scfg = $conf->findnodes("/sdr/recording/sender/*");
 
-foreach my $node (@sdrd_childs) {
+foreach my $node (@scfg) {
+
+    # private_key
+    if ( $node->nodeName() =~ /private_key/ ) {
+        $pkey = $node->getAttribute('path');
+    }
 
     # subscription
     if ( $node->nodeName() =~ /subscription/ ) {
@@ -164,6 +164,13 @@ foreach my $node (@sdrd_childs) {
     if ( $node->nodeName() =~ /tcp_keepalive/ ) {
         $tcpka = $node->textContent();
     }
+
+}
+
+my @sdcfg = $conf->findnodes("/sdr/recording/sender/data/*");
+my $schilds   = 0;
+
+foreach my $node (@sdcfg) {
 
     # sdrd data
     next if $node->nodeName() !~ /sdrd/;
