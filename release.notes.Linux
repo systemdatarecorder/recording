@@ -41,11 +41,11 @@ Recording
     Bug 278 - sdr.conf clean-up and restructuring recording side
     Update perl-5.16.3
     Update libssh2-1.4.3
-    Update curl-7.29.0
+    Update curl-7.30.0
     Update libidn-1.26
     Update sysstat-10.1.5
     Update Net-SSH2-0.48
-    Update libxml2-2.9.0
+    Update libxml2-2.9.1
     Update XML-LibXML-2.0014
 
 Known issues:
