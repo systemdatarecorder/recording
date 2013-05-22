@@ -46,7 +46,7 @@ Recording
     Update sysstat-10.1.5
     Update Net-SSH2-0.48
     Update libxml2-2.9.1
-    Update XML-LibXML-2.0014
+    Update XML-LibXML-2.0018
 
 Known issues:
     Bug 172 - procrec uses additional memory over long periods of time
