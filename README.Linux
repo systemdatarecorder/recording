@@ -118,91 +118,92 @@ Manual Mode
         # bzcat sdr-0735-linux-x64.tar.bz2 | tar xvf -
 
 
-    2.1.3 Start Procedure
+  2.2 Start Procedure
 
-      By default, sdr start-up script will start 5 main recorders: sysrec, cpurec,
-      diskrec, nicrec and hdwrec. Edit start-up sdr script, if you require to add
-      remove recorders from the start-up list, defined under SDR_SVC variable. 
+    By default, sdr start-up script will start 5 main recorders: sysrec, cpurec,
+    diskrec, nicrec and hdwrec. Edit start-up sdr script, if you require to add
+    remove recorders from the start-up list, defined under SDR_SVC variable. 
 
-      Example: 
-        * enable sysrec, cpurec, netrec SDR_SVC="sys cpu net"
-        * enable sysrec, netrec SDR_SVC="sys net"
+    Example: 
+      * enable sysrec, cpurec, netrec SDR_SVC="sys cpu net"
+      * enable sysrec, netrec SDR_SVC="sys net"
 
-      SDR start sequence:   
-        # cd /etc/init.d
-        # ln -s /opt/sdr/etc/sdr .
-        # ln -s /opt/sdr/etc/sdr.transport .
-        # chkconfig --add sdr
-        # chkconfig --add sdr.transport
-        # chkconfig --list sdr
-        # chkconfig --list sdr.transport
-   
-        # /etc/init.d/sdr start
-        Starting SDR recorders
-         sysrec: ok
-         cpurec: ok
-         nicrec: ok
-         hdwrec: ok
+    SDR start sequence:   
+      # cd /etc/init.d
+      # ln -s /opt/sdr/etc/sdr .
+      # ln -s /opt/sdr/etc/sdr.transport .
+      # chkconfig --add sdr
+      # chkconfig --add sdr.transport
+      # chkconfig --list sdr
+      # chkconfig --list sdr.transport
 
-        Note: On some Debian/Ubuntu based systems we need to sym link insserv before 
-        using chkconfig: 
-          # ln -s /usr/lib/insserv/insserv /sbin/insserv
+      # /etc/init.d/sdr start
+      Starting SDR recorders
+       sysrec: ok
+       cpurec: ok
+       nicrec: ok
+       hdwrec: ok
 
-      SDR Transport mode is used to send sdrd raw data to a backend system
-      for further analysis. Transport mode includes two operating modes:
+      Note: On some Debian/Ubuntu based systems we need to sym link insserv before 
+      using chkconfig: 
+        # ln -s /usr/lib/insserv/insserv /sbin/insserv
+
+    SDR Transport mode is used to send sdrd raw data to a backend system
+    for further analysis. Transport mode includes two operating modes:
       
-      - Instant Transport Mode
-          All sdrd raw data updates are delivered as soon as they happen 
-          via HTTP or SSH2. Transport is handled by the sender utility.
+    - Instant Transport Mode
+      All sdrd raw data updates are delivered as soon as they happen 
+      via HTTP or SSH2. Transport is handled by the sender utility.
 
-          # /etc/init.d/sdr.transport start
-          Starting SDR transport
-           sender: ok
+        # /etc/init.d/sdr.transport start
+        Starting SDR transport
+         sender: ok
  
-      - Batch Transport Mode
-          All sdrd raw data files are delivered one time per day, the batch being
-          scheduled to run at a fixed time.
+    - Batch Transport Mode
+      All sdrd raw data files are delivered one time per day, the batch being
+      scheduled to run at a fixed time.
           
-          # env EDITOR=vi crontab -e
-          06 00 * * *  /opt/sdr/bin/raw2day
+        # env EDITOR=vi crontab -e
+        06 00 * * *  /opt/sdr/bin/raw2day
 
-          Note: We can try to rotate logs as close as possible to midnight. 
-          See below example:
+        Note: We can try to rotate logs as close as possible to midnight. 
+        See below example:
 
-          00 00 * * * /bin/sleep 30 && /opt/sdr/bin/raw2day -t sftp
+        00 00 * * * /bin/sleep 30 && /opt/sdr/bin/raw2day -t sftp
      
  
-    2.1.4 Stop procedure
+  2.3 Stop procedure
 
-     # /etc/init.d/sdr stop
-     Stopping SDR recorders
-      sysrec: ok
-      cpurec: ok
-      nicrec: ok
-      hdwrec: ok
+    # /etc/init.d/sdr stop
+    Stopping SDR recorders
+     sysrec: ok
+     cpurec: ok
+     nicrec: ok
+     hdwrec: ok
 
-     # /etc/init.d/sdr.transport stop
-     Stopping SDR transport
-      sender: ok
+    # /etc/init.d/sdr.transport stop
+    Stopping SDR transport
+     sender: ok
 
 
-    2.1.5 SDRD Raw data file rotation
+  2.4 SDRD Raw data file rotation
 
-      sdrd raw data files, from each host must be rotated every night in order to
-      keep a clean status of each daily activity. To do this we need to configure
-      logrotate on each host being monitored.
+    sdrd raw data files, from each host must be rotated every night in order to
+    keep a clean status of each daily activity. To do this we need to configure
+    logrotate on each host being monitored.
 
-      Transport and SDRD Raw data rotation should be configured as sdr username. 
-      Enable log rotation every 24hrs. Configure sdr rotation script and raw2day. 
-      Edit sdr's crontab, to enable the sdrd raw data rotation and if needed the
-      batch transport:
-        $ env EDITOR=vi crontab -e
-        59 23 * * *  /bin/sleep 59 && /usr/sbin/logrotate -f -s /opt/sdr/log/logsdr.status \
-          /opt/sdr/etc/logrotate.sdr
-        00 00 * * *  /bin/sleep 30 && /opt/sdr/bin/raw2day -t sftp
+    Transport and SDRD Raw data rotation should be configured as sdr username. 
+    Enable log rotation every 24hrs. Configure sdr rotation script and raw2day. 
+    Edit sdr's crontab, to enable the sdrd raw data rotation and if needed the
+    batch transport:
 
-      The previous example does rotate sdrd files every 23:59:59 and will
-      transport them via SFTP to a reporting backend at 00:00:30, every night.
+    $ env EDITOR=vi crontab -e
+    59 23 * * *  /bin/sleep 59 && /usr/sbin/logrotate -f -s /opt/sdr/log/logsdr.status \
+    /opt/sdr/etc/logrotate.sdr
+    00 00 * * *  /bin/sleep 30 && /opt/sdr/bin/raw2day -t sftp
+
+    The previous example does rotate sdrd files every 23:59:59 and will
+    transport them via SFTP to a reporting backend at 00:00:30, every night.
  
 
 SDR Configuration
@@ -283,14 +284,14 @@ SDR Configuration
 Notes
 =====
 
-    Diskrec is currently under development and it is not included as part of 
-    SDR 0.74 release.
+  Diskrec is currently under development and it is not included as part of 
+  SDR 0.74 release.
 
-    SDR Recording Linux supports any distribution based on Linux x86_64 kernel
-    versions 2.6 at least.  
+  SDR Recording Linux supports any distribution based on Linux x86_64 kernel
+  versions 2.6 at least.  
 
-    SDR uses its own logrotate job in order to be flexible and dont conflict with
-    other operating system jobs. raw2day as well is called after the logrotation
-    has taken place ! If your installation requires to copy every night the raw
-    data to the reporting system, make sure you configure raw2day and check the
-    SDR Manual for more information.
+  SDR uses its own logrotate job in order to be flexible and dont conflict with
+  other operating system jobs. raw2day as well is called after the logrotation
+  has taken place ! If your installation requires to copy every night the raw
+  data to the reporting system, make sure you configure raw2day and check the
+  SDR Manual for more information.
