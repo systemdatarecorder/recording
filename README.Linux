@@ -5,7 +5,7 @@ README SDR Linux
 
 SDR Recording Module
 
-OS:                  : RedHat Entreprise Linux 5.x+ 32/64bit
+OS:                  : RedHat Enterprise Linux 5.x+ 32/64bit
                        Ubuntu Server Edition 10.04+ 32/64bit
                        CentOS 5.x+ 32/64bit
 
@@ -57,7 +57,7 @@ Automatic Mode
 
   Note: to configure SDR software you need to check sdr.conf and
   manually restart, if needed, the recorders or the transporter.
-   
+  
   1.1 Install SDR package:
 
     RPM based systems:
@@ -105,7 +105,7 @@ Manual Mode
         # useradd -u 500 -d /home/sdr -g sdr -m sdr
 
         Note: sdr username should be part of the system accounts, if possible.
-        If 500 uid, gid is already reserved make sure you allocate another id
+        If 500 id is already reserved make sure you allocate another id
         and properly change the owner of the installation for sdr.
 
      
@@ -154,6 +154,17 @@ Manual Mode
     - Instant Transport Mode
       All sdrd raw data updates are delivered as soon as they happen 
       via HTTP or SSH2. Transport is handled by the sender utility.
+
+      Note: Before starting sender, make sure you have defined under 
+      /opt/sdr/etc/sdr.conf a valid subscription id. Without a valid subscription id 
+      sender wont be able to start:
+
+      Starting SDR transport
+       sender: error: main - no subscription defined, check sdr.conf
+      failed
+
+      After you have defined the reporting host, the subscription id and credentials
+      you can easily transport sdrd raw data updates, by starting sender:
 
         # /etc/init.d/sdr.transport start
         Starting SDR transport

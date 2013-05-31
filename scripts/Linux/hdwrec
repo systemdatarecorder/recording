@@ -225,7 +225,7 @@ USAGE: hdwrec [-hV] | [interval [count]]
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
   #02 hostname   : hostname
-  #03 platform   : name of the hardware platform
+  #03 hdw        : machine hardware name
   #04 hypervisor : name of the hypervisor
   #05 os         : name of the operating system
   #06 codename   : codename of the operating system
