@@ -69,9 +69,6 @@ Automatic Mode
       cpurec: ok
       nicrec: ok
       hdwrec: ok
-     Starting SDR transport
-      sender: ok
-
 
   1.2 Uninstall SDR package:
 
@@ -82,8 +79,6 @@ Automatic Mode
       cpurec: ok
       nicrec: ok
       hdwrec: ok
-     Stopping SDR transport
-      sender: ok
 
 
 Manual Mode
@@ -108,7 +103,6 @@ Manual Mode
         If 500 id is already reserved make sure you allocate another id
         and properly change the owner of the installation for sdr.
 
-     
     2.1.2 Package installation
 
       SDR ships as a RPM, DEB or TAR archive. For manual installation select the
