@@ -5,7 +5,7 @@ README SDR Linux
 
 SDR Recording Module
 
-OS:                  : RedHat Enterprise Linux 5.x+ 32/64bit
+OS                   : RedHat Enterprise Linux 5.x+ 32/64bit
                        Ubuntu Server Edition 10.04+ 32/64bit
                        CentOS 5.x+ 32/64bit
 
@@ -39,8 +39,8 @@ JAVA:
   * Ubuntu/Debian/RedHat:
     # mkdir /opt/java
     # cd java
-    # sh jdk-6u23-linux-x64.bin
-    # ln -s jdk1.6.0_23 current
+    # sh jdk-6u45-linux-x64.bin
+    # ln -s jdk1.6.0_45 current
 
 
 SDR Recording module can be installed and administered using two modes:
@@ -52,11 +52,10 @@ Automatic Mode
 
   Under automatic mode, the installation and start-up of SDR software
   is done by the package management software: RPM or DEB. The recorders
-  and transporter are started automatically, after the software has been
-  installed.
+  and started automatically, after the software has been installed.
 
   Note: to configure SDR software you need to check sdr.conf and
-  manually restart, if needed, the recorders or the transporter.
+  manually restart, if needed, the recorders or the transporter part.
   
   1.1 Install SDR package:
 
