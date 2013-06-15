@@ -94,8 +94,8 @@ while (1) {
     # net stats
     my ( $rxByt, $txByt, $ntByt, $rxerr, $txerr, $rxdrp, $txdrp ) = 0;
 
-    # runq_sz and process count
-    my ($runq_sz, $count) = 0;
+    # runq size and task count
+    my ( $rqsz, $tcount ) = 0;
 
     ### Get Stats
     my $stat    = $lxs->get;
@@ -209,17 +209,15 @@ while (1) {
     }
 
     # get runq_sz and process count from /proc/loadavg
-    open my $LA, "<", "/proc/loadavg"
+    open my $plavg, '<', '/proc/loadavg'
       or die "Error: Cannot find proc partitions file: $!\n";
- 
-    while (<$LA>) {
-        ($runq_sz, $count) = (split m@/@, (split /\s+/, $_)[3]);
-    }
 
-    close $LA;
+    ($rqsz, $tcount) = (split m@/@, (split /\s+/, <$plavg>)[3]);
+
+    close $plavg;
 
     # exclude from runqa_sz current process
-    $runq_sz--;
+    $rqsz--;
 
     # print metrics
     # sdrd 0737 43 fields
@@ -236,7 +234,7 @@ while (1) {
           $cpu->{total},  $ncpu,        $hcpu, 
           $cpu->{user},   $cpu->{nice}, $cpu->{system},  $cpu->{idle},
           $cpu->{iowait}, $cpu->{irq},  $cpu->{softirq}, $cpu->{steal},
-          $runq_sz,       $count,
+          $rqsz,       $tcount,
           $mem->{memusedper},  $mem->{memused},
           $mem->{memfree},     $mem->{memtotal},
           $mem->{buffers},     $mem->{cached},
