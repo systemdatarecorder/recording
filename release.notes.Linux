@@ -40,6 +40,7 @@ Recording
     Bug 277 - sender HTTP message digest improvements
     Bug 278 - sdr.conf clean-up and restructuring recording side
     Bug 279 - hdwrec does not correctly return the number of physical NICs
+    Bug 280 - sysrec LA recording warnings
     Update perl-5.16.3
     Update libssh2-1.4.3
     Update curl-7.30.0
