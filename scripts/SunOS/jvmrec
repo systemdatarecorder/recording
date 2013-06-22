@@ -26,7 +26,7 @@
 revision() {
 
 cat << END
-${0##*/}: 0.74.2, 2013-01-30
+${0##*/}: 0.74.2, 2013-06-30
 END
 
 exit 0;
@@ -41,18 +41,18 @@ USAGE: ${0##*/} [-l] [-f weblogic] interval
    eg, jvmrec -f weblogic 60  # print every 60sec JVM stats of a
                               # Weblogic process
  FIELDS:
-  #01 timestamp : seconds since Epoch
+  #01 timestamp : seconds since Epoch, time
   #02 zone.pid  : zone name and process id
-  #03 s0pct     : survivor S0 utilization, percentage, gauge
-  #04 s1pct     : survivor S1 utilization, percentage, gauge
-  #05 eden      : eden space utilization, percentage, gauge
-  #06 oldpct    : old space utilization, percentage, gauge
-  #07 permpct   : permanent space utilization, percentage, gauge
-  #08 mGC       : number of young generation GC events
-  #09 tmGC      : young generation garbage collection time, secs
-  #10 MGC       : number of full GC events
-  #11 tMGC      : full garbage collection time, secs
-  #12 totalGC   : total garbage collection time, secs
+  #03 s0pct     : survivor S0 utilization, number
+  #04 s1pct     : survivor S1 utilization, number
+  #05 eden      : eden space utilization, number
+  #06 oldpct    : old space utilization, number 
+  #07 permpct   : permanent space utilization, number
+  #08 mGC       : number of young generation GC events, number
+  #09 tmGC      : young generation garbage collection time, time
+  #10 MGC       : number of full GC events, number
+  #11 tMGC      : full garbage collection time, time
+  #12 totalGC   : total garbage collection time, time
 END
 exit 0
 }

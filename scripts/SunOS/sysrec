@@ -596,32 +596,32 @@ USAGE: sysrec [-hv] | [interval [count]]
 
  FIELDS:
   cpu
-   #01 timestamp  : seconds since Epoch
-   #02 cpupct     : cpu utilization, across all cpus, percentage, gauge
-   #03 sumpct     : sum of all cpus utilization, percentage, gauge
-   #04 headpct    : headroom cpu available, all cpus, percentage, gauge
-   #05 userpct    : cpu utilization user space, all cpus, percentage, gauge
-   #06 syspct     : cpu utilization system space, all cpus, percentage, gauge
-   #07 idlepct    : cpu utilization Idle state, all cpus, percentage, gauge
-   #08 runqlen    : threads on the run queue, gauge
-   #09 pcount     : current process count on the system
-   #10 tcount     : current lwp count on the system
+   #01 timestamp  : seconds since Epoch, time
+   #02 cpupct     : cpu utilization, across all cpus, number
+   #03 sumpct     : sum of all cpus utilization, number
+   #04 headpct    : headroom cpu available, all cpus, number
+   #05 userpct    : cpu utilization user space, all cpus, number
+   #06 syspct     : cpu utilization system space, all cpus, number
+   #07 idlepct    : cpu utilization Idle state, all cpus, number
+   #08 runqlen    : threads on the run queue, number
+   #09 pcount     : current process count on the system, number
+   #10 tcount     : current lwp count on the system, number
 
   MEM
-   #11 memusedpct : size of used memory in percent, gauge
-   #12 pscanner   : scan rate of the page scanner, gauge
+   #11 memusedpct : size of used memory in percent, number
+   #12 pscanner   : scan rate of the page scanner, number
  
   DISK
-   #13 diskpct    : sum read+write across disks, percentage, gauge
-   #14 diskerrs   : operations on the wait queue, gauge
+   #13 diskpct    : sum read+write across disks, number
+   #14 diskerrs   : operations on the wait queue, number
 
   NET
-   #15 netpct     : throughput, read+write bytes across NICs, percentage, gauge
-   #16 neterrs    : number of errors due to buffer saturation
+   #15 netpct     : throughput, read+write bytes across NICs, number
+   #16 neterrs    : errors due to buffer saturation, number
 
-   #17 avg_1       : LA of the last minute
-   #18 avg_5       : LA of the last 5 minutes
-   #19 avg_15      : LA of the last 15 minutes
+   #17 avg_1      : LA of the last minute, number
+   #18 avg_5      : LA of the last 5 minutes, number
+   #19 avg_15     : LA of the last 15 minutes, number
 END
         exit 0;
 }
@@ -630,7 +630,7 @@ END
 # revision - print revision and exit
 sub revision {
        print STDERR <<END;
-sysrec: 0.74.2, 2013-01-30
+sysrec: 0.74.2, 2013-06-30
  sdrd format: 0737 19
 END
        exit 0;

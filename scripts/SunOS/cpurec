@@ -268,19 +268,19 @@ USAGE: cpurec [-hv] | [interval [count]]
        cpurec 1 5           # print 5 times, every 1 second
 
  FIELDS:
-  #01 timestamp: seconds since Epoch
-  #02 cpuid    : cpuid
-  #03 xcalls   : rate of multiprocessor cross calls, gauge
-  #04 intr     : rate of intrerrupts, gauge
-  #05 ithr     : rate of interrupts threads, gauge
-  #06 csw      : rate of context switches, gauge
-  #07 icsw     : rate of involuntary context switches, gauge
-  #08 migr     : rate of migrations, gauge
-  #09 smtx     : rate of kernel mutexes, gauge
-  #10 syscalls : rate of system calls, gauge
-  #11 userpct  : percentage of time spent in user mode, gauge
-  #12 syspct   : percentage of time spent in sys mode, gauge
-  #13 idlepct  : percentage of time spent in idle mode, gauge
+  #01 timestamp: seconds since Epoch, time
+  #02 cpuid    : cpuid, number
+  #03 xcalls   : rate of multiprocessor cross calls, rate
+  #04 intr     : rate of intrerrupts, rate
+  #05 ithr     : rate of interrupts threads, rate
+  #06 csw      : rate of context switches, rate
+  #07 icsw     : rate of involuntary context switches, rate
+  #08 migr     : rate of migrations, rate
+  #09 smtx     : rate of kernel mutexes, rate
+  #10 syscalls : rate of system calls, rate
+  #11 userpct  : percentage of time spent in user mode, number
+  #12 syspct   : percentage of time spent in sys mode, number
+  #13 idlepct  : percentage of time spent in idle mode, number
 END
         exit 0;
 }
@@ -289,7 +289,7 @@ END
 #
 sub revision {
        print STDERR <<END;
-cpurec: 0.74.2, 2013-01-30
+cpurec: 0.74.2, 2013-06-30
 END
        exit 0;
 }

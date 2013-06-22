@@ -308,7 +308,7 @@ sub fetch_net {
 # revision - print revision and exit
 sub revision {
     print STDERR <<END;
-hdwrec: 0.74.2, 2013-01-30
+hdwrec: 0.74.2, 2013-06-30
  sdrd format: 0737 13
 END
     exit 0;
@@ -322,19 +322,19 @@ USAGE: hdwrec [-hV] | [interval [count]]
       hdwrec 1 5     print 5 times, every 1 second
 
  FIELDS:
-  #01 timestamp  : seconds since Epoch
+  #01 timestamp  : seconds since Epoch, time
   #02 hostname   : hostname
   #03 platform   : name of the hardware platform
   #04 os         : name of the operating system
   #05 kernel     : kernel version and release number
-  #06 pcpu       : number of physical installed CPUs
-  #07 vcpu       : number of virtual CPUs
-  #08 memtotal   : total physical memory installed
-  #09 swaptotal  : total physical swap installed
-  #10 disks      : total number of disks
-  #11 nics       : total number of NICs
-  #12 jvms       : total number of running JVMs
-  #13 uptime     : how long the system has been running 
+  #06 pcpu       : number of physical installed CPUs, number
+  #07 vcpu       : number of virtual CPUs, number
+  #08 memtotal   : total physical memory installed, number
+  #09 swaptotal  : total physical swap installed, number
+  #10 disks      : total number of disks, number
+  #11 nics       : total number of NICs, number
+  #12 jvms       : total number of running JVMs, number
+  #13 uptime     : how long the system has been running, number
 
 END
     exit 0;

@@ -76,14 +76,14 @@ USAGE: zonerec [-hV] | [interval [count]]
        man zonerec    # see man page for more details
 
  FIELDS:
-  #01 timestamp: seconds since Epoch
+  #01 timestamp: seconds since Epoch, time
   #02 zonename : zone name
   #03 zid      : zone id
-  #04 cpu      : zone cpu utilization, percentage, gauge
-  #05 mem      : zone mem utilization, percentage, gauge
-  #06 nproc    : number of processes used by zoneid
-  #07 swap     : total swap used by zoneid, includes tmpfs mounts, in bytes
-  #08 rss      : resident set size, the amount of physical memory, in bytes
+  #04 cpu      : zone cpu utilization, number
+  #05 mem      : zone mem utilization, number
+  #06 nproc    : number of processes used by zoneid, number
+  #07 swap     : swap used by zoneid, includes tmpfs mounts, in bytes, number
+  #08 rss      : resident set size, in bytes, number
 
  NOTES:
   Make sure you have correctly exported the following
@@ -96,7 +96,7 @@ exit 0;
 # print revision
 sub revision {
        print STDERR <<END;
-zonerec: 0.74.2, 2013-01-30
+zonerec: 0.74.2, 2013-06-30
 END
        exit 0;
 }

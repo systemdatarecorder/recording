@@ -731,7 +731,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-sender: 0.74.2, 2013-05-31
+sender: 0.74.2, 2013-06-30
 END
     exit 0;
 }

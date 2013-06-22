@@ -3,7 +3,7 @@
 # chkconfig:   2345 20 88
 # description: SDR Master script. Starts and stops each recorder
 
-# COPYRIGHT: Copyright (c) 2012 System Data Recorder
+# COPYRIGHT: Copyright (c) 2013 System Data Recorder
 #
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
@@ -26,25 +26,26 @@ OS_NAME=`uname -s`
 SDR_ROOT="/opt/sdr"
 SDR_ETC=${SDR_ROOT}/etc
 SDR_LOG=${SDR_ROOT}/log
-RECORDERS="sys cpu nic"
+RECORDERS="sys cpu nic hdw"
 
 # std recorders
 test -f ${SDR_ETC}/sysrec.start  || exit 0
 test -f ${SDR_ETC}/cpurec.start  || exit 0
 test -f ${SDR_ETC}/nicrec.start  || exit 0
+test -f ${SDR_ETC}/hdwrec.start  || exit 0
 
 
 start() {
-    echo "Starting SDR services"
+    echo "Starting SDR recorders"
 
     for rec in $RECORDERS
     do
         RETVAL=0
 
         if [ "X${OS_NAME}" = "XSunOS" ]; then
-            echo " ${rec}rec service: \c"
+            echo " ${rec}rec: \c"
         else
-            echo -n " ${rec}rec service: "
+            echo -n " ${rec}rec: "
         fi
            
         # check pid before start
@@ -71,16 +72,16 @@ start() {
 
 
 stop() {
-    echo "Stopping SDR services"
+    echo "Stopping SDR recorders"
 
     for rec in $RECORDERS
     do
         RETVAL=0
 
         if [ "X${OS_NAME}" = "XSunOS" ]; then
-            echo " ${rec}rec service: \c"
+            echo " ${rec}rec: \c"
         else
-            echo -n " ${rec}rec service: "
+            echo -n " ${rec}rec: "
         fi
 
         if [ -f ${SDR_LOG}/${rec}rec.pid ]; then

@@ -378,14 +378,14 @@ USAGE: nicstat [-hsz] [-i int[,int...]] | [interval [count]]
  FIELDS:
   #01 timestamp: seconds since Epoch
   #02 int      : interface name, NIC name
-  #03 rKB      : read KB/sec, gauge
-  #04 wKB      : write KB/sec, gauge
-  #05 rpk      : read packets/sec, gauge
-  #06 wpk      : write packets/sec, gauge
-  #07 ravg     : read average size, bytes
-  #08 wavg     : write average size, bytes
-  #09 util     : utilization (read+write)/nic speed, gauge
-  #10 sat      : saturation: defer, nocanput, norecvbuf, noxmtbuf, gauge
+  #03 rKB      : read KB/sec, rate
+  #04 wKB      : write KB/sec, rate
+  #05 rpk      : read packets/sec, rate 
+  #06 wpk      : write packets/sec, rate 
+  #07 ravg     : read average size in bytes, number
+  #08 wavg     : write average size in bytes, number
+  #09 util     : utilization (read+write)/nic speed, number
+  #10 sat      : saturation: defer, nocanput, norecvbuf, noxmtbuf, number 
 END
         exit 0;
 }
@@ -394,7 +394,7 @@ END
 #
 sub revision {
        print STDERR <<END;
-nicrec: 0.74.2, 2013-01-30
+nicrec: 0.74.2, 2013-06-30
 END
        exit 0;
 }

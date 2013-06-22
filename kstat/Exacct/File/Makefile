@@ -27,7 +27,7 @@
 
 # --- MakeMaker const_config section:
 
-# These definitions are from config.sh (via /opt/sdr/perl/lib/5.16.1/i86pc-solaris-64/Config.pm).
+# These definitions are from config.sh (via /opt/sdr/perl/lib/5.16.3/i86pc-solaris-64/Config.pm).
 # They may have been overridden via Makefile.PL or on the command line.
 AR = ar
 CC = cc
@@ -46,8 +46,8 @@ OBJ_EXT = .o
 OSNAME = solaris
 OSVERS = 2.10
 RANLIB = :
-SITELIBEXP = /opt/sdr/perl/lib/site_perl/5.16.1
-SITEARCHEXP = /opt/sdr/perl/lib/site_perl/5.16.1/i86pc-solaris-64
+SITELIBEXP = /opt/sdr/perl/lib/site_perl/5.16.3
+SITEARCHEXP = /opt/sdr/perl/lib/site_perl/5.16.3/i86pc-solaris-64
 SO = so
 VENDORARCHEXP = 
 VENDORLIBEXP = 
@@ -80,15 +80,15 @@ PREFIX = $(SITEPREFIX)
 PERLPREFIX = /opt/sdr/perl
 SITEPREFIX = /opt/sdr/perl
 VENDORPREFIX = 
-INSTALLPRIVLIB = /opt/sdr/perl/lib/5.16.1
+INSTALLPRIVLIB = /opt/sdr/perl/lib/5.16.3
 DESTINSTALLPRIVLIB = $(DESTDIR)$(INSTALLPRIVLIB)
-INSTALLSITELIB = /opt/sdr/perl/lib/site_perl/5.16.1
+INSTALLSITELIB = /opt/sdr/perl/lib/site_perl/5.16.3
 DESTINSTALLSITELIB = $(DESTDIR)$(INSTALLSITELIB)
 INSTALLVENDORLIB = 
 DESTINSTALLVENDORLIB = $(DESTDIR)$(INSTALLVENDORLIB)
-INSTALLARCHLIB = /opt/sdr/perl/lib/5.16.1/i86pc-solaris-64
+INSTALLARCHLIB = /opt/sdr/perl/lib/5.16.3/i86pc-solaris-64
 DESTINSTALLARCHLIB = $(DESTDIR)$(INSTALLARCHLIB)
-INSTALLSITEARCH = /opt/sdr/perl/lib/site_perl/5.16.1/i86pc-solaris-64
+INSTALLSITEARCH = /opt/sdr/perl/lib/site_perl/5.16.3/i86pc-solaris-64
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
 INSTALLVENDORARCH = 
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
@@ -116,14 +116,14 @@ INSTALLSITEMAN3DIR = /opt/sdr/perl/man/man3
 DESTINSTALLSITEMAN3DIR = $(DESTDIR)$(INSTALLSITEMAN3DIR)
 INSTALLVENDORMAN3DIR = 
 DESTINSTALLVENDORMAN3DIR = $(DESTDIR)$(INSTALLVENDORMAN3DIR)
-PERL_LIB = /opt/sdr/perl/lib/5.16.1
-PERL_ARCHLIB = /opt/sdr/perl/lib/5.16.1/i86pc-solaris-64
+PERL_LIB = /opt/sdr/perl/lib/5.16.3
+PERL_ARCHLIB = /opt/sdr/perl/lib/5.16.3/i86pc-solaris-64
 LIBPERL_A = libperl.a
 FIRST_MAKEFILE = Makefile
 MAKEFILE_OLD = Makefile.old
 MAKE_APERL_FILE = Makefile.aperl
 PERLMAINCC = $(CC)
-PERL_INC = /opt/sdr/perl/lib/5.16.1/i86pc-solaris-64/CORE
+PERL_INC = /opt/sdr/perl/lib/5.16.3/i86pc-solaris-64/CORE
 PERL = /opt/sdr/perl/bin/perl
 FULLPERL = /opt/sdr/perl/bin/perl
 ABSPERL = $(PERL)
@@ -138,7 +138,7 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /opt/sdr/perl/lib/5.16.1/ExtUtils/MakeMaker.pm
+MAKEMAKER   = /opt/sdr/perl/lib/5.16.3/ExtUtils/MakeMaker.pm
 MM_VERSION  = 6.6302
 MM_REVISION = 66302
 
@@ -204,12 +204,12 @@ AUTOSPLITFILE = $(ABSPERLRUN)  -e 'use AutoSplit;  autosplit($$$$ARGV[0], $$$$AR
 
 # --- MakeMaker tool_xsubpp section:
 
-XSUBPPDIR = /opt/sdr/perl/lib/5.16.1/ExtUtils
+XSUBPPDIR = /opt/sdr/perl/lib/5.16.3/ExtUtils
 XSUBPP = $(XSUBPPDIR)$(DFSEP)xsubpp
 XSUBPPRUN = $(PERLRUN) $(XSUBPP)
 XSPROTOARG = 
-XSUBPPDEPS = /opt/sdr/perl/lib/5.16.1/ExtUtils/typemap ../typemap $(XSUBPP)
-XSUBPPARGS = -typemap /opt/sdr/perl/lib/5.16.1/ExtUtils/typemap -typemap ../typemap
+XSUBPPDEPS = /opt/sdr/perl/lib/5.16.3/ExtUtils/typemap ../typemap $(XSUBPP)
+XSUBPPARGS = -typemap /opt/sdr/perl/lib/5.16.3/ExtUtils/typemap -typemap ../typemap
 XSUBPP_EXTRA_ARGS = 
 
 
@@ -259,7 +259,7 @@ makemakerdflt : all
 
 # --- MakeMaker cflags section:
 
-CCFLAGS = -m64 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DPERL_USE_SAFE_PUTENV
+CCFLAGS = -m64 -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DPERL_USE_SAFE_PUTENV
 OPTIMIZE = -xO3
 PERLTYPE = 
 MPOLLUTE = 
@@ -511,22 +511,22 @@ clean_subdirs :
 
 clean :: clean_subdirs
 	- $(RM_F) \
-	  *$(LIB_EXT) core \
-	  core.[0-9] $(INST_ARCHAUTODIR)/extralibs.all \
-	  core.[0-9][0-9] $(BASEEXT).bso \
-	  pm_to_blib.ts MYMETA.json \
-	  core.[0-9][0-9][0-9][0-9] MYMETA.yml \
-	  $(BASEEXT).x $(BOOTSTRAP) \
-	  perl$(EXE_EXT) tmon.out \
-	  *$(OBJ_EXT) pm_to_blib \
-	  $(INST_ARCHAUTODIR)/extralibs.ld blibdirs.ts \
-	  core.[0-9][0-9][0-9][0-9][0-9] *perl.core \
-	  core.*perl.*.? $(MAKE_APERL_FILE) \
-	  $(BASEEXT).def perl \
-	  core.[0-9][0-9][0-9] mon.out \
-	  File.c lib$(BASEEXT).def \
+	  core.[0-9] $(BASEEXT).bso \
+	  pm_to_blib.ts core.[0-9][0-9][0-9][0-9] \
+	  MYMETA.yml perl$(EXE_EXT) \
+	  tmon.out *$(OBJ_EXT) \
+	  pm_to_blib blibdirs.ts \
+	  *perl.core core.*perl.*.? \
+	  $(BASEEXT).def core.[0-9][0-9][0-9] \
+	  mon.out lib$(BASEEXT).def \
 	  perl.exe perlmain.c \
-	  so_locations $(BASEEXT).exp 
+	  so_locations $(BASEEXT).exp \
+	  *$(LIB_EXT) core \
+	  $(INST_ARCHAUTODIR)/extralibs.all core.[0-9][0-9] \
+	  MYMETA.json $(BASEEXT).x \
+	  $(BOOTSTRAP) $(INST_ARCHAUTODIR)/extralibs.ld \
+	  core.[0-9][0-9][0-9][0-9][0-9] $(MAKE_APERL_FILE) \
+	  perl File.c 
 	- $(RM_RF) \
 	  blib 
 	- $(MV) $(FIRST_MAKEFILE) $(MAKEFILE_OLD) $(DEV_NULL)

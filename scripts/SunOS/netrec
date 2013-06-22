@@ -78,34 +78,32 @@ USAGE: netrec [-nshV] | [interval [count]]
        man netrec     # see man page for more details
 
  FIELDS:
-  #01 timestamp       : seconds since Epoch
+  #01 timestamp       : seconds since Epoch, time
   #02 zonename        : zone name
-  #03 udpInDatagrams  : number of UDP input datagrams
-  #04 udpInErr        : number of UDP input errors
-  #05 udpOutDatagrams : number of UDP output datagrams
-  #06 udpOutErrors    : number of UDP output errors
-  #07 tcpActiveOpens  : number of outgoing connections since boot, counter
-  #08 tcpPassiveOpens : number of incoming connections since boot, counter
-  #09 tcpAttemptFails : number of outgoing failures since boot, counter
-  #10 tcpEstabResets  : number of resets to terminate established connections
-  #11 tcpCurrEstab    : number of current established connections
-  #12 tcpOutSegs      : total no. of segments sent, counter
-  #13 tcpOutDataSegs  : sender total no. of data segments sent, counter
-  #14 tcpOutDataBytes : sender total no. of bytes in data segments sent, counter
-  #15 tcpRetransSegs  : total no. of segments retransmitted
-  #16 tcpRetransBytes : sender total no. of bytes in segments retransmitted,
-                         counter
-  #17 tcpOutRsts      : number of segments sent with RST flag, counter
-
-  #18 tcpListenDrop   : total no. of connections refused, backlog full
-  #19 tcpListenDropQ0 : total no. of connections refused, half-open queue full
-  #20 tcpHalfOpenDrop : total no. of connections dropped, full half-open queue
-  #21 tcpOutSackRetrs : total no. of retransmitted segments by SACK retrans
-  #22 ipInHdrErr      : number of dg discards for iph error
-  #23 ipInAddrErr     : number of dg discards for bad addr
-  #24 ipInCksumErr    : number of bad IP header checksum
-  #25 tcpInErr        : total no. of segments recv with error, counter
-  #26 udpInCksumErr   : number of UDP packets with bad UDP checksum, counter
+  #03 udpInDatagrams  : number of UDP input datagrams, number
+  #04 udpInErr        : number of UDP input errors, number
+  #05 udpOutDatagrams : number of UDP output datagrams, number
+  #06 udpOutErrors    : number of UDP output errors, number
+  #07 tcpActiveOpens  : number of outgoing connections since boot, number
+  #08 tcpPassiveOpens : number of incoming connections since boot, number
+  #09 tcpAttemptFails : number of outgoing failures since boot, number
+  #10 tcpEstabResets  : number of resets to terminate est connections, number
+  #11 tcpCurrEstab    : number of current established connections, number
+  #12 tcpOutSegs      : total no. of segments sent, number
+  #13 tcpOutDataSegs  : sender total no. of data segments sent, number
+  #14 tcpOutDataBytes : sender total no. of bytes in data segments sent, number
+  #15 tcpRetransSegs  : total no. of segments retransmitted, number
+  #16 tcpRetransBytes : sender total no. of bytes in segments retrans, number
+  #17 tcpOutRsts      : number of segments sent with RST flag, number
+  #18 tcpListenDrop   : connections refused, number
+  #19 tcpListenDropQ0 : connections refused, half-open, number
+  #20 tcpHalfOpenDrop : connections dropped, full half-open, number
+  #21 tcpOutSackRetrs : retransmitted segments by SACK retrans, number
+  #22 ipInHdrErr      : dg discards for iph error, number
+  #23 ipInAddrErr     : dg discards for bad addr, number
+  #24 ipInCksumErr    : bad IP header checksum, number
+  #25 tcpInErr        : segments recv with error, number
+  #26 udpInCksumErr   : UDP packets with bad UDP checksum, number
 END
 exit 0;
 }
@@ -114,7 +112,7 @@ exit 0;
 # print revision and exit
 sub revision {
        print STDERR <<END;
-netrec: 0.74.2, 2013-01-30
+netrec: 0.74.2, 2013-06-30
 END
        exit 0;
 }
