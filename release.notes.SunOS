@@ -1,6 +1,6 @@
 
 ==================
-SDR version 0.74.1
+SDR version 0.74.2
 ==================
 
 Release Date
@@ -12,11 +12,35 @@ Platforms
 Compiled by: sparvu
 
 
-What's New
-==========
-
 Recording
 =========
+
+
+0.74.2
+======
+    Bug 224 - sender use of uninitialized value $@ in concatenation
+    Bug 225 - sysrec performance metrics type definition
+    Bug 226 - cpurec performance metrics type definition
+    Bug 227 - nicrec performance metrics type definition
+    Bug 228 - netrec performance metrics type definition
+    Bug 229 - jvmrec performance metrics type definition
+    Bug 230 - webrec performance metrics type definition
+    Bug 240 - webrec output results to stdout
+    Bug 262 - sender support for http transport
+    Bug 271 - sender should be able to select a specific reporting server
+    Bug 274 - sender should check for a subscription id
+    Bug 276 - sender sendssh2 routine not aware of subscription id
+    Bug 277 - sender HTTP message digest improvements
+    Bug 278 - sdr.conf clean-up and restructuring recording side
+    Bug 281 - perl modules clean-up
+    Update perl-5.16.3
+    Update libssh2-1.4.3
+    Update curl-7.30.0
+    Update libidn-1.27
+    Update Net-SSH2-0.48
+    Update libxml2-2.9.1
+    Update XML-LibXML-2.0018
+
 
 0.74.1
 ======
