@@ -42,6 +42,7 @@ Recording
     Bug 279 - hdwrec does not correctly return the number of physical NICs
     Bug 280 - sysrec LA recording warnings
     Bug 281 - perl modules clean-up
+    Bug 282 - raw2day should support the new sdr.conf format
     Update perl-5.16.3
     Update libssh2-1.4.3
     Update curl-7.30.0
