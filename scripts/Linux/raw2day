@@ -604,7 +604,7 @@ sub get_values {
 # revision - print revision and exit
 sub revision {
     print STDERR <<END;
-raw2day: 0.74.2, 2013-06-30
+raw2day: 0.74.2, 2013-08-31
 END
     exit 0;
 }
