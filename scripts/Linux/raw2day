@@ -46,11 +46,11 @@ my $quiet_flag = defined $main::opt_q ? $main::opt_q : 0;
 
 # Global Vars
 
-my $port = 22;
-my $trans_flag = 0;
+my $port       = 22;
 my $osname     = $^O;
+my $trans_flag = 0;
 my $xmlcnf     = 'sdr.conf';  # sdr configuration
-$main::opt_h   = 0 ;          # help option
+$main::opt_h   = 0;           # help option
 $main::opt_V   = 0;           # revision option
 
 my $conf;
@@ -63,7 +63,9 @@ local $| = 1;                 # autoflush
 # ######### #
 
 my $ttype;
+my $tcpka = 0;
 my ($sdr_current, $sdr_daily, $pkey);
+my ($sdrid, $dr);
 
 #start counting here
 my $tstart = gettimeofday();
@@ -88,34 +90,25 @@ $host =~ s/\..*$// if $host =~ /\./;
 # validate and open configuration xml
 $conf = open_conf($xmlcnf);
 
-# Recording Config XML
-# check for: current_log daily_log
-my @rec_childs = $conf -> findnodes("/sdr/recording/*");
-
 my $rchilds = 0;
-foreach my $node (@rec_childs) {
+my @sdrdlog = $conf->findnodes("/sdr/recording/logs/*");
 
-    next if $node -> nodeName() !~ /current_log|daily_log|private_key/;
+foreach my $node (@sdrdlog) {
 
-    given($node -> nodeName()) {
+    next if $node -> nodeName() !~ /base|current|daily/;
 
-        # current_log
-        when(/current_log/) {
-            $sdr_current = $node -> getAttribute('path');  }
+    # current log
+    if ( $node->nodeName() =~ /current/ ) {
+        $sdr_current = $node->getAttribute('path');
+    }
 
-        # daily_log
-        when(/daily_log/) {
-            $sdr_daily = $node -> getAttribute('path');  }
-
-        # private_key
-        when(/private_key/) {
-            $pkey = $node -> getAttribute('path');  }
-
+    # daily log
+    if ( $node->nodeName() =~ /daily/ ) {
+        $sdr_daily = $node->getAttribute('path');
     }
 
     $rchilds++;
 }
-
 
 # check errors
 if ($rchilds == 0) {
@@ -133,13 +126,35 @@ if (!($sdr_daily)) {
           "daily_log not found\n";
 }
 
+# key, subscription, destination, tcpka
+my @transcfg = $conf->findnodes("/sdr/recording/sender/*");
+foreach my $node (@transcfg) {
+
+    # private_key
+    if ( $node->nodeName() =~ /private_key/ ) {
+        $pkey = $node->getAttribute('path');
+    }
+
+    # subscription
+    if ( $node->nodeName() =~ /subscription/ ) {
+        $sdrid = $node->textContent();
+    }
+
+    # destination
+    if ( $node->nodeName() =~ /destination/ ) {
+        $dr = $node->textContent();
+    }
+
+    # keepalive
+    if ( $node->nodeName() =~ /tcp_keepalive/ ) {
+        $tcpka = $node->textContent();
+    }
+
+}
 
 # Verbose Messages
 if ($verbose_flag == 1) {
     print "SDR Recording: $host \n";
-}
-
-if ($verbose_flag == 1) {
     print " current log: $sdr_current \n";
     print " daily log: $sdr_daily \n";
 }
@@ -151,7 +166,7 @@ if ($verbose_flag == 1) {
 }
 
 # Current to Daily
-my $dsdrd = current2daily($sdr_current, $sdr_daily, $dprev);
+my $dsdrd = rotate($sdr_current, $sdr_daily, $dprev);
 
 # Verbose Messages
 if ($verbose_flag == 1) {
@@ -488,7 +503,7 @@ sub do_scp {
 }
 
 
-sub current2daily {
+sub rotate {
 
     my($rawdir, $dailydir, $pdir) = @_;
 
