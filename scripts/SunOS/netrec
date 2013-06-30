@@ -112,7 +112,7 @@ exit 0;
 # print revision and exit
 sub revision {
        print STDERR <<END;
-netrec: 0.74.2, 2013-06-30
+netrec: 0.74.2, 2013-08-31
 END
        exit 0;
 }

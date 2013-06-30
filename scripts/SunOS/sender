@@ -552,11 +552,11 @@ sub sendssh2 {
     if ($c) {
 
         # exec method
-        $c->exec("echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$dbid:$host\n");
+        $c->exec("echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$host:$dbid\n");
 
         # shell method
         #$c->shell();
-        # print $c "echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$dbid:$host\n";
+        # print $c "echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$host:$dbid\n";
 
         $c->close;
 
@@ -731,7 +731,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-sender: 0.74.2, 2013-06-30
+sender: 0.74.2, 2013-08-31
 END
     exit 0;
 }

@@ -308,7 +308,7 @@ sub fetch_net {
 # revision - print revision and exit
 sub revision {
     print STDERR <<END;
-hdwrec: 0.74.2, 2013-06-30
+hdwrec: 0.74.2, 2013-08-31
  sdrd format: 0737 13
 END
     exit 0;
