@@ -235,7 +235,6 @@ OPTIONS:
   #18 txcompr    : compressed packets transmitted per second, rate
   #19 ttpcks     : total packets (received + transmitted) per second, rate 
   #20 ttKB       : total KBytes (received + transmitted) per second, rate
-
 END
     exit 0;
 }

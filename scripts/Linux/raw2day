@@ -40,7 +40,7 @@ usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
 getopts('hvVt:q') or usage();
 usage()    if defined $main::opt_h;
 revision() if defined $main::opt_V;
-usage() if (($#ARGV+1) > 10);
+usage() if (($#ARGV+1) >= 1);
 my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
 my $quiet_flag = defined $main::opt_q ? $main::opt_q : 0;
 
@@ -78,7 +78,7 @@ $argv_flag = 1 if (($#ARGV+1) > 0);
 # check for transport mode
 if (defined $main::opt_t) {
     # check for separator
-    usage() if $main::opt_t !~ /(ftp|scp|sftp)/i;
+    usage() if $main::opt_t !~ /(http|ftp|scp|sftp)/i;
     $ttype = $main::opt_t;
     $trans_flag = 1;
 }
@@ -274,7 +274,7 @@ sub transport {
               if ($verbose_flag == 1) {
                   printf "%s\n", " transport protocol: FTP";
               }
-              do_ftp("$sdr_daily", "$dc_path/hosts/$host", $dprev, $d, $u, $p);
+              sdrd2ftp("$sdr_daily", "$dc_path/hosts/$host", $dprev, $d, $u, $p);
           }
 
           # SCP Transport
@@ -282,7 +282,7 @@ sub transport {
               if ($verbose_flag == 1) {
                   printf "%s\n", " transport protocol: SCP";
               }
-              do_scp("$sdr_daily", "$dc_path/hosts/$host", $dprev, $d, $t, $u, $p);
+              sdrd2scp("$sdr_daily", "$dc_path/hosts/$host", $dprev, $d, $t, $u, $p);
           }
 
           # SFTP Transport
@@ -290,7 +290,7 @@ sub transport {
               if ($verbose_flag == 1) {
                   printf "%s\n", " transport protocol: SFTP";
               }
-              do_sftp("$sdr_daily", "$dc_path/hosts/$host", "$dprev", $d, $t, $u, $p);
+              sdrd2sftp("$sdr_daily", "$dc_path/hosts/$host", "$dprev", $d, $t, $u, $p);
           }
 
           default { usage(); }
@@ -321,16 +321,14 @@ sub get_yesterday {
 # usage - print usage and exit.
 sub usage {
     print STDERR <<END;
-USAGE: raw2day [-hV] [-t ftp|scp|sftp] [host...]
- e.g. raw2day               moves raw data to daily log
-      raw2day -t ftp        switch transport to FTP
-      raw2day -t sftp       switch transport to SFTP
-      raw2day -t scp        switch transport to SCP
-      raw2day -t sftp rep1  switch transport to SFTP and 
-                              transport data to rep1 reporting server
+USAGE: raw2day [-hV] [-t http|ftp|scp|sftp]
+  e.g. raw2day               moves raw data to daily log
+       raw2day -t http       switch transport to HTTP
+       raw2day -t ftp        switch transport to FTP
+       raw2day -t sftp       switch transport to SFTP
+       raw2day -t scp        switch transport to SCP
 NOTES:
  sdr.conf: raw2day uses sdr.conf XML configuration file !
-
 END
     exit 0;
 }
@@ -355,7 +353,7 @@ sub ftp_mget {
 
 
 # transport mode: ftp
-sub do_ftp {
+sub sdrd2ftp {
 
     my ($sdir, $ddir, $prevday, $dest, $user, $pass) = @_;
 
@@ -399,7 +397,7 @@ sub do_ftp {
 
 
 # transport mode: SFTP
-sub do_sftp {
+sub sdrd2sftp {
 
     my ($sdir, $ddir, $prevday, $dest, $port, $user, $pass) = @_;
 
@@ -429,7 +427,7 @@ sub do_sftp {
 
 
 # transport mode: SCP
-sub do_scp {
+sub sdrd2scp {
 
     my ($sdir, $ddir, $prevday, $dest, $port, $user, $pass) = @_;
 
@@ -579,7 +577,6 @@ sub open_conf {
 }
 
 
-
 # return an array of hashes
 sub get_values {
     my ($conf, $path, $id) = @_;
@@ -598,6 +595,120 @@ sub get_values {
 
 
     return @result;
+}
+
+
+sub sdrd2http {
+
+    my ( $curl, $dest, $sdrid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
+    my $response;
+
+    ## uri
+    my $uri = "http://" . $dest . ":" . $hport . "/cgi-bin/trans.cgi";
+
+    ## payload
+    my $payload = sha256sdrd($delta);
+    addlog("info: sendhttp - id=$sdrid&h=$host&db=$dbid&$payload")
+      if ( $verbose_flag == 1 );
+
+    ## test for HTTP proxy
+    ## CURLOPT_PROXY CURLOPT_PROXYPORT
+    if ($hproxy) {
+        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(),     $hproxy );
+        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXYPORT(), $hproxyport );
+    }
+    else {
+        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(), '' );
+    }
+
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_HEADER(), 1 );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_URL(),    $uri );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_HTTPHEADER(),
+        ['Content-Type: text/plain'] );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
+        "id=$sdrid&h=$host&db=$dbid&$payload" );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
+
+    my $retcode = $curl->perform;
+
+    if ( $retcode == 0 ) {
+        if ( $verbose_flag == 1 ) {
+            addlog("info: sendhttp - HTTP response");
+            #$response = HTTP::Response->parse($response);
+            #my $xml = $response->decoded_content;
+        }
+    }
+    else {
+        addlog("error: sendhttp - cant send $dbid sdrd data, transport error");
+    }
+
+    return $retcode;
+}
+
+
+# tar sdrd raw data directory
+sub tarsdrd {
+
+    my ($dir) = @_;
+
+    require Archive::Tar;
+
+    # Create a new tar object:
+    my $tar = Archive::Tar->new();
+
+    my $sdrdp = opensdrd("$dir");
+
+    chdir "$dir" or
+        die "Error: cannot change local directory: $!\n";
+
+    foreach my $sdrd (@$sdrdp) {
+        next if $sdrd !~ /.*\.sdrd\.0\.gz$/;
+        $tar->add_files ($sdrd);
+    }
+
+    # Tar sdrd files 
+    my $sdrdtar = '/var/tmp/sdrd';
+    my $sdrdship = $sdrdtar . "tar";
+
+    rmsdrd($sdrdship);
+
+    $tar->write($sdrdtar);
+
+    # Ship the tar file
+    # sdrd2http($curl, $dest, $sdrid, $sdrdtar, $hport, $hproxy, $hproxyport);
+
+    # unlink sdrd tar file
+    rmsdrd($sdrdship);
+
+    return;
+}
+
+
+sub rmsdrd {
+    my ($file) = @_;
+
+    if ( -e $file ) {
+        print "file exists\n";
+        unlink $file or warn "warn: rmsdrd - could not remove $file: $!";
+    }
+
+    return;
+}
+
+# opensdrd raw data directory
+sub opensdrd {
+
+    my ($dir) = @_ ;
+
+    # copy now all raw files into prevdir
+    opendir(PREVDAY, "$dir") or
+        die "error: opensdrd - can't open $dir: $!\n";
+
+    my @sdrdf = grep {!/^\.+$/} readdir(PREVDAY);
+    close(PREVDAY);
+
+    return \@sdrdf;
 }
 
 

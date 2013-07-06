@@ -451,7 +451,6 @@ OPTIONS:
 NOTES:
  JDK_PATH: Make sure you have defined JDK_PATH variable to point
  where your JDK has been installed !
-
 END
     exit 0;
 }

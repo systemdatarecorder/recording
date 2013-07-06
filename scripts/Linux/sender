@@ -721,9 +721,7 @@ NOTES:
  sdr.conf: sender uses sdr.conf XML configuration file ! Make sure you
  have a functional sdr.conf installed or define where sdr.conf
  is found using SDR_ROOT variable
-
 END
-
     exit 0;
 }
 

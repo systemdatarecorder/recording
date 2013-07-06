@@ -239,7 +239,6 @@ USAGE: hdwrec [-hV] | [interval [count]]
   #14 nics       : total number of NICs, number
   #15 jvms       : total number of running JVMs, number
   #16 uptime     : how long the system has been running, number 
-
 END
     exit 0;
 }

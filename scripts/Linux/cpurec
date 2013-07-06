@@ -139,7 +139,6 @@ USAGE: cpurec [-hV] | [interval [count]]
                    is waiting to complete, number
   #11 stealpct   : cpu percentage of time spent in other operating systems 
                    when running in a virtualized environment, number
-
 END
     exit 0;
 }

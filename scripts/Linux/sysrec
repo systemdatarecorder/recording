@@ -372,7 +372,6 @@ USAGE: sysrec [-hV] | [interval [count]]
    #41 avg_1      : LA of the last minute, number
    #42 avg_5      : LA of the last 5 minutes, number
    #43 avg_15     : LA of the last 15 minutes, number
-
 END
     exit 0;
 }
