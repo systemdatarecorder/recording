@@ -18,7 +18,7 @@
 #
 #  (http://www.gnu.org/copyleft/gpl.html)
 
-# SDR VERSION: 0.74.2
+# SDR VERSION: 0.75
 
 use strict;
 use warnings;
@@ -721,9 +721,7 @@ NOTES:
  sdr.conf: sender uses sdr.conf XML configuration file ! Make sure you
  have a functional sdr.conf installed or define where sdr.conf
  is found using SDR_ROOT variable
-
 END
-
     exit 0;
 }
 
@@ -731,7 +729,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-sender: 0.74.2, 2013-08-31
+sender: 0.75, 2013-08-31
 END
     exit 0;
 }
