@@ -49,12 +49,12 @@ my $hport      = 80;          # HTTP default port
 my $sport      = 22;          # SSH2 default port
 my $osname     = $^O;         # OS name via Perl
 my $tcpka      = 0;           # TCP KA flag
-my $trans_flag = 0;           # Transport flag
+my $trans_flag = 0;           # Transport flag, default false
 my $ttype;                    # Transport mode
 my $xmlcnf     = 'sdr.conf';  # sdr configuration name
 $main::opt_h   = 0;           # help option
 $main::opt_V   = 0;           # revision option
-my ( $hproxy, $hproxyport );
+my ($hproxy, $hproxyport);
 
 my $conf;
 
@@ -113,186 +113,177 @@ foreach my $node (@sdrdlog) {
 
 # check errors
 if ($rchilds == 0) {
-    die "Error: wrong configuration file: $xmlcnf, " ,
+    die "error: main - wrong configuration file: $xmlcnf, " ,
           "$rchilds recording elements found \n";
 }
 
 if (!($sdr_current)) {
-    die "Error: wrong configuration file: $xmlcnf, ",
-          "current_log not found\n";
+    die "error: main - wrong configuration file: $xmlcnf, ",
+          "current path not found\n";
 }
 
 if (!($sdr_daily)) {
-    die "Error: wrong configuration file: $xmlcnf, ",
-          "daily_log not found\n";
-}
-
-# key, subscription, destination, tcpka
-my @transcfg = $conf->findnodes("/sdr/recording/transport/*");
-foreach my $node (@transcfg) {
-
-    # private_key
-    if ( $node->nodeName() =~ /private_key/ ) {
-        $pkey = $node->getAttribute('path');
-    }
-
-    # subscription
-    if ( $node->nodeName() =~ /subscription/ ) {
-        $sdrid = $node->textContent();
-    }
-
-    # destination
-    if ( $node->nodeName() =~ /destination/ ) {
-        $dr = $node->textContent();
-    }
-
-    # keepalive
-    if ( $node->nodeName() =~ /tcp_keepalive/ ) {
-        $tcpka = $node->textContent();
-    }
-
+    die "error: main - wrong configuration file: $xmlcnf, ",
+          "daily path not found\n";
 }
 
 # Verbose Messages
 if ($verbose_flag == 1) {
-    print "SDR Recording: $host \n";
-    print " current log: $sdr_current \n";
-    print " daily log: $sdr_daily \n";
+    print "info: main - recording hostname: $host \n";
+    print "info: main - current log dir: $sdr_current \n";
+    print "info: main - daily log dir: $sdr_daily \n";
 }
 
 my $dprev = get_yesterday();
 
 if ($verbose_flag == 1) {
-    printf "%s %s\n", " daily data:", $dprev;
+    printf "%s %s\n", "info: main - sdrd data dir:", $dprev;
 }
 
 # Current to Daily
 my $dsdrd = rotate($sdr_current, $sdr_daily, $dprev);
 
-# Verbose Messages
-if ($verbose_flag == 1) {
-    printf "%s %d\n", " transferred sdrd files to daily log:", $dsdrd;
-}
-
 
 # Transport Mode
 
-# Verbose Messages
-if ($verbose_flag == 1) {
-    print "SDR Reporting\n";
-    given ($trans_flag) {
-        when(0) { printf "%s\n", " transport to reporting: OFF"; }
-        when(1) { printf "%s\n", " transport to reporting: ON";  }
+## we are in transport mode
+if ($trans_flag) {
+
+    # Verbose Messages
+    if ($verbose_flag == 1) {
+        print "info: main - transport mode ON\n";
     }
-}
 
+    # key, subscription, destination, tcpka
+    my @transcfg = $conf->findnodes("/sdr/recording/transport/*");
+    foreach my $node (@transcfg) {
 
-# Reporting Config XML
-# check dest, user, pass, docroot
+        # private_key
+        if ( $node->nodeName() =~ /private_key/ ) {
+            $pkey = $node->getAttribute('path');
+        }
 
-my ($db_path, $dc_path, $dest, $user, $pass);
+        # subscription
+        if ( $node->nodeName() =~ /subscription/ ) {
+            $sdrid = $node->textContent();
+        }
 
-# get db_path, dc_path
-my @rep_childs = $conf -> findnodes("/sdr/reporting/*");
-foreach my $node (@rep_childs) {
-    # print $node -> nodeName() . "\n";
+        # destination
+        if ( $node->nodeName() =~ /destination/ ) {
+            $dr = $node->textContent();
+        }
 
-    # filter out splitmerge, create or update if any
-    next if $node -> nodeName() !~ /db|docroot/;
-  
-    # selection by node name
-    given($node -> nodeName()) {
-
-        # db
-        when(/db/) {
-            $db_path = $node -> getAttribute('path');  }
-
-        # docroot
-        when(/docroot/) {
-            $dc_path = $node -> getAttribute('path');  }
+        # keepalive
+        if ( $node->nodeName() =~ /tcp_keepalive/ ) {
+            $tcpka = $node->textContent();
+        }
     }
-}
 
-# XPATH Method
-# my @res = $conf -> findnodes('//host');
+    ## Reporting Config XML
+    my ($db_path, $dc_path, $dest, $user, $pass);
+    #my @rep_childs = $conf -> findnodes("/sdr/reporting/*");
+    #foreach my $node (@rep_childs) {
+    #    # print $node -> nodeName() . "\n";
+    #
+    #    # filter out splitmerge, create or update if any
+    #    next if $node -> nodeName() !~ /db|docroot/;
+    # 
+    #    # selection by node name
+    #    given($node -> nodeName()) {
+    #
+    #    # db
+    #    when(/db/) {
+    #        $db_path = $node -> getAttribute('path');  }
+    #
+    #        # docroot
+    #        when(/docroot/) {
+    #            $dc_path = $node -> getAttribute('path');  }
+    ##        }
+    #    }
 
-# foreach my $node (@res) {
-#     # DOM Method
-#     $dest = $node -> getAttribute ('name');
-
-#     # ssh2 port
-#     if ($node -> getElementsByTagName('ssh2port')) {
-#         $port = $node -> getElementsByTagName('ssh2port');
-#     }
-
-#     $user = $node -> getElementsByTagName('username');
-#     $pass = $node -> getElementsByTagName('password');
+    # XPATH Method
+    # my @res = $conf -> findnodes('//host');
     
-#     if ($argv_flag) {
-#         for my $h ( 0 .. $#ARGV ) {
-#             next if ($ARGV[$h] ne $dest);
-#             transport($ARGV[$h], $port, $user, $pass);
-#         }
-#     } else {
-#         transport($dest, $port, $user, $pass);
-#     }
-# }
+    # foreach my $node (@res) {
+    #     # DOM Method
+    #     $dest = $node -> getAttribute ('name');
 
+    #     # ssh2 port
+    #     if ($node -> getElementsByTagName('ssh2port')) {
+    #         $port = $node -> getElementsByTagName('ssh2port');
+    #     }
 
-# Reporting XML Configuration
-# XPATH Method
-my @res = $conf->findnodes('//host');
+    #     $user = $node -> getElementsByTagName('username');
+    #     $pass = $node -> getElementsByTagName('password');
+    
+    #     if ($argv_flag) {
+    #         for my $h ( 0 .. $#ARGV ) {
+    #             next if ($ARGV[$h] ne $dest);
+    #             transport($ARGV[$h], $port, $user, $pass);
+    #         }
+    #     } else {
+    #         transport($dest, $port, $user, $pass);
+    #     }
+    # }
 
-foreach my $node (@res) {
+    # Reporting XML Configuration
+    # XPATH Method
+    my @res = $conf->findnodes('//host');
 
-    # destination
-    $dest = $node->getAttribute('name');
+    foreach my $node (@res) {
 
-    ## username, password
-    $user = $node->getElementsByTagName('username');
-    $pass = $node->getElementsByTagName('password');
+        # destination
+        $dest = $node->getAttribute('name');
 
-    if ( $dr eq $dest ) {
-        if ( $node->getElementsByTagName('http') ) {
-            my @http_transport =
-              get_transport( $conf,
-                "/sdr/reporting/host[\@name=\"$dest\"]/http/*" );
+        # username, password
+        $user = $node->getElementsByTagName('username');
+        $pass = $node->getElementsByTagName('password');
 
-            given ($#http_transport) {
-
-                when (0) { $hport = $http_transport[0]; }
-
-                when (1) {
-                    $hport  = $http_transport[0];
-                    $hproxy = $http_transport[1];
-                }
-
-                when (2) {
-                    $hport      = $http_transport[0];
-                    $hproxy     = $http_transport[1];
-                    $hproxyport = $http_transport[2];
-                }
-            }
+        # Verbose Messages
+        if ($verbose_flag == 1) {
+            printf "%s\n", "info: main - transport destination: $dr";
         }
 
-        if ( $node->getElementsByTagName('ssh2') ) {
-            my @ssh2_transport =
-              get_transport( $conf,
-                "/sdr/reporting/host[\@name=\"$dest\"]/ssh2/*" );
+        if ( $dr eq $dest ) {
+            if ( $node->getElementsByTagName('http') ) {
+                my @http_transport =
+                  get_transport( $conf,
+                    "/sdr/reporting/host[\@name=\"$dest\"]/http/*" );
 
-            given ($#ssh2_transport) {
+                given ($#http_transport) {
 
-                when (0) { $sport = $ssh2_transport[0]; }
+                    when (0) { $hport = $http_transport[0]; }
+
+                    when (1) {
+                        $hport  = $http_transport[0];
+                        $hproxy = $http_transport[1];
+                    }
+
+                    when (2) {
+                        $hport      = $http_transport[0];
+                        $hproxy     = $http_transport[1];
+                        $hproxyport = $http_transport[2];
+                    }
+                }
             }
 
-        }
+            if ( $node->getElementsByTagName('ssh2') ) {
+                my @ssh2_transport =
+                  get_transport( $conf,
+                    "/sdr/reporting/host[\@name=\"$dest\"]/ssh2/*" );
 
-        ## we found a match
-        last;
+                given ($#ssh2_transport) {
+
+                    when (0) { $sport = $ssh2_transport[0]; }
+                }
+
+            }
+
+            ## we found a match
+            last;
+        }
     }
 }
-
-
 
 # Mark End of Time
 my $tend = gettimeofday();
@@ -304,10 +295,10 @@ if ($quiet_flag == 0) {
         # we are working in minutes
         $elapsed = $elapsed / 60;
         printf "%s %4.2f %s", 
-         "All jobs done. Elapsed time:", $elapsed, "minutes\n";
+           "All jobs done. Elapsed time:", $elapsed, "minutes\n";
     } else {
         printf "%s %4.2f %s", 
-         "All jobs done. Elapsed time:", $elapsed, "seconds\n";
+            "All jobs done. Elapsed time:", $elapsed, "seconds\n";
     }
 }
 
@@ -362,7 +353,7 @@ sub dispatch {
               if ($verbose_flag == 1) {
                   printf "%s\n", " transport protocol: FTP";
               }
-              sdrd2ftp("$sdr_daily", "$dc_path/hosts/$host", $dprev, $d, $u, $p);
+              sdrd2ftp("$sdr_daily", "$sdrid/content/hosts/$host/raw", $dprev, $d, $u, $p);
           }
 
           # SCP Transport
@@ -370,7 +361,7 @@ sub dispatch {
               if ($verbose_flag == 1) {
                   printf "%s\n", " transport protocol: SCP";
               }
-              sdrd2scp("$sdr_daily", "$dc_path/hosts/$host", $dprev, $d, $t, $u, $p);
+              sdrd2scp("$sdr_daily", "$sdrid/content/hosts/$host/raw", $dprev, $d, $t, $u, $p);
           }
 
           # SFTP Transport
@@ -378,7 +369,7 @@ sub dispatch {
               if ($verbose_flag == 1) {
                   printf "%s\n", " transport protocol: SFTP";
               }
-              sdrd2sftp("$sdr_daily", "$dc_path/hosts/$host", "$dprev", $d, $t, $u, $p);
+              sdrd2sftp("$sdr_daily", "$sdrid/content/hosts/$host/raw", "$dprev", $d, $t, $u, $p);
           }
 
           default { usage(); }
@@ -410,13 +401,11 @@ sub get_yesterday {
 sub usage {
     print STDERR <<END;
 USAGE: raw2day [-hV] [-t http|ftp|scp|sftp]
-  e.g. raw2day               moves raw data to daily log
-       raw2day -t http       switch transport to HTTP
-       raw2day -t ftp        switch transport to FTP
-       raw2day -t sftp       switch transport to SFTP
-       raw2day -t scp        switch transport to SCP
-NOTES:
- sdr.conf: raw2day uses sdr.conf XML configuration file !
+  e.g. raw2day               rotate raw data to daily log
+       raw2day -t http       transport sdrd files over HTTP
+       raw2day -t ftp        transport sdrd files over FTP
+       raw2day -t sftp       transport sdrd files over SFTP
+       raw2day -t scp        transport sdrd files over SCP
 END
     exit 0;
 }
@@ -593,7 +582,8 @@ sub rotate {
 
     my($rawdir, $dailydir, $pdir) = @_;
 
-    opendir(DIR, $rawdir) or die "Can't open $rawdir: $!";
+    opendir(DIR, $rawdir) or 
+        die "error: rotate - Can't open $rawdir: $!";
     my @files = grep {!/^\.+$/} readdir(DIR);
     close(DIR);
 
@@ -607,7 +597,7 @@ sub rotate {
     }
 
     if ($verbose_flag == 1) {
-        printf "%s %d\n", " found sdrd data files:", $#sdrd_files +1;
+        printf "%s %d\n", "info: rotate - copying sdrd data files:", $#sdrd_files +1;
     }
 
     my $cnt = 0;
@@ -616,12 +606,12 @@ sub rotate {
    
         # make daily target dir
         unless(mkdir $dest) {
-            die "Error: cannot create destination $pdir, already exists\n";
+            die "error: rotate - cannot create destination $pdir, already exists\n";
         }
 
         foreach my $dir (@sdrd_files) {
             move("$rawdir/$dir","$dest") or
-                die "Error: copying previous daily data, $!\n";
+                die "error: rotate - copying previous daily data, $!\n";
             $cnt++;
         }
     }

@@ -130,7 +130,7 @@ foreach my $node (@log_childs) {
 
 # check errors
 if ( $rchilds == 0 ) {
-    die "error: wrong configuration file: $xmlcnf, ",
+    die "error: main - wrong configuration file: $xmlcnf, ",
       "$rchilds recording elements found \n";
 }
 
@@ -178,7 +178,7 @@ foreach my $node (@sdcfg) {
     $schilds++;
 }
 
-die "error: no destination found, check sdr.conf\n"
+die "error: main - no destination found, check sdr.conf\n"
   if ( !$dr );
 
 # check errors
@@ -301,7 +301,7 @@ else {
 
 # cd raw data directory
 chdir("$sdr_curlog")
-  or die "error: cannot open SDR sdrd raw data directory, $!\n";
+  or die "error: main - cannot open SDR sdrd raw data directory, $!\n";
 
 foreach (@dbs) {
     my $n = $_ . "rec.sdrd";
@@ -685,7 +685,7 @@ sub open_conf {
             $tree = $parser->parse_file("$ENV{'SDR_ROOT'}/etc/$conf");
         }
         else {
-            print "error: $! $ENV{'SDR_ROOT'}/etc/$conf \n";
+            print "error: open_conf - $! $ENV{'SDR_ROOT'}/etc/$conf \n";
             usage();
         }
     }
@@ -694,7 +694,7 @@ sub open_conf {
             $tree = $parser->parse_file("/opt/sdr/etc/$conf");
         }
         else {
-            print "error: $! /opt/sdr/etc/$conf \n";
+            print "error: open_conf - $! /opt/sdr/etc/$conf \n";
             usage();
         }
     }
