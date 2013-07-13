@@ -272,7 +272,7 @@ if ($trans_flag) {
             if ($verbose_flag == 1) {
                 printf "%s\n", "info: main - transport protocol: FTP";
             }
-            sdrd2ftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
+            trans2ftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
                      $dprev, 
                      $dest, 
                      $user,
@@ -284,7 +284,7 @@ if ($trans_flag) {
             if ($verbose_flag == 1) {
                 printf "%s\n", "info: main - transport protocol: SCP";
             }
-            sdrd2scp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
+            trans2scp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
                      $dprev, 
                      $dest, 
                      $sport, 
@@ -297,7 +297,7 @@ if ($trans_flag) {
             if ($verbose_flag == 1) {
                 printf "%s\n", "info: main - transport protocol: SFTP";
             }
-            sdrd2sftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
+            trans2sftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
                       $dprev, 
                       $dest, 
                       $sport, 
@@ -413,21 +413,21 @@ sub ftp_mget {
 
 
 # transport mode: ftp
-sub sdrd2ftp {
+sub trans2ftp {
 
     my ($sdir, $ddir, $prevday, $dest, $user, $pass) = @_;
 
     require Net::FTP;
 
     my $ftp = Net::FTP->new($dest, Debug => 0, Timeout=>60)
-      or die "Error: FTP transport, cannot connect to $dest: $@\n";
+      or die "error: trans2ftp - cannot connect to $dest: $@\n";
 
     $ftp->login($user,$pass)
-     or die "Error: FTP transport, cannot login ", $ftp->message;
+     or die "error: trans2ftp - cannot login ", $ftp->message;
 
     if (! $ftp->cwd("$ddir/$prevday")) {
         $ftp->mkdir("$ddir/$prevday") or
-            die "Error: FTP transport, cannot make daily directory\n";
+            die "error: trans2ftp - cannot create daily directory\n";
 
         $ftp->cwd("$ddir/$prevday");
     }
@@ -435,12 +435,12 @@ sub sdrd2ftp {
 
     # copy now all raw files into prevdir
     opendir(PREVDAY, "$sdir/$prevday") or
-        die "Error: FTP transport, can't open $sdir/$prevday: $!\n";
+        die "error: trans2ftp - can't open $sdir/$prevday: $!\n";
     my @sdrdf = grep {!/^\.+$/} readdir(PREVDAY);
     close(PREVDAY);
 
     chdir "$sdir/$prevday" or 
-        die "Error: FTP transport, cannot change local directory: $!\n";
+        die "error: trans2ftp - cannot change local directory: $!\n";
 
     my $tftp = 0;
     foreach my $sdrd (@sdrdf) {
@@ -457,7 +457,7 @@ sub sdrd2ftp {
 
 
 # transport mode: SFTP
-sub sdrd2sftp {
+sub trans2sftp {
 
     my ($sdir, $ddir, $prevday, $dest, $port, $user, $pass) = @_;
 
@@ -480,14 +480,14 @@ sub sdrd2sftp {
     $sftp->status or $sftp->error;
 
     $sftp->rput("$sdir/$prevday","$ddir/$prevday") or
-        die "Error: SFTP transport, put failed: " . $sftp->error;
+        die "error: trans2sftp - rput failed: " . $sftp->error;
 
     return;
 }
 
 
 # transport mode: SCP
-sub sdrd2scp {
+sub trans2scp {
 
     my ($sdir, $ddir, $prevday, $dest, $port, $user, $pass) = @_;
 
@@ -504,7 +504,7 @@ sub sdrd2scp {
 
             eval { $ssh2->auth_publickey($user, $pubkey, $pkey); 1 }
             or do {
-                warn "Error: SCP transport, authkey failed $@ \n", $ssh2->error;
+                warn "error: trans2scp - authkey failed $@ \n", $ssh2->error;
             };
 
         } else {
@@ -513,13 +513,13 @@ sub sdrd2scp {
             eval { $ssh2->auth(username => "$user",
                                 password => "$pass"); 1 }
             or do {
-                warn "Error: SCP transport, auth failed $@ \n", $ssh2->error;
+                warn "error: trans2scp - auth failed $@ \n", $ssh2->error;
             };
 
         }
 
         if ($verbose_flag == 1) {
-            printf "SCP transport, auth OK: %s\n", $ssh2->auth_ok; 
+            printf "info: trans2scp - auth OK: %s\n", $ssh2->auth_ok; 
         }
 
         my $chan = $ssh2->channel();
@@ -532,28 +532,28 @@ sub sdrd2scp {
 
         if($dir_flag == 0) {
             if ($verbose_flag == 1) {
-                print "SCP transport, generating $prevday on: $dest\n";
+                print "info: trans2scp - generating $prevday on: $dest\n";
             }
             print $chan "mkdir $prevday\n";
         }
 
         # copy now all raw files into prevdir
         opendir(PREVDAY, "$sdir/$prevday") or 
-            die "Error: SCP transport, can't open $sdir/$prevday: $!";
+            die "error: trans2scp - can't open $sdir/$prevday: $!";
         my @sdrdf = grep {!/^\.+$/} readdir(PREVDAY);
         close(PREVDAY);
 
         foreach my $sdrd (@sdrdf) {
             next if $sdrd !~ /.*\.sdrd\.0\.gz$/;
             $ssh2->scp_put("$sdir/$prevday/$sdrd", "$ddir/$prevday/$sdrd") or 
-                die "Error: SCP transport, cannot copy daily data: " , $ssh2->error;
+                die "error: trans2scp - cannot copy daily data: " , $ssh2->error;
         }
 
         # close the ssh2 channel for shell 
         $chan->close;
 
     } else {
-        warn "Error: SCP transport, connect failed $@ \n", $ssh2->error;
+        warn "error: trans2scp - connect failed $@ \n", $ssh2->error;
     }
 
     return;

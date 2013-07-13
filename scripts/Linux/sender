@@ -407,7 +407,7 @@ while (1) {
                 ## ssh2 transport mode
                 if ( defined($s2) ) {
 
-                    $rcode = sendssh2( $s2, $sdrid, $dbid, $delta );
+                    $rcode = trans2ssh2( $s2, $sdrid, $dbid, $delta );
                     if ( $rcode == 0 ) {
                         addlog(
 "error: main - no ssh2 connection available, trying again..."
@@ -416,7 +416,7 @@ while (1) {
                         $s2 = connect2rep( $dest, $sport, $user, $pass );
                         next if ( !defined($s2) );
                         addlog("info: main - ssh2 connection re-established");
-                        $rcode = sendssh2( $s2, $sdrid, $dbid, $delta );
+                        $rcode = trans2ssh2( $s2, $sdrid, $dbid, $delta );
                     }
                 }
                 else {
@@ -430,7 +430,7 @@ while (1) {
             else {
                 ## http transport mode
                 my $hstat =
-                  sendhttp( $http, $dest, $sdrid, $dbid, $delta, $hport, $hproxy,
+                  trans2http( $http, $dest, $sdrid, $dbid, $delta, $hport, $hproxy,
                     $hproxyport );
             }
         }
@@ -486,7 +486,7 @@ sub get_transport {
 }
 
 ## send payload over HTTP
-sub sendhttp {
+sub trans2http {
 
     my ( $curl, $dest, $sdrid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
     my $response;
@@ -496,7 +496,7 @@ sub sendhttp {
 
     ## payload
     my $payload = sha256sdrd($delta);
-    addlog("info: sendhttp - id=$sdrid&h=$host&db=$dbid&$payload")
+    addlog("info: trans2http - id=$sdrid&h=$host&db=$dbid&$payload")
       if ( $verbose_flag == 1 );
 
     ## test for HTTP proxy
@@ -522,20 +522,20 @@ sub sendhttp {
 
     if ( $retcode == 0 ) {
         if ( $verbose_flag == 1 ) {
-            addlog("info: sendhttp - HTTP response");
+            addlog("info: trans2http - HTTP response");
             #$response = HTTP::Response->parse($response);
             #my $xml = $response->decoded_content;
         }
     }
     else {
-        addlog("error: sendhttp - cant send $dbid sdrd data, transport error");
+        addlog("error: trans2http - cant send $dbid sdrd data, transport error");
     }
 
     return $retcode;
 }
 
 ## send payload to SDR Reporting
-sub sendssh2 {
+sub trans2ssh2 {
 
     my ( $s, $sdrid, $dbid, $payload ) = @_;
 
@@ -544,7 +544,7 @@ sub sendssh2 {
     my ( $code, $error_name, $error_string ) = $s->error();
     if ($code) {
         addlog(
-"fatal: sendssh2 - cant init channel, code:$code error:$error_name $error_string"
+"fatal: trans2ssh2 - cant init channel, code:$code error:$error_name $error_string"
         );
         return 0;
     }
@@ -564,7 +564,7 @@ sub sendssh2 {
 
     }
     else {
-        addlog("error: sendssh2 - cant operate on channel, check ssh2 backend");
+        addlog("error: trans2ssh2 - cant operate on channel, check ssh2 backend");
         return 0;
     }
 
