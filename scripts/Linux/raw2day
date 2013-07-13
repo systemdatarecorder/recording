@@ -659,7 +659,7 @@ sub get_values {
 }
 
 
-sub sdrd2http {
+sub trans2http {
 
     my ( $curl, $dest, $sdrid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
     my $response;
@@ -737,7 +737,7 @@ sub tarsdrd {
     $tar->write($sdrdtar);
 
     # Ship the tar file
-    # sdrd2http($curl, $dest, $sdrid, $sdrdtar, $hport, $hproxy, $hproxyport);
+    # trans2http($curl, $dest, $sdrid, $sdrdtar, $hport, $hproxy, $hproxyport);
 
     # unlink sdrd tar file
     rmsdrd($sdrdship);
@@ -756,6 +756,7 @@ sub rmsdrd {
 
     return;
 }
+
 
 # opensdrd raw data directory
 sub opensdrd {
