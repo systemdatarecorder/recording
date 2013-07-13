@@ -144,7 +144,7 @@ if ($verbose_flag == 1) {
 my $dsdrd = rotate($sdr_current, $sdr_daily, $dprev);
 
 
-# Transport Mode
+## Transport Mode
 
 ## we are in transport mode
 if ($trans_flag) {
@@ -181,25 +181,6 @@ if ($trans_flag) {
 
     ## Reporting Config XML
     my ($db_path, $dc_path, $dest, $user, $pass);
-    #my @rep_childs = $conf -> findnodes("/sdr/reporting/*");
-    #foreach my $node (@rep_childs) {
-    #    # print $node -> nodeName() . "\n";
-    #
-    #    # filter out splitmerge, create or update if any
-    #    next if $node -> nodeName() !~ /db|docroot/;
-    # 
-    #    # selection by node name
-    #    given($node -> nodeName()) {
-    #
-    #    # db
-    #    when(/db/) {
-    #        $db_path = $node -> getAttribute('path');  }
-    #
-    #        # docroot
-    #        when(/docroot/) {
-    #            $dc_path = $node -> getAttribute('path');  }
-    ##        }
-    #    }
 
     # XPATH Method
     # my @res = $conf -> findnodes('//host');
@@ -283,9 +264,52 @@ if ($trans_flag) {
             last;
         }
     }
+
+    given($ttype) {
+
+        # FTP Transport
+        when(/^ftp$/i) {
+            if ($verbose_flag == 1) {
+                printf "%s\n", "info: main - transport protocol: FTP";
+            }
+            sdrd2ftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
+                     $dprev, 
+                     $dest, 
+                     $user,
+                     $pass);
+        }        
+
+        # SCP Transport
+        when(/^scp$/i) { 
+            if ($verbose_flag == 1) {
+                printf "%s\n", "info: main - transport protocol: SCP";
+            }
+            sdrd2scp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
+                     $dprev, 
+                     $dest, 
+                     $sport, 
+                     $user, 
+                     $pass);
+        }
+
+        # SFTP Transport
+        when(/^sftp$/i) {
+            if ($verbose_flag == 1) {
+                printf "%s\n", "info: main - transport protocol: SFTP";
+            }
+            sdrd2sftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
+                      $dprev, 
+                      $dest, 
+                      $sport, 
+                      $user, 
+                      $pass);
+        }
+
+        default { usage(); }
+    }
 }
 
-# Mark End of Time
+## Mark End of Time
 my $tend = gettimeofday();
 my $elapsed = $tend - $tstart;
 my $len = length(int($elapsed));
@@ -337,47 +361,6 @@ sub get_transport {
     return @result;
 }
 
-
-# transport
-sub dispatch {
-
-    my ($d, $t, $u, $p) = @_;
-
-    if ($trans_flag == 1) {
-        # we need to transport data
-    
-        given($ttype) {
-
-          # FTP Transport
-          when(/^ftp$/i) {
-              if ($verbose_flag == 1) {
-                  printf "%s\n", " transport protocol: FTP";
-              }
-              sdrd2ftp("$sdr_daily", "$sdrid/content/hosts/$host/raw", $dprev, $d, $u, $p);
-          }
-
-          # SCP Transport
-          when(/^scp$/i) { 
-              if ($verbose_flag == 1) {
-                  printf "%s\n", " transport protocol: SCP";
-              }
-              sdrd2scp("$sdr_daily", "$sdrid/content/hosts/$host/raw", $dprev, $d, $t, $u, $p);
-          }
-
-          # SFTP Transport
-          when(/^sftp$/i) {
-              if ($verbose_flag == 1) {
-                  printf "%s\n", " transport protocol: SFTP";
-              }
-              sdrd2sftp("$sdr_daily", "$sdrid/content/hosts/$host/raw", "$dprev", $d, $t, $u, $p);
-          }
-
-          default { usage(); }
-        }
-    }
-
-    return;
-}
 
 
 # get yesterday
