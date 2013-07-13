@@ -136,7 +136,7 @@ if ( $rchilds == 0 ) {
 
 my $slog = $sdr_baselog . "/sender.log";
 
-my @scfg = $conf->findnodes("/sdr/recording/sender/*");
+my @scfg = $conf->findnodes("/sdr/recording/transport/*");
 
 foreach my $node (@scfg) {
 
@@ -155,8 +155,8 @@ foreach my $node (@scfg) {
         $dr = $node->textContent();
     }
 
-    # transport mode
-    if ( $node->nodeName() =~ /transport/ ) {
+    # instant mode, protocol type
+    if ( $node->nodeName() =~ /protocol/ ) {
         $trans = $node->textContent();
     }
 
@@ -167,7 +167,7 @@ foreach my $node (@scfg) {
 
 }
 
-my @sdcfg = $conf->findnodes("/sdr/recording/sender/data/*");
+my @sdcfg = $conf->findnodes("/sdr/recording/transport/data/*");
 my $schilds   = 0;
 
 foreach my $node (@sdcfg) {

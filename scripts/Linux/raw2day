@@ -45,13 +45,16 @@ my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
 my $quiet_flag = defined $main::opt_q ? $main::opt_q : 0;
 
 # Global Vars
-
-my $port       = 22;
-my $osname     = $^O;
-my $trans_flag = 0;
-my $xmlcnf     = 'sdr.conf';  # sdr configuration
+my $hport      = 80;          # HTTP default port
+my $sport      = 22;          # SSH2 default port
+my $osname     = $^O;         # OS name via Perl
+my $tcpka      = 0;           # TCP KA flag
+my $trans_flag = 0;           # Transport flag
+my $ttype;                    # Transport mode
+my $xmlcnf     = 'sdr.conf';  # sdr configuration name
 $main::opt_h   = 0;           # help option
 $main::opt_V   = 0;           # revision option
+my ( $hproxy, $hproxyport );
 
 my $conf;
 
@@ -62,8 +65,6 @@ local $| = 1;                 # autoflush
 # MAIN BODY #
 # ######### #
 
-my $ttype;
-my $tcpka = 0;
 my ($sdr_current, $sdr_daily, $pkey);
 my ($sdrid, $dr);
 
@@ -127,7 +128,7 @@ if (!($sdr_daily)) {
 }
 
 # key, subscription, destination, tcpka
-my @transcfg = $conf->findnodes("/sdr/recording/sender/*");
+my @transcfg = $conf->findnodes("/sdr/recording/transport/*");
 foreach my $node (@transcfg) {
 
     # private_key
@@ -247,7 +248,7 @@ foreach my $node (@res) {
     # destination
     $dest = $node->getAttribute('name');
 
-    # username, password
+    ## username, password
     $user = $node->getElementsByTagName('username');
     $pass = $node->getElementsByTagName('password');
 
@@ -312,8 +313,7 @@ if ($quiet_flag == 0) {
 
 
 
-# Subroutines
-
+## Subroutines
 
 sub get_transport {
 
