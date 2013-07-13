@@ -1,10 +1,10 @@
 
-==================
-SDR version 0.74.2
-==================
+================
+SDR version 0.75
+================
 
 Release Date
-2013-06-30
+2013-08-31
 
 Platforms
  Solaris 10+ x64, sparcv9 64bit
@@ -16,8 +16,8 @@ Recording
 =========
 
 
-0.74.2
-======
+0.75
+====
     Bug 224 - sender use of uninitialized value $@ in concatenation
     Bug 225 - sysrec performance metrics type definition
     Bug 226 - cpurec performance metrics type definition
@@ -33,6 +33,8 @@ Recording
     Bug 277 - sender HTTP message digest improvements
     Bug 278 - sdr.conf clean-up and restructuring recording side
     Bug 281 - perl modules clean-up
+    Bug 282 - raw2day should support the new sdr.conf format
+    Bug 286 - raw2day should not ask for a host reporting
     Update perl-5.16.3
     Update libssh2-1.4.3
     Update curl-7.30.0

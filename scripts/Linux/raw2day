@@ -213,29 +213,84 @@ foreach my $node (@rep_childs) {
 }
 
 # XPATH Method
-my @res = $conf -> findnodes('//host');
+# my @res = $conf -> findnodes('//host');
+
+# foreach my $node (@res) {
+#     # DOM Method
+#     $dest = $node -> getAttribute ('name');
+
+#     # ssh2 port
+#     if ($node -> getElementsByTagName('ssh2port')) {
+#         $port = $node -> getElementsByTagName('ssh2port');
+#     }
+
+#     $user = $node -> getElementsByTagName('username');
+#     $pass = $node -> getElementsByTagName('password');
+    
+#     if ($argv_flag) {
+#         for my $h ( 0 .. $#ARGV ) {
+#             next if ($ARGV[$h] ne $dest);
+#             transport($ARGV[$h], $port, $user, $pass);
+#         }
+#     } else {
+#         transport($dest, $port, $user, $pass);
+#     }
+# }
+
+
+# Reporting XML Configuration
+# XPATH Method
+my @res = $conf->findnodes('//host');
 
 foreach my $node (@res) {
-    # DOM Method
-    $dest = $node -> getAttribute ('name');
 
-    # ssh2 port
-    if ($node -> getElementsByTagName('ssh2port')) {
-        $port = $node -> getElementsByTagName('ssh2port');
-    }
+    # destination
+    $dest = $node->getAttribute('name');
 
-    $user = $node -> getElementsByTagName('username');
-    $pass = $node -> getElementsByTagName('password');
-    
-    if ($argv_flag) {
-        for my $h ( 0 .. $#ARGV ) {
-            next if ($ARGV[$h] ne $dest);
-            transport($ARGV[$h], $port, $user, $pass);
+    # username, password
+    $user = $node->getElementsByTagName('username');
+    $pass = $node->getElementsByTagName('password');
+
+    if ( $dr eq $dest ) {
+        if ( $node->getElementsByTagName('http') ) {
+            my @http_transport =
+              get_transport( $conf,
+                "/sdr/reporting/host[\@name=\"$dest\"]/http/*" );
+
+            given ($#http_transport) {
+
+                when (0) { $hport = $http_transport[0]; }
+
+                when (1) {
+                    $hport  = $http_transport[0];
+                    $hproxy = $http_transport[1];
+                }
+
+                when (2) {
+                    $hport      = $http_transport[0];
+                    $hproxy     = $http_transport[1];
+                    $hproxyport = $http_transport[2];
+                }
+            }
         }
-    } else {
-        transport($dest, $port, $user, $pass);
+
+        if ( $node->getElementsByTagName('ssh2') ) {
+            my @ssh2_transport =
+              get_transport( $conf,
+                "/sdr/reporting/host[\@name=\"$dest\"]/ssh2/*" );
+
+            given ($#ssh2_transport) {
+
+                when (0) { $sport = $ssh2_transport[0]; }
+            }
+
+        }
+
+        ## we found a match
+        last;
     }
 }
+
 
 
 # Mark End of Time
@@ -259,8 +314,41 @@ if ($quiet_flag == 0) {
 
 # Subroutines
 
+
+sub get_transport {
+
+    my ( $conf, $path ) = @_;
+    my ( $port, $proxy, $proxyport );
+    my @result;
+
+    #XPath Walking
+    my @childs = $conf->findnodes($path);
+
+    foreach my $node (@childs) {
+        given ( $node->nodeName() ) {
+            when (/^port$/)      { $port      = $node->textContent(); }
+            when (/^proxy$/)     { $proxy     = $node->textContent(); }
+            when (/^proxyport$/) { $proxyport = $node->textContent(); }
+        }
+    }
+
+    if ( defined($proxy) and defined($proxyport) ) {
+        push @result, ( $port, $proxy, $proxyport );
+    }
+    else {
+        push @result, $port;
+    }
+
+    ## debug
+    # print "port=$port proxy=$proxy proxyport=$proxyport \n";
+
+    # return array of coordinates for http or ssh2
+    return @result;
+}
+
+
 # transport
-sub transport {
+sub dispatch {
 
     my ($d, $t, $u, $p) = @_;
 
