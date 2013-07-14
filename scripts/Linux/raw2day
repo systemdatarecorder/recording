@@ -28,6 +28,7 @@ use Date::Calc qw{:all};
 use Time::HiRes qw(gettimeofday);
 use File::Copy;
 use Sys::Hostname;
+use File::Basename;
 use XML::LibXML;
 use XML::LibXML::XPathContext;
 
@@ -145,8 +146,6 @@ my $dsdrd = rotate($sdr_current, $sdr_daily, $dprev);
 
 
 ## Transport Mode
-
-## we are in transport mode
 if ($trans_flag) {
 
     # Verbose Messages
@@ -298,14 +297,32 @@ if ($trans_flag) {
                 printf "%s\n", "info: main - transport protocol: SFTP";
             }
             trans2sftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
-                      $dprev, 
-                      $dest, 
-                      $sport, 
-                      $user, 
+                      $dprev,
+                      $dest,
+                      $sport,
+                      $user,
                       $pass);
         }
 
-        default { usage(); }
+        # HTTP Transport
+        when(/^http$/i) {
+            if ($verbose_flag == 1) {
+                printf "%s\n", "info: main - transport protocol: HTTP";
+            }
+            my $sdrd_daily_dir = $sdr_daily . '/' . $dprev;
+            my $sdrd_dir = tarsdrd($sdrd_daily_dir);
+
+            if ($verbose_flag == 1) {
+                printf "%s\n", "info: main - sdrd tar shipment: $sdrd_dir";
+            }
+            #trans2shttp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
+            #          $dprev, 
+            #          $dest, 
+            #          $sport, 
+            #          $user, 
+            #          $pass);
+            #rmsdrd($shipfile);
+        }
     }
 }
 
@@ -720,29 +737,22 @@ sub tarsdrd {
 
     my $sdrdp = opensdrd("$dir");
 
+    $dir = dirname($dir);
     chdir "$dir" or
-        die "Error: cannot change local directory: $!\n";
+        die "error: tarsdrd - cannot change local directory: $!\n";
 
     foreach my $sdrd (@$sdrdp) {
         next if $sdrd !~ /.*\.sdrd\.0\.gz$/;
-        $tar->add_files ($sdrd);
+        my $sdrdf = $dprev . '/' . $sdrd;
+        $tar->add_files($sdrdf);
     }
 
-    # Tar sdrd files 
-    my $sdrdtar = '/var/tmp/sdrd';
-    my $sdrdship = $sdrdtar . "tar";
-
-    rmsdrd($sdrdship);
+    # Tar sdrd files
+    my $sdrdtar = '/var/tmp/sdrd.' . $host . '.tar';
 
     $tar->write($sdrdtar);
 
-    # Ship the tar file
-    # trans2http($curl, $dest, $sdrid, $sdrdtar, $hport, $hproxy, $hproxyport);
-
-    # unlink sdrd tar file
-    rmsdrd($sdrdship);
-
-    return;
+    return $sdrdtar;
 }
 
 
@@ -750,7 +760,6 @@ sub rmsdrd {
     my ($file) = @_;
 
     if ( -e $file ) {
-        print "file exists\n";
         unlink $file or warn "warn: rmsdrd - could not remove $file: $!";
     }
 
