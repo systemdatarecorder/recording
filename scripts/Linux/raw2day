@@ -310,10 +310,10 @@ if ($trans_flag) {
                 printf "%s\n", "info: main - transport protocol: HTTP";
             }
             my $sdrd_daily_dir = $sdr_daily . '/' . $dprev;
-            my $sdrd_dir = tarsdrd($sdrd_daily_dir);
+            my $shipment = tarsdrd($sdrd_daily_dir);
 
             if ($verbose_flag == 1) {
-                printf "%s\n", "info: main - sdrd tar shipment: $sdrd_dir";
+                printf "%s\n", "info: main - sdrd tar shipment: $shipment";
             }
             #trans2shttp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
             #          $dprev, 
@@ -321,7 +321,20 @@ if ($trans_flag) {
             #          $sport, 
             #          $user, 
             #          $pass);
-            #rmsdrd($shipfile);
+
+            my $rmship = rmsdrd($shipment);
+            
+            if ($verbose_flag == 1) {
+                given($rmship) {
+                    when(0) {
+                     printf "%s\n", "info: main - sdrd tar shipment clean-up: done"; }
+
+                    when(1) {
+                     printf "%s\n", "info: main - sdrd tar shipment clean-up: failed, $rmship"; }
+                }
+            }
+
+
         }
     }
 }
@@ -760,7 +773,7 @@ sub rmsdrd {
     my ($file) = @_;
 
     if ( -e $file ) {
-        unlink $file or warn "warn: rmsdrd - could not remove $file: $!";
+        if (unlink($file) > 0) { return 0; } else { return 1; }
     }
 
     return;

@@ -27,7 +27,6 @@ use File::Tail;
 use File::Basename;
 use Digest::SHA;
 use WWW::Curl::Easy;
-use HTTP::Response;
 use Net::SSH2;
 use Getopt::Std;
 use XML::LibXML;
@@ -522,7 +521,7 @@ sub trans2http {
 
     if ( $retcode == 0 ) {
         if ( $verbose_flag == 1 ) {
-            addlog("info: trans2http - HTTP response");
+            addlog("info: trans2http - $dbid sdrd data delivered");
             #$response = HTTP::Response->parse($response);
             #my $xml = $response->decoded_content;
         }
@@ -716,11 +715,6 @@ OPTIONS:
 
  e.g. sender     check and send sdrd raw data, every 60 secs
       sender 10  check and send sdrd raw data, every 10 secs
-
-NOTES:
- sdr.conf: sender uses sdr.conf XML configuration file ! Make sure you
- have a functional sdr.conf installed or define where sdr.conf
- is found using SDR_ROOT variable
 END
     exit 0;
 }
