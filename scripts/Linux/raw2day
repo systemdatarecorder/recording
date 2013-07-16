@@ -29,6 +29,8 @@ use Time::HiRes qw(gettimeofday);
 use File::Copy;
 use Sys::Hostname;
 use File::Basename;
+use Digest::SHA;
+use WWW::Curl::Easy;
 use XML::LibXML;
 use XML::LibXML::XPathContext;
 
@@ -146,6 +148,7 @@ my $dsdrd = rotate($sdr_current, $sdr_daily, $dprev);
 
 
 ## Transport Mode
+
 if ($trans_flag) {
 
     # Verbose Messages
@@ -178,33 +181,11 @@ if ($trans_flag) {
         }
     }
 
+    die "error: main - no subscription defined, check sdr.conf\n"
+        if (! $sdrid);
+
     ## Reporting Config XML
     my ($db_path, $dc_path, $dest, $user, $pass);
-
-    # XPATH Method
-    # my @res = $conf -> findnodes('//host');
-    
-    # foreach my $node (@res) {
-    #     # DOM Method
-    #     $dest = $node -> getAttribute ('name');
-
-    #     # ssh2 port
-    #     if ($node -> getElementsByTagName('ssh2port')) {
-    #         $port = $node -> getElementsByTagName('ssh2port');
-    #     }
-
-    #     $user = $node -> getElementsByTagName('username');
-    #     $pass = $node -> getElementsByTagName('password');
-    
-    #     if ($argv_flag) {
-    #         for my $h ( 0 .. $#ARGV ) {
-    #             next if ($ARGV[$h] ne $dest);
-    #             transport($ARGV[$h], $port, $user, $pass);
-    #         }
-    #     } else {
-    #         transport($dest, $port, $user, $pass);
-    #     }
-    # }
 
     # Reporting XML Configuration
     # XPATH Method
@@ -264,6 +245,8 @@ if ($trans_flag) {
         }
     }
 
+    my $destdir = '/' . $sdrid . "/content/hosts/" . $host . "/raw";
+
     given($ttype) {
 
         # FTP Transport
@@ -271,11 +254,7 @@ if ($trans_flag) {
             if ($verbose_flag == 1) {
                 printf "%s\n", "info: main - transport protocol: FTP";
             }
-            trans2ftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
-                     $dprev, 
-                     $dest, 
-                     $user,
-                     $pass);
+            trans2ftp($sdr_daily, $destdir, $dprev, $dest, $user, $pass);
         }        
 
         # SCP Transport
@@ -283,12 +262,7 @@ if ($trans_flag) {
             if ($verbose_flag == 1) {
                 printf "%s\n", "info: main - transport protocol: SCP";
             }
-            trans2scp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
-                     $dprev, 
-                     $dest, 
-                     $sport, 
-                     $user, 
-                     $pass);
+            trans2scp($sdr_daily, $destdir, $dprev, $dest, $sport, $user, $pass);
         }
 
         # SFTP Transport
@@ -296,12 +270,7 @@ if ($trans_flag) {
             if ($verbose_flag == 1) {
                 printf "%s\n", "info: main - transport protocol: SFTP";
             }
-            trans2sftp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
-                      $dprev,
-                      $dest,
-                      $sport,
-                      $user,
-                      $pass);
+            trans2sftp($sdr_daily, $destdir, $dprev, $dest, $sport, $user, $pass);
         }
 
         # HTTP Transport
@@ -309,28 +278,33 @@ if ($trans_flag) {
             if ($verbose_flag == 1) {
                 printf "%s\n", "info: main - transport protocol: HTTP";
             }
-            my $sdrd_daily_dir = $sdr_daily . '/' . $dprev;
-            my $shipment = tarsdrd($sdrd_daily_dir);
+            my $sdrd_dir = $sdr_daily . '/' . $dprev;
+            my $shipment = tarsdrd($sdrd_dir);
 
             if ($verbose_flag == 1) {
                 printf "%s\n", "info: main - sdrd tar shipment: $shipment";
             }
-            #trans2shttp($sdr_daily, "$sdrid/content/hosts/$host/raw", 
-            #          $dprev, 
-            #          $dest, 
-            #          $sport, 
-            #          $user, 
-            #          $pass);
+
+            # init HTTP transport
+            my $http = WWW::Curl::Easy->new;
+
+            if ($tcpka) {
+                $http->setopt( WWW::Curl::Easy::CURLOPT_TCP_KEEPALIVE(), 1 );
+            }
+
+            trans2http($http, $dest, $sdrid, $destdir, $shipment, $hport, $hproxy);
 
             my $rmship = rmsdrd($shipment);
             
             if ($verbose_flag == 1) {
                 given($rmship) {
                     when(0) {
-                     printf "%s\n", "info: main - sdrd tar shipment clean-up: done"; }
+                     printf "%s\n", 
+                            "info: main - sdrd tar shipment clean-up: done"; }
 
                     when(1) {
-                     printf "%s\n", "info: main - sdrd tar shipment clean-up: failed, $rmship"; }
+                     printf "%s\n", 
+                            "info: main - sdrd tar shipment clean-up: failed, $rmship"; }
                 }
             }
 
@@ -691,50 +665,55 @@ sub get_values {
 
 sub trans2http {
 
-    my ( $curl, $dest, $sdrid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
+    my ( $curl, $dest, $sdrid, $destdir, $shipment, $hport, $hproxy, $hproxyport) = @_;
+
     my $response;
 
+    if ( $verbose_flag == 1 ) {
+        printf "%s\n", "info: trans2http - dest:$dest, destdir=$destdir, ship=$shipment"; 
+    }
     ## uri
-    my $uri = "http://" . $dest . ":" . $hport . "/cgi-bin/trans.cgi";
+    # my $uri = "http://" . $dest . ":" . $hport . "/cgi-bin/trans.cgi";
 
     ## payload
-    my $payload = sha256sdrd($delta);
-    addlog("info: sendhttp - id=$sdrid&h=$host&db=$dbid&$payload")
-      if ( $verbose_flag == 1 );
+    #my $payload = sha256sdrd($delta);
+    #addlog("info: sendhttp - id=$sdrid&h=$host&db=$dbid&$payload")
+    #  if ( $verbose_flag == 1 );
 
     ## test for HTTP proxy
     ## CURLOPT_PROXY CURLOPT_PROXYPORT
-    if ($hproxy) {
-        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(),     $hproxy );
-        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXYPORT(), $hproxyport );
-    }
-    else {
-        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(), '' );
-    }
+    #if ($hproxy) {
+    #    $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(),     $hproxy );
+    #    $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXYPORT(), $hproxyport );
+    #}
+    #else {
+    #    $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(), '' );
+    #}
 
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_HEADER(), 1 );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_URL(),    $uri );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_HTTPHEADER(),
-        ['Content-Type: text/plain'] );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
-        "id=$sdrid&h=$host&db=$dbid&$payload" );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
+    #$curl->setopt( WWW::Curl::Easy::CURLOPT_HEADER(), 1 );
+    #$curl->setopt( WWW::Curl::Easy::CURLOPT_URL(),    $uri );
+    #$curl->setopt( WWW::Curl::Easy::CURLOPT_HTTPHEADER(),
+    #    ['Content-Type: text/plain'] );
+    #$curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
+    #$curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
+    #    "id=$sdrid&h=$host&db=$dbid&$payload" );
+    #$curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
 
-    my $retcode = $curl->perform;
+    #my $retcode = $curl->perform;
 
-    if ( $retcode == 0 ) {
-        if ( $verbose_flag == 1 ) {
-            addlog("info: sendhttp - HTTP response");
+    #if ( $retcode == 0 ) {
+    #    if ( $verbose_flag == 1 ) {
+    #        addlog("info: sendhttp - HTTP response");
             #$response = HTTP::Response->parse($response);
             #my $xml = $response->decoded_content;
-        }
-    }
-    else {
-        addlog("error: sendhttp - cant send $dbid sdrd data, transport error");
-    }
+    #    }
+    #}
+    #else {
+    #    addlog("error: sendhttp - cant send $dbid sdrd data, transport error");
+    #}
 
-    return $retcode;
+    #return $retcode;
+    return;
 }
 
 
@@ -761,7 +740,7 @@ sub tarsdrd {
     }
 
     # Tar sdrd files
-    my $sdrdtar = '/var/tmp/sdrd.' . $host . '.tar';
+    my $sdrdtar = '/var/tmp/sdrd.' . $sdrid . '.' . $host . '.tar';
 
     $tar->write($sdrdtar);
 
