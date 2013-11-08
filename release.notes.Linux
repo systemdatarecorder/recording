@@ -47,7 +47,7 @@ Recording
     Bug 289 - sender host, group and subscription-id configuration
     Update perl-5.16.3
     Update libssh2-1.4.3
-    Update curl-7.32.0
+    Update curl-7.33.0
     Update libidn-1.27
     Update sysstat-10.1.6
     Update Net-SSH2-0.53
