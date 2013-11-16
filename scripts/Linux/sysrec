@@ -381,7 +381,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-sysrec: 0.75, 2013-08-31
+sysrec: 0.75, 2013-12-31
  sdrd format: 0737 43
 END
     exit 0;
