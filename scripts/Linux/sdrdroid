@@ -18,7 +18,7 @@
 #
 #  (http://www.gnu.org/copyleft/gpl.html)
 
-# Built-in self-test SDR Recording Module
+##  SDR Droid Utility
 
 use strict;
 use warnings;
@@ -32,16 +32,22 @@ use 5.010;
 # Command line arguments
 #
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
-getopts('hr:cV') or usage();
+getopts('hr:vV') or usage();
 usage()    if defined $main::opt_h;
 revision() if defined $main::opt_V;
+
+# verbose flag
+my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
+
 
 
 #
 #  Variables
 #
+$main::opt_h = 0;
+$main::opt_v = 0;
+$main::opt_V = 0;
 local $| = 1;
-
 
 
 # ######### #
@@ -59,12 +65,39 @@ my $recsem = 0;
 ## check for recorder list
 if ( defined $main::opt_r ) {
     # check comma separator
-    # /^(([a-z]*[0-9](:[1-9])?|,)*$)/
     usage() if $main::opt_r !~ /^(((sys|cpu|disk|nic|hdw)rec?|,)*$)/;
     $recsem = 1;
     @recs = split( /,/, $main::opt_r );
 }
-    
+
+
+# Command line arguments
+my $command = shift;
+
+# check on internal commands
+given($command) {
+    # built-in selft-test command
+    when('test') { print "test command mode @recs\n"; }
+
+    # run command
+    when('run') { print "run command mode"; }
+
+    default { usage(); }
+}    
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Subroutines
 
 
 sub check_recorder {
@@ -90,18 +123,15 @@ OPTIONS:
   -r recorder,recorder,...           # recorder list
 
 COMMAND:
-     bist                            # built-in selft-test
+     test                            # built-in selft-test
      run                             # run recorders
   
- eg, sdrdroid bist                   # self-test all recorders
-     sdrdroid -r sysrec bist         # self-test sysrec
-     sdrdroid -r sysrec,cpurec bist  # self-test sysrec,cpurec
+ eg, sdrdroid test                   # self-test all recorders
+     sdrdroid -r sysrec test         # self-test sysrec
+     sdrdroid -r sysrec,cpurec test  # self-test sysrec,cpurec
 
 NOTES:
-sdrbist - SDR Built-In Self-Test procedure will test all
-main recorders of SDR: sysrec, cpurec, diskrec, nicrec
-and hdwrec. sdrbist will ensure the SDR Recording module
-has been properly installed and is correctly configured.
+sdrdroid - A SDR Utility
 END
     exit 0;
 }
