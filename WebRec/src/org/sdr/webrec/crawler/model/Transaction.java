@@ -20,7 +20,7 @@
 
 package org.sdr.webrec.crawler.model;
 
-public class Transaction {
+public class Transaction extends ARound {
 
 		Workload workload; //the parent workload
 	
@@ -58,7 +58,7 @@ public class Transaction {
 			    return result.toString();
 
 		}
-		public String getId() {
+		public String getName() {
 			return id;
 		}
 		public void setId(String id) {

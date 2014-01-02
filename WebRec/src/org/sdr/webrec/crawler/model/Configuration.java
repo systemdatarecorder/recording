@@ -22,7 +22,6 @@ package org.sdr.webrec.crawler.model;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.apache.commons.codec.binary.StringUtils;
 
 public class Configuration {
 		
@@ -112,19 +111,19 @@ public class Configuration {
 
 		
 		public String toString(){
-			 StringBuilder result = new StringBuilder();
-			 String NEW_LINE = System.getProperty("line.separator");
+			 StringBuilder  result = new StringBuilder();
+			 final String NEW_LINE = System.getProperty("line.separator");
 			 result.append(NEW_LINE);
 			 result.append(" KeepConnectionAlive: " + this.keepConnectionAlive + NEW_LINE);
 			 result.append(" Proxy: " + proxyHost +":" + proxyPort + NEW_LINE);
 			 result.append(" # of threads: " + getThreadNumber() + NEW_LINE);
 			 result.append(" Workloads: " + workloads + NEW_LINE);
 				      
-			    Iterator<Workload> i = workloads.iterator();
+			    final Iterator<Workload> iterator = workloads.iterator();
 			    
-			    while(i.hasNext())
-			    	result.append( "Workload{" + (Workload) i.next()+ "}" + NEW_LINE);
-			    
+			    while(iterator.hasNext()){
+			    	result.append( "Workload{" + (Workload) iterator.next()+ "}" + NEW_LINE);
+			    }
 			    return result.toString();
 
 		}

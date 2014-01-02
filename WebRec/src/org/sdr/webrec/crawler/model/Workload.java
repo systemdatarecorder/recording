@@ -1,6 +1,6 @@
 /**
  * 
- * Copyright 2010 System Data Recorder
+ * Copyright 2013 System Data Recorder
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); 
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 
-public class Workload {
+public class Workload extends ARound {
 
 			String name;
 			int delay;

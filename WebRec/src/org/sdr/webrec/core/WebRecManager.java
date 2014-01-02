@@ -30,7 +30,7 @@ public class WebRecManager extends Thread {
 	private Configuration settings;
 	private WebRec[] webrec;
 	
-	Logger  logger = Logger.getLogger("org.sdr");
+	static final Logger LOGGER = Logger.getLogger("org.sdr");
 
 	public WebRecManager(Configuration configuration) {
 		this.settings = configuration;
@@ -55,25 +55,25 @@ public class WebRecManager extends Thread {
 
 	public void run() {
 		for (int i = 0; i < webrec.length; i++) {
-			logger.info("Starting Thread : " + webrec[i].getThreadName());
+			LOGGER.info("Starting Thread : " + webrec[i].getThreadName());
 			webrec[i].start();
 		}
 		for (int i = 0; i < webrec.length; i++) {
 			try {
 				webrec[i].join();
 			} catch (InterruptedException e) {
-				logger.error("ERROR:" + e.getLocalizedMessage());
+				LOGGER.error("ERROR:" + e.getLocalizedMessage());
 				e.printStackTrace();
 			}
 		}
 
-		logger.info("Started #" + webrec.length + " threads");
+		LOGGER.info("Started #" + webrec.length + " threads");
 	}
 
 	@SuppressWarnings("deprecation")
 	public void finalize() {
 		for (int i = 0; i < settings.getThreadNumber(); i++) {
-			logger.info("Stopping Thread : " + webrec[i].getThreadName());
+			LOGGER.info("Stopping Thread : " + webrec[i].getThreadName());
 			webrec[i].stop();
 		}
 	}
@@ -81,11 +81,11 @@ public class WebRecManager extends Thread {
 	
 	public void testRound() {
 		for (int i = 0; i < webrec.length; i++) {
-			logger.info("Starting Tests for: " + webrec[i].getThreadName());
+			LOGGER.info("Starting Tests for: " + webrec[i].getThreadName());
 			webrec[i].testURLS();
 		}
 	
-		logger.debug("Tested all configured Workloads");
+		LOGGER.debug("Tested all configured Workloads");
 	}
 
 

@@ -1,3 +1,6 @@
+package org.sdr.webrec.core;
+
+
 /**
  * 
  * Copyright 2010 System Data Recorder
@@ -18,25 +21,28 @@
  */
 
 
-package org.sdr.webrec.core;
 
 import java.io.BufferedWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Arrays;
 
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
+
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
@@ -84,10 +90,10 @@ public class WebRec extends Thread {
     ThreadSafeClientConnManager cm;
     HttpGet httpget;
     DefaultHttpClient  httpclient;
+    RequestConfig requestConfig;
     
     
-	Logger  logger = Logger.getLogger("org.sdr");
-	private BasicHttpContext context;
+	static final Logger  LOGGER = Logger.getLogger("org.sdr");
 	   
 	public WebRec(Configuration settings, String name, int interval, int timeout, int delay, Object[] urls) {
 		super(name);
@@ -100,7 +106,7 @@ public class WebRec extends Thread {
 		try {
 			out = new BufferedWriter(new OutputStreamWriter(System.out));
 		} catch (Exception e) {
-			logger.error("ERROR:" + e.getLocalizedMessage());
+			LOGGER.error("ERROR:" + e.getLocalizedMessage());
 			e.printStackTrace();
 		}
 	}
@@ -130,13 +136,12 @@ public class WebRec extends Thread {
 
 				for (int i = 0; i < url.length; i++) {
 
-					context = new BasicHttpContext();
 					
-					logger.debug("url:" + ((Transaction) url[i]).getUrl());
+					LOGGER.debug("url:" + ((Transaction) url[i]).getUrl());
 
 					Transaction transaction = (Transaction) url[i];
 					siteURL = new URL(transaction.getUrl());
-					transactionName = transaction.getId();
+					transactionName = transaction.getName();
 
 					//if transaction requires server authentication
 					if(transaction.isAutenticate())
@@ -161,7 +166,7 @@ public class WebRec extends Thread {
 						
 					} catch (Exception e){
 						httpget.abort();
-						logger.error("ERROR in receiving response:" + e.getLocalizedMessage());
+						LOGGER.error("ERROR in receiving response:" + e.getLocalizedMessage());
 						e.printStackTrace();
 					}
 	                
@@ -172,26 +177,15 @@ public class WebRec extends Thread {
 					
 							timeLapse = endTime - startTime;
 							
-							logger.debug("starttime:" + (new Double (startTime)).toString());
-							logger.debug("timeLapse:" + endTime);
-							logger.debug("timeLapse:" + timeLapse);
+							LOGGER.debug("starttime:" + (new Double (startTime)).toString());
+							LOGGER.debug("timeLapse:" + endTime);
+							LOGGER.debug("timeLapse:" + timeLapse);
 							
-							Header header = response.getFirstHeader("staletime");
-
-							if (header != null) {
-								//only remove stale connection time from response time if keep connection live is enabled
-								if(settings.isKeepConnectionAlive()){
-									timeLapse = timeLapse - (new Double(header.getValue())).doubleValue();
-								}
-								logger.debug("staletime:" + ( ((new Double(header.getValue())).doubleValue()) / 1000000L ) +"ms.");
-								logger.debug("staletime:" + ( ((new Double(header.getValue())).doubleValue())) +"ns.");
-							}
-							
-		
+					
 						
 							//move nanos to millis
 							timeLapse = timeLapse / 1000000L;
-							logger.debug("response time:" + formatter.format(timeLapse) + "ms.");
+							LOGGER.debug("response time:" + formatter.format(timeLapse) + "ms.");
 							out.write(System.currentTimeMillis()/1000 + ":");
 							out.write( threadName + '.' + transactionName + ":" + formatter.format(timeLapse) +"\n");
 
@@ -204,21 +198,21 @@ public class WebRec extends Thread {
 							}
 					
 						} else {
-							logger.error("Status code of transaction:" + transactionName +" was not "+ HttpURLConnection.HTTP_OK+" but " + response.getStatusLine().getStatusCode());
+							LOGGER.error("Status code of transaction:" + transactionName +" was not "+ HttpURLConnection.HTTP_OK+" but " + response.getStatusLine().getStatusCode());
 						}
 						
 					}
 					int sleepTime = delay;
 					try {
-						logger.debug("Sleeping " + delay / 1000 + "s...");
+						LOGGER.debug("Sleeping " + delay / 1000 + "s...");
 						sleep(sleepTime);
 					} catch (InterruptedException ie) {
-						logger.error("ERROR:" + ie);
+						LOGGER.error("ERROR:" + ie);
 						ie.printStackTrace();
 					}
 				}
 			} catch (Exception e) {
-				logger.error("Error in thread " + threadName +  " with url:" + siteURL+ " " + e.getMessage());
+				LOGGER.error("Error in thread " + threadName +  " with url:" + siteURL+ " " + e.getMessage());
 				e.printStackTrace();
 			}
 			try {
@@ -226,21 +220,21 @@ public class WebRec extends Thread {
 				t2=System.currentTimeMillis();
 				tTask=t2-t1;
 
-				logger.debug("Total time consumed:" + tTask / 1000 + "s.");
+				LOGGER.debug("Total time consumed:" + tTask / 1000 + "s.");
 				
 				if(tTask <= interval){
 					 //when task takes less than preset time
-					logger.debug("Sleeping interval:" + (interval-tTask) / 1000 + "s.");
+					LOGGER.debug("Sleeping interval:" + (interval-tTask) / 1000 + "s.");
 					sleep(interval-tTask);
 				}
 				
 								
 				cm.closeExpiredConnections();
 			} catch (InterruptedException ie) {
-				logger.error("Error:" + ie);
+				LOGGER.error("Error:" + ie);
 				ie.printStackTrace();
 			} catch (Exception e) {
-				logger.error("Error:" + e);
+				LOGGER.error("Error:" + e);
 				e.printStackTrace();
 			}
 		} while (true);
@@ -290,11 +284,11 @@ public class WebRec extends Thread {
 		// initialize HTTP parameters
        params = new BasicHttpParams();
        ConnManagerParams.setMaxTotalConnections(params, 100);
-       params.setBooleanParameter("http.connection.stalecheck", settings.isKeepConnectionAlive());
-       //params.setIntParameter("http.connection.timeout", timeout);
        HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-       ConnManagerParams.setTimeout(params, timeout);
+     
        httpclient = new DefaultHttpClient(cm, params);
+
+       //TODO: CloseableHttpClient httpclient = HttpClients.createDefault();
        
        
        //set proxy if available in settings
@@ -308,7 +302,7 @@ public class WebRec extends Thread {
         		httpclient.getCredentialsProvider().setCredentials(
                     new AuthScope(settings.getProxyHost(), settings.getProxyPort()),
                     new UsernamePasswordCredentials(settings.getProxyUserName(), settings.getProxyPasswd()));
-        		logger.debug("autentication for proxy on");
+        		LOGGER.debug("autentication for proxy on");
         	}
       
        }
@@ -339,6 +333,7 @@ public class WebRec extends Thread {
                         try {
                             return Long.parseLong(value);
                         } catch(NumberFormatException ignore) {
+                        	
                         }
                     }
                 }
@@ -351,16 +346,27 @@ public class WebRec extends Thread {
         });
 
   
-		context = new BasicHttpContext();
 		httpget = null;
 		
 		httpclient = new DefaultHttpClient(cm, params);	
 			
 		
-		// RFC 2965 cookie management spec is used per default
-        // to parse, validate, format & match cookies
-        httpclient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.RFC_2965);
-
+		 // Create global request configuration
+        RequestConfig defaultRequestConfig = RequestConfig.custom()
+            .setCookieSpec(CookieSpecs.BEST_MATCH)
+            .setExpectContinueEnabled(true)
+            .setStaleConnectionCheckEnabled(settings.isKeepConnectionAlive())
+            .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
+            .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC))
+            .build();
+		
+		 requestConfig = RequestConfig.copy(defaultRequestConfig)
+                .setSocketTimeout(timeout)
+                .setConnectTimeout(timeout)
+                .setConnectionRequestTimeout(timeout)
+                .build();
+		
+            
 		
 	}
 	
@@ -380,7 +386,7 @@ public class WebRec extends Thread {
 				
 				Transaction transaction = (Transaction) url[i];
 				siteURL = new URL(transaction.getUrl());
-				transactionName = transaction.getId();
+				transactionName = transaction.getName();
 
 				//if transaction requires server authentication
 				if(transaction.isAutenticate())
@@ -389,22 +395,27 @@ public class WebRec extends Thread {
 		                	new UsernamePasswordCredentials(transaction.getWorkload().getUsername(), transaction.getWorkload().getPassword()));
 
 					
+				
+				
 				// Get HTTP GET method
 				httpget = new HttpGet(((Transaction) url[i]).getUrl());
+				
+				httpget.setConfig(requestConfig);
 				
 				response = null;
 				// Execute HTTP GET
 
-				
+					
 				response = httpclient.execute(httpget);
-
+				
+			
 				if (response != null){
 					if(response.getStatusLine().getStatusCode() == HttpURLConnection.HTTP_OK) {
-						logger.debug("HTTP Status code:" + HttpURLConnection.HTTP_OK + " for " + siteURL.toURI());
+						LOGGER.debug("HTTP Status code:" + HttpURLConnection.HTTP_OK + " for " + siteURL.toURI());
 					}	
 					if(response.getStatusLine().getStatusCode() != HttpURLConnection.HTTP_OK) {
-						logger.error("HTTP response for transaction:" + transactionName + ", " + siteURL.toURI()+" was faulty. It was:" + response.getStatusLine().getStatusCode());
-						logger.error("WebRec will not start. Please fix the above errors.");
+						LOGGER.error("HTTP response for transaction:" + transactionName + ", " + siteURL.toURI()+" was faulty. It was:" + response.getStatusLine().getStatusCode());
+						LOGGER.error("WebRec will not start. Please fix the above errors.");
 						System.exit(-1);
 					}
 					//content must be consumed just because 
@@ -418,8 +429,8 @@ public class WebRec extends Thread {
 					
 				}
 			} catch (Exception e) {
-				logger.error("Error in testRun " + threadName +  " with url:" + siteURL+ " " + e.getMessage());
-				logger.error("WebRec will exit. Please correct above errors.");
+				LOGGER.error("Error in testRun " + threadName +  " with url:" + siteURL+ " " + e.getMessage());
+				LOGGER.error("WebRec will exit. Please correct above errors.");
 				e.printStackTrace();
 				System.exit(-1);
 			
