@@ -1,6 +1,6 @@
 #!/bin/ksh -p
-
-# COPYRIGHT: Copyright (c) 2013 System Data Recorder
+#
+#  Copyright (c) 2014 Stefan Parvu (www.systemdatarecorder.org).
 #
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
@@ -17,6 +17,8 @@
 #  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #  (http://www.gnu.org/copyleft/gpl.html)
+
+# SDR VERSION: 1.00
 
 # ######### #
 # MAIN BODY #

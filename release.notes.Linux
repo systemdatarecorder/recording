@@ -1,6 +1,6 @@
 
 ================
-SDR version 0.75
+SDR version 0.80
 ================
 
 Release Date
@@ -16,7 +16,7 @@ Recording
 =========
 
 
-0.75
+0.80
 ====
     Bug 224 - sender use of uninitialized value $@ in concatenation
     Bug 225 - sysrec performance metrics type definition

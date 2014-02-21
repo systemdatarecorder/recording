@@ -50,7 +50,7 @@
   <reporting description="SDR reporting module configuration">
 
     <!-- Destination Reporting Servers -->
-    <host name="reporting" ver="0.74" description="SDR reporting server">
+    <host name="reporting" ver="1.00" description="SDR reporting server">
       <http description="default HTTP port">
         <port>80</port>
         <!-- Via HTTP Proxy -->
