@@ -44,8 +44,8 @@ Recording
     Bug 226 - cpurec performance metrics type definition
     Bug 225 - sysrec performance metrics type definition
     Bug 224 - sender use of uninitialized value $@ in concatenation
-    Update perl-5.16.3
-    Update openssl-1.0.0l
+    Update perl-5.18.2
+    Update openssl-1.0.0g
     Update libssh2-1.4.3
     Update curl-7.35.0
     Update libidn-1.28
