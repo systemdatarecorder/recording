@@ -19,6 +19,7 @@ Recording
 1.00
 ====
     Bug 294 - crash in Digest::SHA methods
+    Bug 293 - Xen hypervisor specifications
     Bug 292 - cleanup manual pages
     Bug 289 - sender host, group and subscription-id configuration
     Bug 286 - raw2day should not ask for a host reporting
