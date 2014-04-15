@@ -16,7 +16,7 @@ Recording
 =========
 
 
-0.80
+1.00
 ====
     Bug 224 - sender use of uninitialized value $@ in concatenation
     Bug 225 - sysrec performance metrics type definition
@@ -44,27 +44,14 @@ Recording
     Bug 286 - raw2day should not ask for a host reporting
     Bug 289 - sender host, group and subscription-id configuration
     Update perl-5.16.3
+    Update openssl-1.0.0l
     Update libssh2-1.4.3
-    Update curl-7.33.0
-    Update libidn-1.27
-    Update sysstat-10.2.0
+    Update curl-7.35.0
+    Update libidn-1.28
+    Update sysstat-10.2.1
     Update Net-SSH2-0.53
     Update libxml2-2.9.1
-    Update XML-LibXML-2.0104
-
-Known issues:
-    Bug 172 - procrec uses additional memory over long periods of time
-    Info: procrec uses Sys::Statistics::Linux, Processes.pm to
-    extract per process statistics. It seems there is a design
-    issue within Processes.pm module which caches each
-    process id resulting in a larger RES segment over long periods 
-    of time. We are working with the author of Sys::Statistics::Linux
-    to correct this defect.
-
-    Bug 173 - jvmrec uses more memory over long periods of time
-    Info: jvmrec in extended mode, uses Sys::Statistics::Linux
-    to extract per process statistics, resulting in a similar 
-    memory usage pattern as described for procrec, Bug 172.
+    Update XML-LibXML-2.011
 
 
 0.74.1
