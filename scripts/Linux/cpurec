@@ -18,8 +18,6 @@
 #
 #  (http://www.gnu.org/copyleft/gpl.html)
 
-# SDR VERSION: 1.00
-
 use strict;
 use warnings;
 use Getopt::Std;
