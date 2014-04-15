@@ -15,14 +15,12 @@ Time series let us understand what has happened in past and look in the future, 
 
 Standard Agents
 
+ sysrec overall system CPU, MEM, DISK, NIC utilization
 
-sysrec 
-    overall system CPU, MEM, DISK, NIC utilization
-cpurec
-    per-CPU statistics
-nicrec
-    per-NIC statistics
-diskrec
-    per-DISK statistics
-hdwrec
-    hardware, software inventory 
+ cpurec per-CPU statistics
+ 
+ nicrec per-NIC statistics
+ 
+ diskrec per-DISK statistics
+ 
+ hdwrec hardware, software inventory 
