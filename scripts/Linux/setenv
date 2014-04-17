@@ -84,6 +84,7 @@ NETREC_CUR=${SDR_CURRENT}/netrec.sdrd
 JVMREC_CUR=${SDR_CURRENT}/jvmrec.sdrd
 HDWREC_CUR=${SDR_CURRENT}/hdwrec.sdrd
 PROCREC_CUR=${SDR_CURRENT}/procrec.sdrd
+XENREC_CUR=${SDR_CURRENT}/xenrec.sdrd
 ########################################
 
 
@@ -98,6 +99,7 @@ JVMREC_LOG=${SDR_LOG}/jvmrec.log
 HDWREC_LOG=${SDR_LOG}/hdwrec.log
 PROCREC_LOG=${SDR_LOG}/procrec.log
 WEBREC_LOG=${SDR_LOG}/webrec.log
+XENREC_LOG=${SDR_LOG}/xenrec.log
 
 
 ########################################
