@@ -20,7 +20,6 @@
 
 use strict;
 use warnings;
-use 5.010;
 use Getopt::Std;
 use Date::Calc qw{:all};
 use Time::HiRes qw(gettimeofday);
@@ -39,7 +38,7 @@ use XML::LibXML::XPathContext;
 # Command line arguments
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
 getopts('hvVt:q') or usage();
-usage()    if defined $main::opt_h;
+usage() if defined $main::opt_h;
 revision() if defined $main::opt_V;
 usage() if (($#ARGV+1) >= 1);
 my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
@@ -129,7 +128,7 @@ if (!($sdr_daily)) {
 }
 
 # Verbose Messages
-if ($verbose_flag == 1) {
+if ( $verbose_flag == 1 ) {
     print "info: main - recording hostname: $host \n";
     print "info: main - current log dir: $sdr_current \n";
     print "info: main - daily log dir: $sdr_daily \n";
@@ -137,7 +136,7 @@ if ($verbose_flag == 1) {
 
 my $dprev = get_yesterday();
 
-if ($verbose_flag == 1) {
+if ( $verbose_flag == 1 ) {
     printf "%s %s\n", "info: main - sdrd data dir:", $dprev;
 }
 
@@ -147,10 +146,10 @@ my $dsdrd = rotate($sdr_current, $sdr_daily, $dprev);
 
 ## Transport Mode
 
-if ($trans_flag) {
+if ( $trans_flag ) {
 
     # Verbose Messages
-    if ($verbose_flag == 1) {
+    if ( $verbose_flag == 1 ) {
         print "info: main - transport mode ON\n";
     }
 
@@ -180,7 +179,7 @@ if ($trans_flag) {
     }
 
     die "error: main - no subscription defined, check sdr.conf\n"
-        if (! $sdrid);
+        if ( ! $sdrid );
 
     ## Reporting Config XML
     my ($db_path, $dc_path, $dest, $user, $pass);
@@ -199,7 +198,7 @@ if ($trans_flag) {
         $pass = $node->getElementsByTagName('password');
 
         # Verbose Messages
-        if ($verbose_flag == 1) {
+        if ( $verbose_flag == 1 ) {
             printf "%s\n", "info: main - transport destination: $dr";
         }
 
@@ -209,21 +208,14 @@ if ($trans_flag) {
                   get_transport( $conf,
                     "/sdr/reporting/host[\@name=\"$dest\"]/http/*" );
 
-                given ($#http_transport) {
 
-                    when (0) { $hport = $http_transport[0]; }
+            if ( $#http_transport == 0 ) { $hport      = $http_transport[0]; }
+         elsif ( $#http_transport == 1 ) { $hport      = $http_transport[0];
+                                           $hproxy     = $http_transport[1]; }
+         elsif ( $#http_transport == 2 ) { $hport      = $http_transport[0];
+                                           $hproxy     = $http_transport[1];
+                                           $hproxyport = $http_transport[2]; }
 
-                    when (1) {
-                        $hport  = $http_transport[0];
-                        $hproxy = $http_transport[1];
-                    }
-
-                    when (2) {
-                        $hport      = $http_transport[0];
-                        $hproxy     = $http_transport[1];
-                        $hproxyport = $http_transport[2];
-                    }
-                }
             }
 
             if ( $node->getElementsByTagName('ssh2') ) {
@@ -231,9 +223,9 @@ if ($trans_flag) {
                   get_transport( $conf,
                     "/sdr/reporting/host[\@name=\"$dest\"]/ssh2/*" );
 
-                given ($#ssh2_transport) {
 
-                    when (0) { $sport = $ssh2_transport[0]; }
+                if ( $#ssh2_transport == 0 ) {
+                    $sport = $ssh2_transport[0];
                 }
 
             }
@@ -273,20 +265,20 @@ if ($trans_flag) {
 
         # HTTP Transport
         when(/^http$/i) {
-            if ($verbose_flag == 1) {
+            if ( $verbose_flag == 1 ) {
                 printf "%s\n", "info: main - transport protocol: HTTP";
             }
             my $sdrd_dir = $sdr_daily . '/' . $dprev;
             my $shipment = tarsdrd($sdrd_dir);
 
-            if ($verbose_flag == 1) {
+            if ( $verbose_flag == 1 ) {
                 printf "%s\n", "info: main - sdrd tar shipment: $shipment";
             }
 
             # init HTTP transport
             my $http = WWW::Curl::Easy->new;
 
-            if ($tcpka) {
+            if ( $tcpka ) {
                 $http->setopt( WWW::Curl::Easy::CURLOPT_TCP_KEEPALIVE(), 1 );
             }
 
@@ -295,10 +287,11 @@ if ($trans_flag) {
             my $rmship = rmsdrd($shipment);
             
             if ($verbose_flag == 1) {
-                if ($rmship == 0) {
+
+                if ( $rmship == 0 ) {
                     printf "%s\n",
                         "info: main - sdrd tar shipment clean-up: done";
-                } elsif ($rmship == 1) {
+                } elsif ( $rmship == 1 ) {
                     printf "%s\n",
                         "info: main - sdrd tar shipment clean-up: failed, $rmship"; 
                 }
