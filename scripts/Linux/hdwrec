@@ -20,7 +20,6 @@
 
 use strict;
 use warnings;
-use 5.010;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use Sys::Statistics::Linux;
 use POSIX qw(pause);
