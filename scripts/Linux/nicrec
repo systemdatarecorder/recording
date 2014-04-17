@@ -20,11 +20,11 @@
 
 use strict;
 use warnings;
-use 5.010;
 use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use Sys::Statistics::Linux qw(NetStats);
 use POSIX qw(pause);
+use List::MoreUtils qw(any);
 
 #
 # Command line arguments
@@ -118,49 +118,49 @@ while (1) {
     my @nics = sort $stat->netstats;
 
     # loop over all NICS
-    foreach (@nics) {
+    foreach my $n (@nics) {
 
-        # print "NIC: $_ \n";
+        # print "NIC: $n \n";
 
         # skip here the loopback interface
-        next if $_ =~ /^lo.*/;
+        next if $n =~ /^lo.*/;
 
         # filter by interface
         if ( $int_sem == 1 ) {
-            next if !( $_ ~~ @def_nics );
+            next if ( any { $_ ne $n } @def_nics);
         }
 
-        if (    defined( $nic->{$_}{rxbyt} )
-            and defined( $nic->{$_}{rxpcks} )
-            and defined( $nic->{$_}{rxerrs} )
-            and defined( $nic->{$_}{rxdrop} )
-            and defined( $nic->{$_}{rxfifo} )
-            and defined( $nic->{$_}{rxframe} )
-            and defined( $nic->{$_}{rxcompr} )
-            and defined( $nic->{$_}{rxmulti} )
-            and defined( $nic->{$_}{txbyt} )
-            and defined( $nic->{$_}{txpcks} )
-            and defined( $nic->{$_}{txerrs} )
-            and defined( $nic->{$_}{txdrop} )
-            and defined( $nic->{$_}{txfifo} )
-            and defined( $nic->{$_}{txcolls} )
-            and defined( $nic->{$_}{txcarr} )
-            and defined( $nic->{$_}{txcompr} )
-            and defined( $nic->{$_}{ttpcks} )
-            and defined( $nic->{$_}{ttbyt} ) )
+        if (    defined( $nic->{$n}{rxbyt} )
+            and defined( $nic->{$n}{rxpcks} )
+            and defined( $nic->{$n}{rxerrs} )
+            and defined( $nic->{$n}{rxdrop} )
+            and defined( $nic->{$n}{rxfifo} )
+            and defined( $nic->{$n}{rxframe} )
+            and defined( $nic->{$n}{rxcompr} )
+            and defined( $nic->{$n}{rxmulti} )
+            and defined( $nic->{$n}{txbyt} )
+            and defined( $nic->{$n}{txpcks} )
+            and defined( $nic->{$n}{txerrs} )
+            and defined( $nic->{$n}{txdrop} )
+            and defined( $nic->{$n}{txfifo} )
+            and defined( $nic->{$n}{txcolls} )
+            and defined( $nic->{$n}{txcarr} )
+            and defined( $nic->{$n}{txcompr} )
+            and defined( $nic->{$n}{ttpcks} )
+            and defined( $nic->{$n}{ttbyt} ) )
         {
 
-            $rKBytes = $nic->{$_}{rxbyt} / 1024;
-            $tKBytes = $nic->{$_}{txbyt} / 1024;
-            $TKBytes = $nic->{$_}{ttbyt} / 1024;
+            $rKBytes = $nic->{$n}{rxbyt} / 1024;
+            $tKBytes = $nic->{$n}{txbyt} / 1024;
+            $TKBytes = $nic->{$n}{ttbyt} / 1024;
 
             print_nicstats(
-                $_,                  $rKBytes,            $nic->{$_}{rxpcks},
-                $nic->{$_}{rxerrs},  $nic->{$_}{rxdrop},  $nic->{$_}{rxfifo},
-                $nic->{$_}{rxframe}, $nic->{$_}{rxcompr}, $nic->{$_}{rxmulti},
-                $tKBytes,            $nic->{$_}{txpcks},  $nic->{$_}{txerrs},
-                $nic->{$_}{txdrop},  $nic->{$_}{txfifo},  $nic->{$_}{txcolls},
-                $nic->{$_}{txcarr},  $nic->{$_}{txcompr}, $nic->{$_}{ttpcks},
+                $n,                  $rKBytes,            $nic->{$n}{rxpcks},
+                $nic->{$n}{rxerrs},  $nic->{$n}{rxdrop},  $nic->{$n}{rxfifo},
+                $nic->{$n}{rxframe}, $nic->{$n}{rxcompr}, $nic->{$n}{rxmulti},
+                $tKBytes,            $nic->{$n}{txpcks},  $nic->{$n}{txerrs},
+                $nic->{$n}{txdrop},  $nic->{$n}{txfifo},  $nic->{$n}{txcolls},
+                $nic->{$n}{txcarr},  $nic->{$n}{txcompr}, $nic->{$n}{ttpcks},
                 $TKBytes
             );
         }
