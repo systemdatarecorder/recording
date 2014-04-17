@@ -295,14 +295,21 @@ if ($trans_flag) {
             my $rmship = rmsdrd($shipment);
             
             if ($verbose_flag == 1) {
-                given($rmship) {
-                    when(0) {
-                     printf "%s\n", 
-                            "info: main - sdrd tar shipment clean-up: done"; }
+                if ($rmship == 0) {
+                    printf "%s\n",
+                        "info: main - sdrd tar shipment clean-up: done";
+                } elsif ($rmship == 1) {
+                    printf "%s\n",
+                        "info: main - sdrd tar shipment clean-up: failed, $rmship"; 
+                }
+                # given($rmship) {
+                #     when(0) {
+                #      printf "%s\n", 
+                #             "info: main - sdrd tar shipment clean-up: done"; }
 
-                    when(1) {
-                     printf "%s\n", 
-                            "info: main - sdrd tar shipment clean-up: failed, $rmship"; }
+                #     when(1) {
+                #      printf "%s\n", 
+                #             "info: main - sdrd tar shipment clean-up: failed, $rmship"; }
                 }
             }
 
@@ -342,11 +349,20 @@ sub get_transport {
     my @childs = $conf->findnodes($path);
 
     foreach my $node (@childs) {
-        given ( $node->nodeName() ) {
-            when (/^port$/)      { $port      = $node->textContent(); }
-            when (/^proxy$/)     { $proxy     = $node->textContent(); }
-            when (/^proxyport$/) { $proxyport = $node->textContent(); }
+
+        if ( $node->nodeName() =~ /^port$/ ) {
+            $port = $node->textContent(); 
+        } elsif ( $node->nodeName() =~ /^proxy$/ ) {
+            $proxy = $node->textContent(); 
+        } elsif ( $node->nodeName() =~ /^proxyport$/ ) {
+            $proxyport = $node->textContent(); 
         }
+
+        # given ( $node->nodeName() ) {
+        #     when (/^port$/)      { $port      = $node->textContent(); }
+        #     when (/^proxy$/)     { $proxy     = $node->textContent(); }
+        #     when (/^proxyport$/) { $proxyport = $node->textContent(); }
+        #}
     }
 
     if ( defined($proxy) and defined($proxyport) ) {
