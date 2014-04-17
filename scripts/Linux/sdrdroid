@@ -21,7 +21,6 @@
 use strict;
 use warnings;
 use Getopt::Std;
-use 5.010;
 
 # Debug Only
 #use Data::Dumper;
@@ -71,23 +70,21 @@ if ( defined $main::opt_r ) {
 
 # Command line arguments
 my $cmd_arg = shift;
+usage() if (! defined $cmd_arg);
 
 ## command modes
 my $cmd_mode = 0;
 
+
+
 # check on internal commands
-given($cmd_arg) {
+if ( $cmd_arg eq "test" ) {
+    print "testoption ON";
+    if($recsem) { bist(@recs); } else { bist("all"); }
+} elsif ($cmd_arg eq "run" ) {
+    print "run option ON";
+} else {  usage(); }
 
-    # built-in selft-test command
-    when('test') { 
-        if($recsem) { bist(@recs); } else { bist("all"); }
-    }
-
-    # run command
-    when('run') { print "run command mode"; }
-
-    default { usage(); }
-}    
 
 
 # Subroutines
