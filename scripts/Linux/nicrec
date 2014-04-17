@@ -24,7 +24,7 @@ use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use Sys::Statistics::Linux qw(NetStats);
 use POSIX qw(pause);
-use List::MoreUtils qw(any);
+use List::MoreUtils qw(all);
 
 #
 # Command line arguments
@@ -84,7 +84,7 @@ setitimer( ITIMER_REAL, $first_interval, $interval );
 if ( defined $main::opt_i ) {
 
     # check comma separator
-    usage() if $main::opt_i !~ /^(([a-z]*[0-9](:[1-9])?|,)*$)/;
+    # usage() if $main::opt_i !~ /^(([a-z]*[0-9](:[1-9])?|,)*$)/;
     $int_sem = 1;
     @def_nics = split( /,/, $main::opt_i );
 }
@@ -127,7 +127,7 @@ while (1) {
 
         # filter by interface
         if ( $int_sem == 1 ) {
-            next if ( any { $_ ne $n } @def_nics);
+            next if ( all { $_ ne $n } @def_nics);
         }
 
         if (    defined( $nic->{$n}{rxbyt} )
