@@ -20,11 +20,11 @@
 
 use strict;
 use warnings;
-use 5.010;
 use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use Sys::Statistics::Linux qw(Processes);
 use POSIX qw(pause);
+use List::MoreUtils qw(all);
 
 #
 # Command line arguments
@@ -154,23 +154,23 @@ while (1) {
     my @pids = sort $stat->processes;
 
     # loop over all pids
-    foreach (@pids) {
+    foreach my $p (@pids) {
 
-        # $_ is holding each PID
+        # $p is holding each PID
 
         # filter by name
         if ( $name_sem == 1 ) {
-            next if $proc->{$_}{cmd} !~ /\($name\)/;
+            next if $proc->{$p}{cmd} !~ /\($name\)/;
         }
 
         # filter by pid
         if ( $pids_sem == 1 ) {
-            next if !( $_ ~~ @optpids );
+            next if ( all { $_ ne $p } @optpids);
         }
 
         # filter by username
         if ( $user_sem == 1 ) {
-            next if $proc->{$_}{owner} !~ /$user/;
+            next if $proc->{$p}{owner} !~ /$user/;
         }
 
         # extended mode
@@ -180,81 +180,81 @@ while (1) {
             if ( $expr_sem == 1 ) {
 
                 # fetch cmdline against expression
-                if ( $proc->{$_}{cmdline} =~ /$expr/ ) {
-                    if (defined($proc->{$_}{io}{syscr}) and
-                        defined($proc->{$_}{io}{rchar}) and
-                        defined($proc->{$_}{io}{read_bytes}) and
-                        defined($proc->{$_}{io}{syscw}) and
-                        defined($proc->{$_}{io}{wchar}) and
-                        defined($proc->{$_}{io}{write_bytes})) {
+                if ( $proc->{$p}{cmdline} =~ /$expr/ ) {
+                    if (defined($proc->{$p}{io}{syscr}) and
+                        defined($proc->{$p}{io}{rchar}) and
+                        defined($proc->{$p}{io}{read_bytes}) and
+                        defined($proc->{$p}{io}{syscw}) and
+                        defined($proc->{$p}{io}{wchar}) and
+                        defined($proc->{$p}{io}{write_bytes})) {
 
                         print_pstats(
-                            $_,
-                            $proc->{$_}{cmd},
-                            $proc->{$_}{owner},
-                            $proc->{$_}{state},
-                            $proc->{$_}{nice},
-                            scalar keys %{ $proc->{$_}{fd} },
-                            $proc->{$_}{prior},
-                            $proc->{$_}{nlwp},
-                            $proc->{$_}{minflt},
-                            $proc->{$_}{mayflt},
-                            $proc->{$_}{utime},
-                            $proc->{$_}{stime},
-                            $proc->{$_}{ttime},
-                            $proc->{$_}{cutime},
-                            $proc->{$_}{cstime},
-                            $proc->{$_}{cpu},
-                            $proc->{$_}{size},
-                            $proc->{$_}{resident},
-                            $proc->{$_}{nswap},
-                            $proc->{$_}{cnswap},
-                            $proc->{$_}{io}{syscr},
-                            $proc->{$_}{io}{rchar},
-                            $proc->{$_}{io}{read_bytes},
-                            $proc->{$_}{io}{syscw},
-                            $proc->{$_}{io}{wchar},
-                            $proc->{$_}{io}{write_bytes},
-                            $proc->{$_}{cmdline});
+                            $p,
+                            $proc->{$p}{cmd},
+                            $proc->{$p}{owner},
+                            $proc->{$p}{state},
+                            $proc->{$p}{nice},
+                            scalar keys %{ $proc->{$p}{fd} },
+                            $proc->{$p}{prior},
+                            $proc->{$p}{nlwp},
+                            $proc->{$p}{minflt},
+                            $proc->{$p}{mayflt},
+                            $proc->{$p}{utime},
+                            $proc->{$p}{stime},
+                            $proc->{$p}{ttime},
+                            $proc->{$p}{cutime},
+                            $proc->{$p}{cstime},
+                            $proc->{$p}{cpu},
+                            $proc->{$p}{size},
+                            $proc->{$p}{resident},
+                            $proc->{$p}{nswap},
+                            $proc->{$p}{cnswap},
+                            $proc->{$p}{io}{syscr},
+                            $proc->{$p}{io}{rchar},
+                            $proc->{$p}{io}{read_bytes},
+                            $proc->{$p}{io}{syscw},
+                            $proc->{$p}{io}{wchar},
+                            $proc->{$p}{io}{write_bytes},
+                            $proc->{$p}{cmdline});
                     }
                 }
             }
             else {
-                if (defined($proc->{$_}{io}{syscr}) and 
-                    defined($proc->{$_}{io}{rchar}) and 
-                    defined($proc->{$_}{io}{read_bytes}) and 
-                    defined($proc->{$_}{io}{syscw}) and 
-                    defined($proc->{$_}{io}{wchar}) and 
-                    defined($proc->{$_}{io}{write_bytes})) {
+                if (defined($proc->{$p}{io}{syscr}) and 
+                    defined($proc->{$p}{io}{rchar}) and 
+                    defined($proc->{$p}{io}{read_bytes}) and 
+                    defined($proc->{$p}{io}{syscw}) and 
+                    defined($proc->{$p}{io}{wchar}) and 
+                    defined($proc->{$p}{io}{write_bytes})) {
 
                         print_pstats(
                             $_,
-                            $proc->{$_}{cmd},
-                            $proc->{$_}{owner},
-                            $proc->{$_}{state},
-                            $proc->{$_}{nice},
-                            $proc->{$_}{prior},
-                            $proc->{$_}{nlwp},
-                            scalar keys %{ $proc->{$_}{fd} },
-                            $proc->{$_}{minflt},
-                            $proc->{$_}{mayflt},
-                            $proc->{$_}{utime},
-                            $proc->{$_}{stime},
-                            $proc->{$_}{ttime},
-                            $proc->{$_}{cutime},
-                            $proc->{$_}{cstime},
-                            $proc->{$_}{cpu},
-                            $proc->{$_}{size},
-                            $proc->{$_}{resident},
-                            $proc->{$_}{nswap},
-                            $proc->{$_}{cnswap},
-                            $proc->{$_}{io}{syscr},
-                            $proc->{$_}{io}{rchar},
-                            $proc->{$_}{io}{read_bytes},
-                            $proc->{$_}{io}{syscw},
-                            $proc->{$_}{io}{wchar},
-                            $proc->{$_}{io}{write_bytes},
-                            $proc->{$_}{cmdline}
+                            $proc->{$p}{cmd},
+                            $proc->{$p}{owner},
+                            $proc->{$p}{state},
+                            $proc->{$p}{nice},
+                            $proc->{$p}{prior},
+                            $proc->{$p}{nlwp},
+                            scalar keys %{ $proc->{$p}{fd} },
+                            $proc->{$p}{minflt},
+                            $proc->{$p}{mayflt},
+                            $proc->{$p}{utime},
+                            $proc->{$p}{stime},
+                            $proc->{$p}{ttime},
+                            $proc->{$p}{cutime},
+                            $proc->{$p}{cstime},
+                            $proc->{$p}{cpu},
+                            $proc->{$p}{size},
+                            $proc->{$p}{resident},
+                            $proc->{$p}{nswap},
+                            $proc->{$p}{cnswap},
+                            $proc->{$p}{io}{syscr},
+                            $proc->{$p}{io}{rchar},
+                            $proc->{$p}{io}{read_bytes},
+                            $proc->{$p}{io}{syscw},
+                            $proc->{$p}{io}{wchar},
+                            $proc->{$p}{io}{write_bytes},
+                            $proc->{$p}{cmdline}
                         );
                 }
             }
@@ -263,28 +263,28 @@ while (1) {
         }
         else {
 
-            if (defined($proc->{$_}{io}{syscr}) and
-                defined($proc->{$_}{io}{rchar}) and
-                defined($proc->{$_}{io}{read_bytes}) and
-                defined($proc->{$_}{io}{syscw}) and
-                defined($proc->{$_}{io}{wchar}) and
-                defined($proc->{$_}{io}{write_bytes})) {
+            if (defined($proc->{$p}{io}{syscr}) and
+                defined($proc->{$p}{io}{rchar}) and
+                defined($proc->{$p}{io}{read_bytes}) and
+                defined($proc->{$p}{io}{syscw}) and
+                defined($proc->{$p}{io}{wchar}) and
+                defined($proc->{$p}{io}{write_bytes})) {
 
             # print proc stats
             print_pstats(
-                $_,                          $proc->{$_}{cmd},
-                $proc->{$_}{owner},          $proc->{$_}{state},
-                $proc->{$_}{nice},           $proc->{$_}{prior},
-                $proc->{$_}{nlwp},           scalar keys %{ $proc->{$_}{fd} },
-                $proc->{$_}{minflt},         $proc->{$_}{mayflt},
-                $proc->{$_}{utime},          $proc->{$_}{stime},
-                $proc->{$_}{ttime},          $proc->{$_}{cutime},
-                $proc->{$_}{cstime},         $proc->{$_}{cpu},
-                $proc->{$_}{size},           $proc->{$_}{resident},
-                $proc->{$_}{nswap},          $proc->{$_}{cnswap},
-                $proc->{$_}{io}{syscr},      $proc->{$_}{io}{rchar},
-                $proc->{$_}{io}{read_bytes}, $proc->{$_}{io}{syscw},
-                $proc->{$_}{io}{wchar},      $proc->{$_}{io}{write_bytes},
+                $p,                          $proc->{$p}{cmd},
+                $proc->{$p}{owner},          $proc->{$p}{state},
+                $proc->{$p}{nice},           $proc->{$p}{prior},
+                $proc->{$p}{nlwp},           scalar keys %{ $proc->{$p}{fd} },
+                $proc->{$p}{minflt},         $proc->{$p}{mayflt},
+                $proc->{$p}{utime},          $proc->{$p}{stime},
+                $proc->{$p}{ttime},          $proc->{$p}{cutime},
+                $proc->{$p}{cstime},         $proc->{$p}{cpu},
+                $proc->{$p}{size},           $proc->{$p}{resident},
+                $proc->{$p}{nswap},          $proc->{$p}{cnswap},
+                $proc->{$p}{io}{syscr},      $proc->{$p}{io}{rchar},
+                $proc->{$p}{io}{read_bytes}, $proc->{$p}{io}{syscw},
+                $proc->{$p}{io}{wchar},      $proc->{$p}{io}{write_bytes},
                 undef
             );
             }

@@ -18,6 +18,7 @@ Recording
 
 1.00
 ====
+    Bug 295 - procrec smart match operator warnings
     Bug 294 - crash in Digest::SHA methods
     Bug 293 - Xen hypervisor specifications
     Bug 292 - cleanup manual pages
