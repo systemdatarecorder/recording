@@ -82,9 +82,6 @@ setitimer( ITIMER_REAL, $first_interval, $interval );
 #
 # check for interface list
 if ( defined $main::opt_i ) {
-
-    # check comma separator
-    # usage() if $main::opt_i !~ /^(([a-z]*[0-9](:[1-9])?|,)*$)/;
     $int_sem = 1;
     @def_nics = split( /,/, $main::opt_i );
 }
