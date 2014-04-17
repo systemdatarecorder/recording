@@ -20,7 +20,6 @@
 
 use strict;
 use warnings;
-use 5.010;
 use File::Tail;
 use File::Basename;
 use Digest::SHA;
@@ -108,19 +107,25 @@ foreach my $node (@log_childs) {
 
     next if $node->nodeName() !~ /base|current/;
 
-    given ( $node->nodeName() ) {
-
-        # base_log
-        when (/base/) {
-            $sdr_baselog = $node->getAttribute('path');
-        }
-
-        # current_log
-        when (/current/) {
-            $sdr_curlog = $node->getAttribute('path');
-        }
-
+    if ( $node->nodeName() =~ /base/ ) {
+        $sdr_baselog = $node->getAttribute('path');
+    } elsif ( $node->nodeName() =~ /current/ ) {
+        $sdr_curlog = $node->getAttribute('path');
     }
+
+    #given ( $node->nodeName() ) {
+    #
+    #        # base_log
+    #        when (/base/) {
+    #            $sdr_baselog = $node->getAttribute('path');
+    #        }
+    #
+    #        # current_log
+    #        when (/current/) {
+    #            $sdr_curlog = $node->getAttribute('path');
+    #        }
+    #
+    #}
 
     $rchilds++;
 }
@@ -185,14 +190,20 @@ die "error: main - no destination found, check sdr.conf\n"
 my ( $ssh2trans, $httptrans ) = 0;
 
 # transport
-given ($trans) {
 
-    when (/ssh2/) { $ssh2trans = 1; }
+   if ( $trans =~ /ssh2/ ) { $ssh2trans = 1; }
+elsif ( $trans =~ /http/ ) { $httptrans = 1; }
+ else                      { $httptrans = 1; } 
+   
 
-    when (/http/) { $httptrans = 1; }
-
-    default { $httptrans = 1; }
-}
+# given ($trans) {
+# 
+#    when (/ssh2/) { $ssh2trans = 1; }
+# 
+#    when (/http/) { $httptrans = 1; }
+# 
+#    default { $httptrans = 1; }
+# }
 
 # Reporting XML Configuration
 # XPATH Method
@@ -213,21 +224,27 @@ foreach my $node (@res) {
               get_transport( $conf,
                 "/sdr/reporting/host[\@name=\"$dest\"]/http/*" );
 
-            given ($#http_transport) {
+            if ( $#http_transport == 0 ) { $hport      = $http_transport[0]; }
+         elsif ( $#http_transport == 1 ) { $hport      = $http_transport[0];
+                                           $hproxy     = $http_transport[1]; }
+         elsif ( $#http_transport == 2 ) { $hport      = $http_transport[0];
+                                           $hproxy     = $http_transport[1];
+                                           $hproxyport = $http_transport[2]; }
+            # given ($#http_transport) {
+            # 
+            #    when (0) { $hport = $http_transport[0]; }
+            #
+            #    when (1) {
+            #        $hport  = $http_transport[0];
+            #        $hproxy = $http_transport[1];
+            #    }
 
-                when (0) { $hport = $http_transport[0]; }
-
-                when (1) {
-                    $hport  = $http_transport[0];
-                    $hproxy = $http_transport[1];
-                }
-
-                when (2) {
-                    $hport      = $http_transport[0];
-                    $hproxy     = $http_transport[1];
-                    $hproxyport = $http_transport[2];
-                }
-            }
+            #    when (2) {
+            #        $hport      = $http_transport[0];
+            #        $hproxy     = $http_transport[1];
+            #        $hproxyport = $http_transport[2];
+            #    }
+            #}
         }
 
         if ( $node->getElementsByTagName('ssh2') ) {
@@ -235,10 +252,12 @@ foreach my $node (@res) {
               get_transport( $conf,
                 "/sdr/reporting/host[\@name=\"$dest\"]/ssh2/*" );
 
-            given ($#ssh2_transport) {
+            if ($#ssh2_transport == 0) { $sport = $ssh2_transport[0]; }
 
-                when (0) { $sport = $ssh2_transport[0]; }
-            }
+            #given ($#ssh2_transport) {
+            #
+            #    when (0) { $sport = $ssh2_transport[0]; }
+            #}
 
         }
 
@@ -363,38 +382,52 @@ while (1) {
 
             # parse id
             my $dbid;
-            given ( $_->{"input"} ) {
+            #given ( $_->{"input"} ) {
 
-                # sysrec
-                when (/sysrec/) { $dbid = 'sys'; }
+            #    # sysrec
+            #    when (/sysrec/) { $dbid = 'sys'; }
 
-                # cpurec
-                when (/cpurec/) { $dbid = 'cpu'; }
+            #    # cpurec
+            #    when (/cpurec/) { $dbid = 'cpu'; }
 
-                # diskrec
-                when (/diskrec/) { $dbid = 'disk'; }
+            #    # diskrec
+            #    when (/diskrec/) { $dbid = 'disk'; }
 
-                # nicrec
-                when (/nicrec/) { $dbid = 'nic'; }
+            #    # nicrec
+            #    when (/nicrec/) { $dbid = 'nic'; }
 
-                # netrec
-                when (/netrec/) { $dbid = 'net'; }
+            #    # netrec
+            #    when (/netrec/) { $dbid = 'net'; }
 
-                # jvmrec
-                when (/jvmrec/) { $dbid = 'jvm'; }
+            #    # jvmrec
+            #    when (/jvmrec/) { $dbid = 'jvm'; }
 
-                # procrec
-                when (/procrec/) { $dbid = 'proc'; }
+            #    # procrec
+            #    when (/procrec/) { $dbid = 'proc'; }
 
-                # zonerec
-                when (/zonerec/) { $dbid = 'zone'; }
+            #    # zonerec
+            #    when (/zonerec/) { $dbid = 'zone'; }
 
-                # webrec
-                when (/webrec/) { $dbid = 'web'; }
+            #    # webrec
+            #    when (/webrec/) { $dbid = 'web'; }
 
-                # hdwrec
-                when (/hdwrec/) { $dbid = 'hdw'; }
-            }
+            #    # hdwrec
+            #    when (/hdwrec/) { $dbid = 'hdw'; }
+            #}
+
+            
+            if ( $_->{"input"} =~ /sysrec/ )  { $dbid = 'sys';  }
+         elsif ( $_->{"input"} =~ /cpurec/ )  { $dbid = 'cpu';  }
+         elsif ( $_->{"input"} =~ /diskrec/ ) { $dbid = 'disk'; }
+         elsif ( $_->{"input"} =~ /nicrec/ )  { $dbid = 'nic';  }
+         elsif ( $_->{"input"} =~ /netrec/ )  { $dbid = 'net';  }
+         elsif ( $_->{"input"} =~ /jvmrec/ )  { $dbid = 'jvm';  }
+         elsif ( $_->{"input"} =~ /procrec/ ) { $dbid = 'proc'; }
+         elsif ( $_->{"input"} =~ /zonerec/ ) { $dbid = 'zone'; }
+         elsif ( $_->{"input"} =~ /webrec/ )  { $dbid = 'web';  }
+         elsif ( $_->{"input"} =~ /hdwrec/ )  { $dbid = 'hdw';  }
+         elsif ( $_->{"input"} =~ /xenrec/ )  { $dbid = 'xen';  }
+                
 
             print "\n" . $_->{"input"} . " payload[" . $delta . "]"
               if ( $verbose_flag == 1 );
@@ -461,10 +494,18 @@ sub get_transport {
     my @childs = $conf->findnodes($path);
 
     foreach my $node (@childs) {
-        given ( $node->nodeName() ) {
-            when (/^port$/)      { $port      = $node->textContent(); }
-            when (/^proxy$/)     { $proxy     = $node->textContent(); }
-            when (/^proxyport$/) { $proxyport = $node->textContent(); }
+        #given ( $node->nodeName() ) {
+        #    when (/^port$/)      { $port      = $node->textContent(); }
+        ##    when (/^proxy$/)     { $proxy     = $node->textContent(); }
+        #    when (/^proxyport$/) { $proxyport = $node->textContent(); }
+        #}
+
+        if ( $node->nodeName() =~ /^port$/ ) { 
+            $port = $node->textContent();
+        } elsif ( $node->nodeName() =~ /^proxy$/ ) {
+            $proxy = $node->textContent(); 
+        } elsif ( $node->nodeName() =~ /^proxyport$/ ) { 
+            $proxyport = $node->textContent(); 
         }
     }
 
