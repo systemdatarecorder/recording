@@ -50,7 +50,7 @@ my $loop = 0;    # current loop number
 my $tp   = 0;    # time precision
 $main::opt_h = 0;
 $main::opt_V = 0;
-my $xentop = "/bin/xentop";
+my $xentop = "/usr/sbin/xentop";
 
 
 # ######### #
@@ -73,9 +73,9 @@ if ( $interval =~ /\./ ) {
 while (1) {
 
     # load current stats
-    my @stats = get_netstat();
+    my @stats = get_stat();
 
-    printf "%.${tp}f:%s\n", time, @stats;
+    # printf "%.${tp}f:%s\n", time, @stats;
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -88,31 +88,6 @@ while (1) {
 # ########### #
 # SUBROUTINES #
 # ########### #
-
-# usage - print usage and exit.
-sub usage {
-    print STDERR <<END;
-USAGE: netrec [-hV] | [interval [count]]
- e.g. netrec 5       print continuously, every 5 seconds
-      netrec 1 5     print 5 times, every 1 second
-
- FIELDS:
-  #01 timestamp  : seconds since Epoch, time
-  #02 active     : TCP active connections, number
-  #03 passive    : TCP passive connections, number
-  #04 failed     : TCP failed connection attempts, number
-  #05 recv_rst   : TCP connection resets received, number
-  #06 est        : TCP connections established, number
-  #07 sent_rst   : TCP resets sent, number
-  #08 upks_recv  : UDP packets received, number
-  #09 upks_sent  : UDP packets sent, number
-  #10 fast_retr  : fast retransmits, number
-  #11 fwd_retr   : forward retransmits, number
-  #12 slow_retr  : retransmits in slow start, number
-END
-    exit 0;
-}
-
 
 sub get_param {
     my ($entry) = @_;
@@ -157,36 +132,61 @@ sub get_param {
     return $param;
 }
 
-# Name: get_netstat                               #
-# Description: get netstat stats from netstat     #
-# Returns: @stat                                  #
-#  active    = Active connections                 #
-#  passive   = Passive connections                #
-#  failed    = Failed connections attempts        #
-#  recv_rst  = Resets received                    #
-#  est       = Connections established            #
-#  sent_rst  = Resets sent                        #
-#  upks_recv = UDP packets received               #
-#  upks_sent = UDP packets sent                   #
-#  fast_retr = Fast retransmits                   #
-#  fwd_retr  = Forward retransmits                #
-#  slow_retr = Retransmits in slow start          #
 
-sub get_netstat {
+sub get_stat {
 
     my @stat = ();
 
-    open my $fh, "-|", "$xentop", "-s"
-      or die "cannot execute '$xentop -s' - $!";
+    open my $fh, "-|", "$xentop", "-b", "-d0", "-i2"
+      or die "cannot execute '$xentop' - $!";
 
     while (<$fh>) {
-        push @stat, get_param($_) if ( defined( get_param($_) ) );
+        next if /NAME/ ... /NAME/;
+        print $_;
+        # push @stat, get_param($_) if ( defined( get_param($_) ) );
     }
-    close $fh;
+    #close $fh;
 
-    @stat = join( ":", @stat );
+    #@stat = join( ":", @stat );
     return @stat;
 }
+
+
+# usage - print usage and exit.
+sub usage {
+    print STDERR <<END;
+USAGE: xenrec [-hV] | [interval [count]]
+ e.g. xenrec 5       print continuously, every 5 seconds
+      xenrec 1 5     print 5 times, every 1 second
+
+ FIELDS:
+  #01 timestamp  : seconds since Epoch, time
+  #02 name       : domain name, the guest name
+  #03 state      : domain state: blocked (b), dying (d), shutdown (s)
+                    crashed (c), paused (p), running (r)
+  #04 cputime    : displays cpu usage in seconds
+  #05 cpupct     : displays cpu usage in percentage
+  #06 vcpus      : number of vCPUs
+  #07 nets       : number of virtual networks
+  #08 mem        : current memory
+  #09 maxmem     : maximum domain memory stats, in KB
+  #10 maxmempct  : memory stats in percentage, ratio of current domain 
+                     memory to total node memory
+  #11 nettx      : number of total network transmits bytes statistic
+  #12 netrx      : number of total network received bytes statistic
+  #13 vbds       : number of virtual block devices
+  #14 vbdoo      : number of total VBD OO requests
+  #15 vbdrd      : number of VBD read requests
+  #16 vbdwr      : number of VBD write requests
+  #17 vbdrsect   : number of VBD read sectors
+  #18 vbdwsect   : number of VBD write sectors
+  #19 ssid       : security id
+
+  Note: VBD, Virtual Block Device
+END
+    exit 0;
+}
+
 
 
 # revision - print revision and exit
