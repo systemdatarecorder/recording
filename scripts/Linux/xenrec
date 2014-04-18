@@ -137,15 +137,32 @@ sub get_stat {
 
     my @stat = ();
 
-    open my $fh, "-|", "$xentop", "-b", "-d0", "-i2"
+    open my $fh, "-|", "$xentop", "-b", "-d1", "-i2"
       or die "cannot execute '$xentop' - $!";
 
-    while (<$fh>) {
+    my $ptime = time();
+
+    while ( <$fh> ) {
+        chomp;
         next if /NAME/ ... /NAME/;
-        print $_;
-        # push @stat, get_param($_) if ( defined( get_param($_) ) );
+        s/Domain/dom/;
+        s/n\/a/NA/g;
+        s/no limit/NA/g;
+        for ($_) { s/(\-)+//g; s/\///; }
+        for ($_) { s/^\s+//; s/\s+/:/g; }
+
+        printf "%.${tp}f:%s\n", $ptime, $_;
+
+
+        # print $print_time . ":" . $_ . "\n";
     }
-    #close $fh;
+
+    # while (<$fh>) {
+    #     next if /NAME/ ... /NAME/;
+     #    print $_;
+        # push @stat, get_param($_) if ( defined( get_param($_) ) );
+    # }
+    close $fh;
 
     #@stat = join( ":", @stat );
     return @stat;
@@ -155,9 +172,16 @@ sub get_stat {
 # usage - print usage and exit.
 sub usage {
     print STDERR <<END;
-USAGE: xenrec [-hV] | [interval [count]]
- e.g. xenrec 5       print continuously, every 5 seconds
-      xenrec 1 5     print 5 times, every 1 second
+USAGE: xenrec [-hV] [-d dom[,dom...]] | [interval [count]]
+OPTIONS:
+  -h         : help information
+  -V         : release version
+  -d dom,... : filter based on a list of domain names
+
+
+ e.g. xenrec 5              print continuously, every 5 seconds
+      xenrec 1 5            print 5 times, every 1 second
+      xenrec -d dom0,c5964  print dom0 and c5964 domains statistics
 
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
@@ -166,21 +190,22 @@ USAGE: xenrec [-hV] | [interval [count]]
                     crashed (c), paused (p), running (r)
   #04 cputime    : displays cpu usage in seconds
   #05 cpupct     : displays cpu usage in percentage
-  #06 vcpus      : number of vCPUs
-  #07 nets       : number of virtual networks
-  #08 mem        : current memory
-  #09 maxmem     : maximum domain memory stats, in KB
-  #10 maxmempct  : memory stats in percentage, ratio of current domain 
+  #06 mem        : current memory
+  #07 mempct     : current memory in percentage
+  #08 maxmem     : maximum domain memory stats, in KB
+  #09 maxmempct  : memory stats in percentage, ratio of current domain 
                      memory to total node memory
-  #11 nettx      : number of total network transmits bytes statistic
-  #12 netrx      : number of total network received bytes statistic
-  #13 vbds       : number of virtual block devices
-  #14 vbdoo      : number of total VBD OO requests
-  #15 vbdrd      : number of VBD read requests
-  #16 vbdwr      : number of VBD write requests
-  #17 vbdrsect   : number of VBD read sectors
-  #18 vbdwsect   : number of VBD write sectors
-  #19 ssid       : security id
+  #10 vcpus      : number of vCPUs
+  #11 nets       : number of virtual networks
+  #12 nettx      : number of total network transmits bytes statistic
+  #13 netrx      : number of total network received bytes statistic
+  #14 vbds       : number of virtual block devices
+  #15 vbdoo      : number of total VBD OO requests
+  #16 vbdrd      : number of VBD read requests
+  #17 vbdwr      : number of VBD write requests
+  #18 vbdrsect   : number of VBD read sectors
+  #19 vbdwsect   : number of VBD write sectors
+  #20 ssid       : security id
 
   Note: VBD, Virtual Block Device
 END
