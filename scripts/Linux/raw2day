@@ -233,83 +233,70 @@ if ( $trans_flag ) {
             ## we found a match
             last;
         }
-    }
+
+    } # for loop
 
     my $destdir = '/' . $sdrid . "/content/hosts/" . $host . "/raw";
 
-    given($ttype) {
+    # FTP Transport
+    if ( $ttype =~ /^ftp$/i ) {
 
-        # FTP Transport
-        when(/^ftp$/i) {
-            if ($verbose_flag == 1) {
-                printf "%s\n", "info: main - transport protocol: FTP";
-            }
-            trans2ftp($sdr_daily, $destdir, $dprev, $dest, $user, $pass);
-        }        
+        if ($verbose_flag == 1) {
+            printf "%s\n", "info: main - transport protocol: FTP";
+        }
+        trans2ftp($sdr_daily, $destdir, $dprev, $dest, $user, $pass);
 
-        # SCP Transport
-        when(/^scp$/i) { 
-            if ($verbose_flag == 1) {
-                printf "%s\n", "info: main - transport protocol: SCP";
-            }
-            trans2scp($sdr_daily, $destdir, $dprev, $dest, $sport, $user, $pass);
+    # SCP Transport
+    } elsif ( $ttype =~ /^scp$/i ) {        
+
+        if ($verbose_flag == 1) {
+            printf "%s\n", "info: main - transport protocol: SCP";
+        }
+        trans2scp($sdr_daily, $destdir, $dprev, $dest, $sport, $user, $pass);
+
+    # SFTP Transport
+    } elsif ( $ttype =~ /^sftp$/i ) {
+        if ($verbose_flag == 1) {
+            printf "%s\n", "info: main - transport protocol: SFTP";
+        }
+        trans2sftp($sdr_daily, $destdir, $dprev, $dest, $sport, $user, $pass);
+
+    # HTTP Transport
+    } elsif ( $ttype =~ /^http$/i ) {
+        if ( $verbose_flag == 1 ) {
+            printf "%s\n", "info: main - transport protocol: HTTP";
+        }
+        my $sdrd_dir = $sdr_daily . '/' . $dprev;
+        my $shipment = tarsdrd($sdrd_dir);
+
+        if ( $verbose_flag == 1 ) {
+            printf "%s\n", "info: main - sdrd tar shipment: $shipment";
         }
 
-        # SFTP Transport
-        when(/^sftp$/i) {
-            if ($verbose_flag == 1) {
-                printf "%s\n", "info: main - transport protocol: SFTP";
-            }
-            trans2sftp($sdr_daily, $destdir, $dprev, $dest, $sport, $user, $pass);
+        # init HTTP transport
+        my $http = WWW::Curl::Easy->new;
+
+        if ( $tcpka ) {
+            $http->setopt( WWW::Curl::Easy::CURLOPT_TCP_KEEPALIVE(), 1 );
         }
 
-        # HTTP Transport
-        when(/^http$/i) {
-            if ( $verbose_flag == 1 ) {
-                printf "%s\n", "info: main - transport protocol: HTTP";
-            }
-            my $sdrd_dir = $sdr_daily . '/' . $dprev;
-            my $shipment = tarsdrd($sdrd_dir);
+        trans2http($http, $dest, $sdrid, $destdir, $shipment, $hport, $hproxy);
 
-            if ( $verbose_flag == 1 ) {
-                printf "%s\n", "info: main - sdrd tar shipment: $shipment";
-            }
-
-            # init HTTP transport
-            my $http = WWW::Curl::Easy->new;
-
-            if ( $tcpka ) {
-                $http->setopt( WWW::Curl::Easy::CURLOPT_TCP_KEEPALIVE(), 1 );
-            }
-
-            trans2http($http, $dest, $sdrid, $destdir, $shipment, $hport, $hproxy);
-
-            my $rmship = rmsdrd($shipment);
+        my $rmship = rmsdrd($shipment);
             
-            if ($verbose_flag == 1) {
-
-                if ( $rmship == 0 ) {
-                    printf "%s\n",
-                        "info: main - sdrd tar shipment clean-up: done";
-                } elsif ( $rmship == 1 ) {
-                    printf "%s\n",
-                        "info: main - sdrd tar shipment clean-up: failed, $rmship"; 
-                }
-                # given($rmship) {
-                #     when(0) {
-                #      printf "%s\n", 
-                #             "info: main - sdrd tar shipment clean-up: done"; }
-
-                #     when(1) {
-                #      printf "%s\n", 
-                #             "info: main - sdrd tar shipment clean-up: failed, $rmship"; }
-                }
+        if ($verbose_flag == 1) {
+            if ( $rmship == 0 ) {
+                printf "%s\n",
+                    "info: main - sdrd tar shipment clean-up: done";
+            } elsif ( $rmship == 1 ) {
+                printf "%s\n",
+                    "info: main - sdrd tar shipment clean-up: failed, $rmship"; 
             }
-
-
         }
     }
 }
+#}
+#}
 
 ## Mark End of Time
 my $tend = gettimeofday();
@@ -785,7 +772,7 @@ sub opensdrd {
 # revision - print revision and exit
 sub revision {
     print STDERR <<END;
-raw2day: 1.00, 2014-03-01
+raw2day: 1.00, 2014-04-27
 END
     exit 0;
 }

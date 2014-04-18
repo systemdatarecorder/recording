@@ -50,7 +50,7 @@ my $loop = 0;    # current loop number
 my $tp   = 0;    # time precision
 $main::opt_h = 0;
 $main::opt_V = 0;
-my $netstat = "/bin/netstat";
+my $xentop = "/bin/xentop";
 
 
 # ######### #
@@ -176,8 +176,8 @@ sub get_netstat {
 
     my @stat = ();
 
-    open my $fh, "-|", "$netstat", "-s"
-      or die "cannot execute '$netstat -s' - $!";
+    open my $fh, "-|", "$xentop", "-s"
+      or die "cannot execute '$xentop -s' - $!";
 
     while (<$fh>) {
         push @stat, get_param($_) if ( defined( get_param($_) ) );
@@ -192,7 +192,7 @@ sub get_netstat {
 # revision - print revision and exit
 sub revision {
     print STDERR <<END;
-netrec: 1.00, 2014-03-01
+xenrec: 1.00, 2014-04-27
 END
     exit 0;
 }

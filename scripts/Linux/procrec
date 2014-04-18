@@ -402,7 +402,7 @@ END
 sub revision {
 
     print STDERR <<END;
-procrec: 1.00, 2014-03-01
+procrec: 1.00, 2014-04-27
 END
     exit 0;
 }
