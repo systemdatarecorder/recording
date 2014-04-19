@@ -195,7 +195,7 @@ OPTIONS:
   #08 maxmem     : maximum domain memory stats, in KB
   #09 maxmempct  : memory stats in percentage, ratio of current domain 
                      memory to total node memory
-  #10 vcpus      : number of vCPUs
+  #10 vpus       : number of virtual processing units, vCPUs
   #11 nets       : number of virtual networks
   #12 nettx      : number of total network transmits bytes statistic
   #13 netrx      : number of total network received bytes statistic
