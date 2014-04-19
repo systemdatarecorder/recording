@@ -82,7 +82,7 @@ if ( $interval =~ /\./ ) {
 
 # check for xentop
 if ( ! -f $xentop ) {
-    print "Error: Cannot find xentop utility, make sure you have XEN installed \n";
+    print "Error: Cannot find xentop, make sure you have XEN installed \n";
     exit 1;
 }
 
