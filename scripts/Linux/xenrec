@@ -46,14 +46,14 @@ else {
 }
 
 # globals
-local $| = 1;    # autoflush
-my $loop = 0;    # current loop number
-my $dom_sem  = 0;    # interface mode
-my @def_doms = ();   # default NICs
-my $tp   = 0;    # time precision
+local $|     = 1;  # autoflush
+my $loop     = 0;  # current loop number
+my $dom_sem  = 0;  # doms mode
+my @def_doms = (); # default NICs
+my $tp       = 0;  # time precision
 $main::opt_h = 0;
 $main::opt_V = 0;
-my $xentop = "/usr/sbin/xentop";
+my $xentop   = "/usr/sbin/xentop";
 
 
 # ######### #
@@ -82,7 +82,7 @@ if ( $interval =~ /\./ ) {
 
 while (1) {
 
-    # load current stats
+    # dom stats
     get_stat();
 
     ### Check for end
@@ -99,11 +99,12 @@ while (1) {
 
 sub print_stat {
     my ($entry, $timestamp) = @_;
+    my $domname;
 
-
-    # filter by dom
-    if ( $dom_sem == 1 ) {
-        next if ( all { $entry ne $n } @def_doms);
+    # do we have filter on
+    if ( $dom_sem ) {
+        $domname = $1 if ($_ =~ /([a-zA-Z_][\w-]*)\s*/);
+        return if ( all { $_ ne $domname } @def_doms);
     }
 
     $entry =~ s/Domain/dom/;
@@ -121,13 +122,14 @@ sub print_stat {
 sub get_stat {
 
     my @stat = ();
+    my $domname;
 
     open my $fh, "-|", "$xentop", "-b", "-d1", "-i2" or die "cannot execute '$xentop' - $!";
     my $ptime = time();
 
     while ( <$fh> ) {
         chomp; 
-        next if /NAME/ ... /NAME/;
+        next if  /NAME/ ... /NAME/;
         print_stat($_,$ptime);
     }
 
@@ -145,7 +147,6 @@ OPTIONS:
   -h         : help information
   -V         : release version
   -d dom,... : filter based on a list of domain names
-
 
  e.g. xenrec 5              print continuously, every 5 seconds
       xenrec 1 5            print 5 times, every 1 second
