@@ -73,9 +73,7 @@ if ( $interval =~ /\./ ) {
 while (1) {
 
     # load current stats
-    my @stats = get_stat();
-
-    # printf "%.${tp}f:%s\n", time, @stats;
+    get_stat();
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -89,47 +87,18 @@ while (1) {
 # SUBROUTINES #
 # ########### #
 
-sub get_param {
-    my ($entry) = @_;
-    my $param;
+sub print_stat {
+    my ($entry, $timestamp) = @_;
 
-    if ( $entry =~ /(\d+)\s*active connections openings/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*passive connection openings/ ) {
+    $entry =~ s/Domain/dom/;
+    $entry =~ s/n\/a/NA/g;
+    $entry =~ s/no limit/NA/g;
+    for ($entry) { s/(\-)+//g; s/\///; }
+    for ($entry) { s/^\s+//; s/\s+/:/g; }
+    
+    printf "%.${tp}f:%s\n", $timestamp, $entry;
 
-        #push @params, $1;
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*failed connection attempts/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*connection resets received/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*connections established/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*resets sent/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*packets received/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*packets sent/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*fast retransmits/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*forward retransmits/ ) {
-        $param = $1;
-    }
-    elsif ( $entry =~ /(\d+)\s*retransmits in slow start/ ) {
-        $param = $1;
-    }
-
-    return $param;
+    return;
 }
 
 
@@ -137,35 +106,18 @@ sub get_stat {
 
     my @stat = ();
 
-    open my $fh, "-|", "$xentop", "-b", "-d1", "-i2"
-      or die "cannot execute '$xentop' - $!";
-
+    open my $fh, "-|", "$xentop", "-b", "-d1", "-i2" or die "cannot execute '$xentop' - $!";
     my $ptime = time();
 
     while ( <$fh> ) {
-        chomp;
+        chomp; 
         next if /NAME/ ... /NAME/;
-        s/Domain/dom/;
-        s/n\/a/NA/g;
-        s/no limit/NA/g;
-        for ($_) { s/(\-)+//g; s/\///; }
-        for ($_) { s/^\s+//; s/\s+/:/g; }
-
-        printf "%.${tp}f:%s\n", $ptime, $_;
-
-
-        # print $print_time . ":" . $_ . "\n";
+        print_stat($_,$ptime);
     }
 
-    # while (<$fh>) {
-    #     next if /NAME/ ... /NAME/;
-     #    print $_;
-        # push @stat, get_param($_) if ( defined( get_param($_) ) );
-    # }
     close $fh;
 
-    #@stat = join( ":", @stat );
-    return @stat;
+    return;
 }
 
 
