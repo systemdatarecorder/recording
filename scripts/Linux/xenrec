@@ -80,6 +80,13 @@ if ( $interval =~ /\./ ) {
     $tp = 3;
 }
 
+# check for xentop
+if ( ! -f $xentop ) {
+    print "Error: Cannot find xentop utility, make sure you have XEN installed \n";
+    exit 1;
+}
+
+
 while (1) {
 
     # dom stats
@@ -124,7 +131,7 @@ sub get_stat {
     my @stat = ();
     my $domname;
 
-    open my $fh, "-|", "$xentop", "-b", "-d1", "-i2" or die "cannot execute '$xentop' - $!";
+    open my $fh, "-|", "$xentop", "-b", "-d1", "-i2" or usage();
     my $ptime = time();
 
     while ( <$fh> ) {
@@ -148,9 +155,10 @@ OPTIONS:
   -V         : release version
   -d dom,... : filter based on a list of domain names
 
- e.g. xenrec 5              print continuously, every 5 seconds
-      xenrec 1 5            print 5 times, every 1 second
-      xenrec -d dom0,c5964  print dom0 and c5964 domains statistics
+ e.g. xenrec 5                  print continuously, every 5 seconds
+      xenrec 1 5                print 5 times, every 1 second
+      xenrec -d c5964           print c5964 domain statistics
+      xenrec -d sdrcom,sdrorg   print sdrcom and sdrorg domains statistics
 
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
