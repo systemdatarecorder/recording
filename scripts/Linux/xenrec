@@ -23,12 +23,13 @@ use warnings;
 use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use POSIX qw(pause);
+use List::MoreUtils qw(all);
 
 #
 # Command line arguments
 #
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
-getopts('hV') or usage();
+getopts('hd:V') or usage();
 usage()    if defined $main::opt_h;
 revision() if defined $main::opt_V;
 
@@ -47,6 +48,8 @@ else {
 # globals
 local $| = 1;    # autoflush
 my $loop = 0;    # current loop number
+my $dom_sem  = 0;    # interface mode
+my @def_doms = ();   # default NICs
 my $tp   = 0;    # time precision
 $main::opt_h = 0;
 $main::opt_V = 0;
@@ -65,6 +68,13 @@ local $SIG{ALRM} = sub { };
 
 # first value is the initial wait, second is the wait thereafter
 setitimer( ITIMER_REAL, $first_interval, $interval );
+
+#
+# check for doms list
+if ( defined $main::opt_d ) {
+    $dom_sem = 1;
+    @def_doms = split( /,/, $main::opt_d );
+}
 
 if ( $interval =~ /\./ ) {
     $tp = 3;
@@ -89,6 +99,12 @@ while (1) {
 
 sub print_stat {
     my ($entry, $timestamp) = @_;
+
+
+    # filter by dom
+    if ( $dom_sem == 1 ) {
+        next if ( all { $entry ne $n } @def_doms);
+    }
 
     $entry =~ s/Domain/dom/;
     $entry =~ s/n\/a/NA/g;
