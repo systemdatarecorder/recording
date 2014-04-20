@@ -38,7 +38,7 @@ my ( $interval, $loop_max );
 if ( defined $ARGV[0] ) {
     $interval = $ARGV[0];
     $loop_max = defined $ARGV[1] ? $ARGV[1] : 2**32;
-    usage() if $interval == 0;
+    usage() if $interval <= 1;
 }
 else {
     $interval = 1;
@@ -80,10 +80,18 @@ if ( $interval =~ /\./ ) {
     $tp = 3;
 }
 
+# check superuser
+if ( $< != 0 ) {
+    print "Error: xenrec must be run as root\n"; 
+    exit (0);
+}
+
+
+
 # check for xentop
 if ( ! -f $xentop ) {
     print "Error: Cannot find xentop, make sure you have XEN installed \n";
-    exit 1;
+    exit (1);
 }
 
 
@@ -154,9 +162,10 @@ OPTIONS:
   -h         : help information
   -V         : release version
   -d dom,... : filter based on a list of domain names
+  interval   : interval of time to sleep between samples, min 2 secs
 
  e.g. xenrec 5                  print continuously, every 5 seconds
-      xenrec 1 5                print 5 times, every 1 second
+      xenrec 2 5                print 5 times, every 2 seconds
       xenrec -d c5964           print c5964 domain statistics
       xenrec -d sdrcom,sdrorg   print sdrcom and sdrorg domains statistics
 
@@ -184,9 +193,12 @@ OPTIONS:
   #19 vbdwsect   : number of VBD write sectors
   #20 ssid       : security id
 
-  Note: VBD, Virtual Block Device
+NOTES:
+  VBD, Virtual Block Device
+  Interval must be min 2 seconds, by default xenrec requires 1 second 
+  to obtain the data from Xen.
 END
-    exit 0;
+    exit (0);
 }
 
 
@@ -196,5 +208,5 @@ sub revision {
     print STDERR <<END;
 xenrec: 1.00, 2014-04-27
 END
-    exit 0;
+    exit (0);
 }
