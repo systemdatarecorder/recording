@@ -85,7 +85,6 @@ while ( 1 ) {
 
     my ( $readReq, $readByt, $writeReq, $writeByt, $totReq, $totByt ) = 0;
 
-
     ### Get Stats
     my $stat    = $lxs->get;
     my $disk    = $stat->diskstats;
