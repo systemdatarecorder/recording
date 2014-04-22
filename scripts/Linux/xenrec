@@ -25,7 +25,6 @@ use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use POSIX qw(pause);
 use List::MoreUtils qw(all);
 
-#
 # Command line arguments
 #
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
@@ -56,9 +55,8 @@ $main::opt_V = 0;
 my $xentop   = "/usr/sbin/xentop";
 
 
-# ######### #
-# MAIN BODY #
-# ######### #
+
+### MAIN BODY
 
 # how often do we trigger
 my $first_interval = $interval;
@@ -69,8 +67,7 @@ local $SIG{ALRM} = sub { };
 # first value is the initial wait, second is the wait thereafter
 setitimer( ITIMER_REAL, $first_interval, $interval );
 
-#
-# check for doms list
+### check for doms list
 if ( defined $main::opt_d ) {
     $dom_sem = 1;
     @def_doms = split( /,/, $main::opt_d );
@@ -80,15 +77,14 @@ if ( $interval =~ /\./ ) {
     $tp = 3;
 }
 
-# check superuser
+### check superuser
 if ( $< != 0 ) {
     print "Error: xenrec must be run as root\n"; 
     exit (0);
 }
 
 
-
-# check for xentop
+### check for xentop
 if ( ! -f $xentop ) {
     print "Error: Cannot find xentop, make sure you have XEN installed \n";
     exit (1);
@@ -97,7 +93,7 @@ if ( ! -f $xentop ) {
 
 while (1) {
 
-    # dom stats
+    ### dom stats
     get_stat();
 
     ### Check for end
@@ -108,10 +104,7 @@ while (1) {
 }
 
 
-# ########### #
-# SUBROUTINES #
-# ########### #
-
+### SUBROUTINES
 sub print_stat {
     my ($entry, $timestamp) = @_;
     my $domname;
@@ -155,6 +148,7 @@ sub get_stat {
 
 
 # usage - print usage and exit.
+#
 sub usage {
     print STDERR <<END;
 USAGE: xenrec [-hV] [-d dom[,dom...]] | [interval [count]]
@@ -202,8 +196,8 @@ END
 }
 
 
-
 # revision - print revision and exit
+#
 sub revision {
     print STDERR <<END;
 xenrec: 1.00, 2014-04-27

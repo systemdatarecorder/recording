@@ -20,6 +20,7 @@
 
 use strict;
 use warnings;
+use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use Sys::Statistics::Linux;
 use POSIX qw(pause);
@@ -28,13 +29,13 @@ use Sys::Hostname;
 # Debug Only
 #use Data::Dumper;
 
-#
-#  Process command line args
-#
-usage()    if defined $ARGV[0] and $ARGV[0] =~ /^(-h|--help|0)$/;
-revision() if defined $ARGV[0] and $ARGV[0] =~ /^(-V|0)$/;
+### Command line arguments
+usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
+getopts('hV') or usage();
+usage()    if defined $main::opt_h;
+revision() if defined $main::opt_V;
 
-# process [interval [count]],
+# process [[interval [count]]
 my ( $interval, $loop_max );
 if ( defined $ARGV[0] ) {
     $interval = $ARGV[0];
@@ -46,15 +47,18 @@ else {
     $loop_max = 1;
 }
 
-#
-#  Variables
-#
+###  Variables
 my $sb   = "/sys/block";
-my $loop = 0;    # current loop number
-my $tp   = 0;    # time precision
+$main::opt_h = 0;  # help option
+$main::opt_V = 0;  # revision option
+my $loop = 0;      # current loop number
+my $tp   = 0;      # time precision
 my $lsb  = "/usr/bin/lsb_release";
 local $| = 1;
 
+
+
+### MAIN BODY
 
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
@@ -65,7 +69,6 @@ my $lxs = Sys::Statistics::Linux->new(
 );
 ### 0.1sec sleep using a timer
 pause;
-
 
 # how often do we trigger (seconds)?
 my $first_interval = $interval;
@@ -183,6 +186,9 @@ while (1) {
 }
 
 
+
+### SUBROUTINES
+
 sub get_disks {
 
     my @d;
@@ -213,6 +219,7 @@ sub get_disks {
 
 
 # usage - print usage and exit.
+#
 sub usage {
     print STDERR <<END;
 USAGE: hdwrec [-hV] | [interval [count]]
@@ -242,6 +249,7 @@ END
 
 
 # revision - print revision and exit
+#
 sub revision {
     print STDERR <<END;
 hdwrec: 1.00, 2014-04-27

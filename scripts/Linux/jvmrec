@@ -24,9 +24,7 @@ use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use POSIX qw(pause);
 
-#
-# Command line arguments
-#
+### Command line arguments
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
 getopts('df:hVx') or usage();
 usage()    if defined $main::opt_h;
@@ -62,9 +60,8 @@ my $jstat;           # jstat utility path
 local $| = 1;        # autoflush
 
 
-# ######### #
-# MAIN BODY #
-# ######### #
+
+### MAIN BODY
 
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
@@ -109,8 +106,7 @@ if ( defined $main::opt_f ) {
 }
 else { $search = 0; }
 
-#
-# check for extended mode
+### check for extended mode
 if ($extended) {
     use Sys::Statistics::Linux qw(Processes);
     $extended                                          = 1;
@@ -306,7 +302,11 @@ while (1) {
 }
 
 
+
+### SUBROUTINES
+
 # get_jstat - get all JVM GC stats from a running process target
+#
 sub get_jstat {
     my $stat;
 
@@ -330,7 +330,9 @@ sub get_jstat {
 
 }
 
+
 # print_gcstats - prints JVM GC stats
+#
 sub print_gcstats {
 
     my (
@@ -400,7 +402,7 @@ sub print_gcstats {
     return;
 }
 
-#
+
 # usage - print usage and exit.
 #
 sub usage {

@@ -60,7 +60,7 @@ Automatic Mode
   1.1 Install SDR package:
 
     RPM based systems:
-    # rpm -ihv sdr-0.74.2.x86_64.rpm 
+    # rpm -ihv sdr-1.0-linux-x86_64.rpm
      Preparing...                ########################################### [100%]
         1:sdr                    ########################################### [100%]
      Starting SDR recorders

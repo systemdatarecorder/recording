@@ -26,16 +26,14 @@ use Sys::Statistics::Linux qw(NetStats);
 use POSIX qw(pause);
 use List::MoreUtils qw(all);
 
-#
-# Command line arguments
-#
+### Command line arguments
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
-getopts('dhi:V') or usage();
+getopts('hi:vV') or usage();
 usage()    if defined $main::opt_h;
 revision() if defined $main::opt_V;
 
-# set debug log
-my $debugmsg = defined $main::opt_d ? $main::opt_d : 0;
+# set verbose mode
+my $verbose = defined $main::opt_v ? $main::opt_v : 0;
 
 # process [[interval [count]]
 my ( $interval, $loop_max );
@@ -49,7 +47,7 @@ else {
     $loop_max = 1;
 }
 
-# Variables
+### Variables
 my $loop = 0;    # current loop number
 $main::opt_h = 0;    # help option
 $main::opt_V = 0;    # revision option
@@ -59,9 +57,8 @@ my @def_nics = ();   # default NICs
 local $| = 1;        # autoflush
 
 
-# ######### #
-# MAIN BODY #
-# ######### #
+
+### MAIN BODY
 
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
@@ -84,11 +81,6 @@ setitimer( ITIMER_REAL, $first_interval, $interval );
 if ( defined $main::opt_i ) {
     $int_sem = 1;
     @def_nics = split( /,/, $main::opt_i );
-}
-
-# Debug
-if ($debugmsg) {
-    printf "[debug NICs:" . ( " %s" x @def_nics ) . "]\n", @def_nics;
 }
 
 if ( $interval =~ /\./ ) {
@@ -114,6 +106,7 @@ while (1) {
     ### Get NICS
     my @nics = sort $stat->netstats;
 
+
     # loop over all NICS
     foreach my $n (@nics) {
 
@@ -125,6 +118,10 @@ while (1) {
         # filter by interface
         if ( $int_sem == 1 ) {
             next if ( all { $_ ne $n } @def_nics);
+        }
+
+        if ($verbose) {
+            print "process NIC: $n\n";
         }
 
         if (    defined( $nic->{$n}{rxbyt} )
@@ -173,7 +170,8 @@ while (1) {
 }
 
 
-#
+### SUBROUTINES
+
 # print_pstats - prints NIC stats
 #
 sub print_nicstats {
@@ -194,15 +192,16 @@ sub print_nicstats {
     return;
 }
 
-#
+
 # usage - print usage and exit.
 #
 sub usage {
 
     print STDERR <<END;
-USAGE: nicrec [-hV] [-i int[,int...]] | [interval [count]]
+USAGE: nicrec [-hvV] [-i int[,int...]] | [interval [count]]
 OPTIONS:
   -h         : help information
+  -v         : verbose mode
   -V         : release version
   -i int,... : monitor a list of interfaces with specified NIC name
 
@@ -234,7 +233,6 @@ END
     exit 0;
 }
 
-#
 # revision - print revision and exit
 #
 sub revision {

@@ -28,9 +28,7 @@ use POSIX qw(pause);
 # Debug Only
 # use Data::Dumper;
 
-#
-# Command line arguments
-#
+### Command line arguments
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
 getopts('hV') or usage();
 usage()    if defined $main::opt_h;
@@ -48,7 +46,7 @@ else {
     $loop_max = 1;
 }
 
-# Variables
+### Variables
 my $HZ;
 my $update;        # used for deltas
 my %cpudataOld;    # cpu_stats data
@@ -58,9 +56,9 @@ $main::opt_V = 0;  # revision option
 my $tp = 0;        # time precision
 local $| = 1;      # autoflush
 
-# ######### #
-# MAIN BODY #
-# ######### #
+
+
+### MAIN BODY
 
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
@@ -114,7 +112,9 @@ while (1) {
 
 }
 
-#
+
+### SUBROUTINES
+
 # usage - print usage and exit.
 #
 sub usage {

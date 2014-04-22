@@ -26,9 +26,7 @@ use Sys::Statistics::Linux qw(Processes);
 use POSIX qw(pause);
 use List::MoreUtils qw(all);
 
-#
-# Command line arguments
-#
+### Command line arguments
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
 getopts('de:hn:p:u:Vx') or usage();
 usage()    if defined $main::opt_h;
@@ -52,7 +50,7 @@ else {
     $loop_max = 1;
 }
 
-# Variables
+### Variables
 my $loop = 0;    # current loop number
 $main::opt_h = 0;    # help option
 $main::opt_V = 0;    # revision option
@@ -70,9 +68,8 @@ my $pgsize   = 0;    # Memory page size
 local $| = 1;        # autoflush
 
 
-# ######### #
-# MAIN BODY #
-# ######### #
+
+### MAIN BODY #
 
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
@@ -302,7 +299,11 @@ while (1) {
 }
 
 
+
+### SUBROUTINES
+
 # print_pstats - prints PROC stats
+#
 sub print_pstats {
 
     my (
@@ -334,7 +335,9 @@ sub print_pstats {
     return;
 }
 
+
 # usage - print usage and exit.
+#
 sub usage {
 
     print STDERR <<END;
