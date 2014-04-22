@@ -98,6 +98,7 @@ while ( 1 ) {
     ### loop over all disks
     foreach (@$rdisks) {
 
+        ### verbose
         if ($verbose) {
             print "time: $print_time, disk: $_ \n";
         }
@@ -126,7 +127,7 @@ while ( 1 ) {
             $totByt += ( $disk->{$_}{ttbyt} / 1024 );
         }
 
-        ### Debug
+        ### verbose
         if ($verbose) {
             print "  total requests: $totReq ( reads: $readReq writes: $writeReq) \n";
             print "  total bytes:  $totByt ( reads: $readByt writes: $writeByt) \n";
