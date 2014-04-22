@@ -32,7 +32,7 @@ usage()    if defined $main::opt_h;
 revision() if defined $main::opt_V;
 
 # set debug log
-my $debugmsg = defined $main::opt_d ? $main::opt_d : 0;
+my $verbose = defined $main::opt_v ? $main::opt_v : 0;
 
 # process [[interval [count]]
 my ( $interval, $loop_max );
@@ -98,7 +98,9 @@ while ( 1 ) {
     ### loop over all disks
     foreach (@$rdisks) {
 
-        # print "\nDisk: $_ \n";
+        if ($verbose) {
+            print "time: $print_time, disk: $_ \n";
+        }
 
         if ( defined( $disk->{$_}{rdreq} ) ) {
             $readReq += $disk->{$_}{rdreq};
@@ -125,8 +127,10 @@ while ( 1 ) {
         }
 
         ### Debug
-        # print "total requests: $totReq ( reads: $readReq writes: $writeReq) \n";
-        # print "total bytes:  $totByt ( reads: $readByt writes: $writeByt) \n";
+        if ($verbose) {
+            print "  total requests: $totReq ( reads: $readReq writes: $writeReq) \n";
+            print "  total bytes:  $totByt ( reads: $readByt writes: $writeByt) \n";
+        }
 
         printf "%.${tp}f:%s:%.f:%.f:%.f:%.2f:%.2f:%.2f\n",
             $print_time, $_, $readReq, $writeReq, $totReq, $readByt, $writeByt, $totByt;
@@ -179,9 +183,10 @@ sub get_disks {
 sub usage {
 
     print STDERR <<END;
-USAGE: diskrec [-hV] [-d disk[,disk...]] | [interval [count]]
+USAGE: diskrec [-hvV] [-d disk[,disk...]] | [interval [count]]
 OPTIONS:
   -h          : help information
+  -v          : verbose mode
   -V          : release version
   -d disk,... : monitor a list of disks only
 
