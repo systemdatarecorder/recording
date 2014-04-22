@@ -48,7 +48,6 @@ my $sb   = "/sys/block";
 my $loop = 0;    # current loop number
 my $tp   = 0;    # time precision
 $main::opt_h = 0;    # help option
-
 $main::opt_V = 0;    # revision option
 local $| = 1;
 

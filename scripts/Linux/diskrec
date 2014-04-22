@@ -1,0 +1,210 @@
+#!/opt/sdr/perl/bin/perl
+#
+#  Copyright (c) 2014 Stefan Parvu (www.systemdatarecorder.org).
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  (http://www.gnu.org/copyleft/gpl.html)
+
+use strict;
+use warnings;
+use Getopt::Std;
+use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
+use Sys::Statistics::Linux;
+use POSIX qw(pause);
+
+### Command line arguments
+usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
+getopts('hd:vV') or usage();
+usage()    if defined $main::opt_h;
+revision() if defined $main::opt_V;
+
+# set debug log
+my $debugmsg = defined $main::opt_d ? $main::opt_d : 0;
+
+# process [[interval [count]]
+my ( $interval, $loop_max );
+if ( defined $ARGV[0] ) {
+    $interval = $ARGV[0];
+    $loop_max = defined $ARGV[1] ? $ARGV[1] : 2**32;
+    usage() if $interval == 0;
+}
+else {
+    $interval = 1;
+    $loop_max = 1;
+}
+
+
+###  Variables
+my $sb   = "/sys/block";
+my $loop = 0;        # current loop number
+$main::opt_h = 0;    # help option
+$main::opt_V = 0;    # revision option
+my $tp       = 0;    # time precision
+$| = 1;
+
+
+
+### MAIN BODY
+
+# Set a timer for S::S::L object
+$SIG{ALRM} = sub { };
+setitimer( ITIMER_REAL, .1, .1 );
+my $lxs = Sys::Statistics::Linux->new(
+    diskstats => 1
+);
+### 0.1sec sleep using a timer
+pause;
+
+# how often do we trigger (seconds)?
+my $first_interval = $interval;
+
+# signal handler is empty
+local $SIG{ALRM} = sub { };
+
+# first value is the initial wait, second is the wait thereafter
+setitimer( ITIMER_REAL, $first_interval, $interval );
+
+if ( $interval =~ /\./ ) {
+    $tp = 3;
+}
+
+while ( 1 ) {
+
+    #my @disks;
+    #my ($s, $maj, $min, $bks, $name);
+
+    #open(DISKS,"</proc/partitions");
+    #while (<DISKS>) {
+    #    chomp;
+    #    next if $_ =~ /^major/;
+    #    next if $_ =~ /^$/;
+    #    next if $_ =~ /(?:[0-9])$/;
+    #    ($s, $maj, $min, $bks, $name) = split /\s+/;
+    #
+    #    print $name;        
+    #    push @disks, "$name";
+    #
+    #    #print $name . "\n";
+    #}
+    # close(DISKS);
+
+    ### get disks
+    my $rdisks = get_disks();
+
+
+
+    # my $disk = $lxs->get->diskstats;
+
+    # my $readsReq = 0;
+ 
+    # loop over all cpus
+    # foreach (@disks) {
+    #     $readsReq += @{$disk->{$_}}{rdreq};
+    #}
+
+
+    # printf "%10d:%d\n", time, $readsReq ;
+
+    ### Check for end
+    if ( ++$loop == $loop_max ) {
+        last;
+    }
+
+    ### Interval
+    pause;
+
+}
+
+
+# get_disks - return the attached disks on the system.
+#
+sub get_disks {
+
+    my @d;
+
+    # get disks
+    opendir(my $dh, $sb) 
+        or die "Error: Cannot find block directory: $!\n";
+
+    while(readdir $dh) {
+        # discard parent dir
+        next if ($_ =~ m/^\./);
+
+        # exceptions
+        next if ($_ =~ m/^loop|^ram/);
+        next if ($_ =~ m/^fd0|^hdc/);
+        next if ($_ =~ m/^md(?:[0-9])/);
+        next if ($_ =~ m/^sr(?:[0-9])$/);
+        
+        # print disks
+        print "Disk: $_\n";
+        push @d, "$_";
+    }
+    closedir $dh;
+
+    # return array ref
+    return \@d;
+}
+
+
+# usage - print usage and exit.
+#
+sub usage {
+
+    print STDERR <<END;
+USAGE: diskrec [-hV] [-d disk[,disk...]] | [interval [count]]
+OPTIONS:
+  -h          : help information
+  -V          : release version
+  -d disk,... : monitor a list of disks only
+
+ e.g. diskrec 60             print every 60secs all found disks
+      diskrec -d sda1 120    print every 120sec sda1 disk only
+
+ FIELDS:
+  #01 timestamp  : seconds since Epoch, time
+  #02 disk       : disk name interface name, NIC name
+  #03 rxKB       : KBytes received per second, rate
+  #04 rxpcks     : packets received per second, rate
+  #05 rxerrs     : errors while received packets per second, rate
+  #06 rxdrop     : packets that were dropped per second, rate
+  #07 rxfifo     : FIFO overruns on received packets per second, rate
+  #08 rxframe    : carrier errors on received packets per second, rate
+  #09 rxcompr    : compressed packets received per second, rate
+  #10 rxmulti    : multicast packets received per second, rate
+  #11 txKB       : KBytes transmitted per second, rate
+  #12 txpcks     : packets transmitted per second, rate
+  #13 txerrs     : errors transmitting packets per second, rate
+  #14 txdrop     : packets that were dropped per second, rate
+  #15 txfifo     : FIFO overruns on transmitted packets per second, rate
+  #16 txcolls    : collisions that were detected per second, rate
+  #17 txcarr     : carrier errors on transmitted packets per second, rate
+  #18 txcompr    : compressed packets transmitted per second, rate
+  #19 ttpcks     : total packets (received + transmitted) per second, rate 
+  #20 ttKB       : total KBytes (received + transmitted) per second, rate
+END
+    exit 0;
+}
+
+
+# revision - print revision and exit
+#
+sub revision {
+    print STDERR <<END;
+sysrec: 1.00, 2014-04-27
+END
+    exit 0;
+}
