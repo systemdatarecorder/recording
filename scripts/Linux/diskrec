@@ -83,41 +83,55 @@ if ( $interval =~ /\./ ) {
 
 while ( 1 ) {
 
-    #my @disks;
-    #my ($s, $maj, $min, $bks, $name);
+    my ( $readReq, $readByt, $writeReq, $writeByt, $totReq, $totByt ) = 0;
 
-    #open(DISKS,"</proc/partitions");
-    #while (<DISKS>) {
-    #    chomp;
-    #    next if $_ =~ /^major/;
-    #    next if $_ =~ /^$/;
-    #    next if $_ =~ /(?:[0-9])$/;
-    #    ($s, $maj, $min, $bks, $name) = split /\s+/;
-    #
-    #    print $name;        
-    #    push @disks, "$name";
-    #
-    #    #print $name . "\n";
-    #}
-    # close(DISKS);
+
+    ### Get Stats
+    my $stat    = $lxs->get;
+    my $disk    = $stat->diskstats;
 
     ### get disks
     my $rdisks = get_disks();
 
+    my $print_time = time();
 
+    ### loop over all disks
+    foreach (@$rdisks) {
 
-    # my $disk = $lxs->get->diskstats;
+        # print "\nDisk: $_ \n";
 
-    # my $readsReq = 0;
- 
-    # loop over all cpus
-    # foreach (@disks) {
-    #     $readsReq += @{$disk->{$_}}{rdreq};
-    #}
+        if ( defined( $disk->{$_}{rdreq} ) ) {
+            $readReq += $disk->{$_}{rdreq};
+        }
 
+        if ( defined( $disk->{$_}{wrtreq} ) ) {
+            $writeReq += $disk->{$_}{wrtreq};
+        }
 
-    # printf "%10d:%d\n", time, $readsReq ;
+        if ( defined( $disk->{$_}{ttreq} ) ) {
+            $totReq += $disk->{$_}{ttreq};
+        }
 
+        if ( defined( $disk->{$_}{rdbyt} ) ) {
+            $readByt += ( $disk->{$_}{rdbyt} / 1024 );
+        }
+
+        if ( defined( $disk->{$_}{wrtbyt} ) ) {
+            $writeByt += ( $disk->{$_}{wrtbyt} / 1024 );
+        }
+
+        if ( defined( $disk->{$_}{ttbyt} ) ) {
+            $totByt += ( $disk->{$_}{ttbyt} / 1024 );
+        }
+
+        ### Debug
+        # print "total requests: $totReq ( reads: $readReq writes: $writeReq) \n";
+        # print "total bytes:  $totByt ( reads: $readByt writes: $writeByt) \n";
+
+        printf "%.${tp}f:%s:%.f:%.f:%.f:%.2f:%.2f:%.2f\n",
+            $print_time, $_, $readReq, $writeReq, $totReq, $readByt, $writeByt, $totByt;
+
+    }
     ### Check for end
     if ( ++$loop == $loop_max ) {
         last;
@@ -150,7 +164,7 @@ sub get_disks {
         next if ($_ =~ m/^sr(?:[0-9])$/);
         
         # print disks
-        print "Disk: $_\n";
+        # print "Disk: $_\n";
         push @d, "$_";
     }
     closedir $dh;
@@ -176,25 +190,13 @@ OPTIONS:
 
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
-  #02 disk       : disk name interface name, NIC name
-  #03 rxKB       : KBytes received per second, rate
-  #04 rxpcks     : packets received per second, rate
-  #05 rxerrs     : errors while received packets per second, rate
-  #06 rxdrop     : packets that were dropped per second, rate
-  #07 rxfifo     : FIFO overruns on received packets per second, rate
-  #08 rxframe    : carrier errors on received packets per second, rate
-  #09 rxcompr    : compressed packets received per second, rate
-  #10 rxmulti    : multicast packets received per second, rate
-  #11 txKB       : KBytes transmitted per second, rate
-  #12 txpcks     : packets transmitted per second, rate
-  #13 txerrs     : errors transmitting packets per second, rate
-  #14 txdrop     : packets that were dropped per second, rate
-  #15 txfifo     : FIFO overruns on transmitted packets per second, rate
-  #16 txcolls    : collisions that were detected per second, rate
-  #17 txcarr     : carrier errors on transmitted packets per second, rate
-  #18 txcompr    : compressed packets transmitted per second, rate
-  #19 ttpcks     : total packets (received + transmitted) per second, rate 
-  #20 ttKB       : total KBytes (received + transmitted) per second, rate
+  #02 disk       : disk name, LUN name
+  #03 readreq    : read requests, number
+  #04 writereq   : write requests, number
+  #05 totreq     : total read + write requests, number
+  #06 readbyt    : read bytes
+  #07 writebyt   : write bytes
+  #08 totbyt     : total read + write bytes
 END
     exit 0;
 }
@@ -204,7 +206,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-sysrec: 1.00, 2014-04-27
+diskrec: 1.00, 2014-04-27
 END
     exit 0;
 }
