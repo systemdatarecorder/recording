@@ -22,7 +22,7 @@ use strict;
 use warnings;
 use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
-use Sys::Statistics::Linux;
+use Sys::Statistics::Linux qw(DiskStats);
 use POSIX qw(pause);
 
 ### Command line arguments
@@ -61,7 +61,7 @@ $| = 1;
 
 # Set a timer for S::S::L object
 $SIG{ALRM} = sub { };
-setitimer( ITIMER_REAL, .1, .1 );
+setitimer( ITIMER_REAL, .5, .5 );
 my $lxs = Sys::Statistics::Linux->new(
     diskstats => 1
 );
@@ -83,19 +83,18 @@ if ( $interval =~ /\./ ) {
 
 while ( 1 ) {
 
-    my ( $readReq, $readByt, $writeReq, $writeByt, $totReq, $totByt ) = 0;
-
-    ### Get Stats
-    my $stat    = $lxs->get;
-    my $disk    = $stat->diskstats;
-
     ### get disks
     my $rdisks = get_disks();
 
-    my $print_time = time();
-
     ### loop over all disks
     foreach (@$rdisks) {
+        my ( $readReq, $readByt, $writeReq, $writeByt, $totReq, $totByt ) = 0;
+
+        my $print_time = time();
+
+        ### Get Stats
+        my $stat    = $lxs->get;
+        my $disk    = $stat->diskstats;
 
         ### verbose
         if ($verbose) {
