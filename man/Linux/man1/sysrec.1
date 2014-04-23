@@ -1,9 +1,9 @@
-.TH sysrec 1  "$Date: 2011-01-25 #$" "USER COMMANDS"
+.TH sysrec 1  "$Date: 2014-04-27 #$" "USER COMMANDS"
 .SH NAME
 sysrec \- system Recorder. Uses perl
 .SH SYNOPSIS
 .B sysrec
-[-hxV] | [interval [count]]
+[-hV] | [interval [count]]
 
 .SH DESCRIPTION
 sysrec records the following system performance parameters: cpu, memory
@@ -28,7 +28,7 @@ print help information
 
 .SS
 \-x
-print additional memory statistics, extended mode
+print additional memory statistics
 
 .SS
 \-V
@@ -126,31 +126,31 @@ Total size of used memory in percent
 
 .TP
 #16 memused
-Total size of used memory in kilobytes, extended mode
+Total size of used memory in kilobytes
 
 .TP
 #17 memfree
-Total size of free memory in kilobytes, extended mode
+Total size of free memory in kilobytes
 
 .TP
 #18 memtotal
-Total size of memory in kilobytes, extended mode
+Total size of memory in kilobytes
 
 .TP
 #19 buffers
-Total size of buffers used from memory in kilobytes, extended mode
+Total size of buffers used from memory in kilobytes
 
 .TP
 #20 cached
-Total size of cached memory in kilobytes, extended mode
+Total size of cached memory in kilobytes
 
 .TP
 #21 realfree
-Total size of memory is real free, (memfree + buffers + cached), extended mode
+Total size of memory is real free, (memfree + buffers + cached)
 
 .TP
 #22 realfreeper
-Total size of memory is real free in percent of total memory, extended mode
+Total size of memory is real free in percent of total memory
  
 .TP
 #23 swapusedper
@@ -158,19 +158,19 @@ Total size of used swap space in percent
 
 .TP
 #24 swapused
-Total size of swap space is used is kilobytes, extended mode
+Total size of swap space is used is kilobytes
 
 .TP
 #25 swapfree
-Total size of swap space is free in kilobytes, extended mode
+Total size of swap space is free in kilobytes
 
 .TP
 #26 swaptotal
-Total size of swap space in kilobytes, extended mode
+Total size of swap space in kilobytes
 
 .TP
 #27 swapcached
-Memory that once was swapped out, is swapped back in but still also is in the swapfile, extended mode
+Memory that once was swapped out, is swapped back in but still also is in the swapfile
 
 .TP
 #28 readReq
@@ -246,9 +246,7 @@ not recommend using values lower than second for long historical
 recordings !
 
 .PP
-sysrec records up to 43 metrics under Linux OS x64 and x86 platforms
-in extended mode. the default mode supports 32 metrics. This conforms
-with SDRD 0737 Raw Data Format Specification.
+sysrec records up to 43 metrics under Linux OS x64 and x86 platforms.
 
 .PP
 .SH DOCUMENTATION
@@ -256,7 +254,7 @@ See SDR documentation for more details.
 
 .SH EXIT
 sysrec will run continuously until is stopped by the master script 
-or manually stopped. 
+or manually stopped.
  
 .SH AUTHOR
 Stefan Parvu
