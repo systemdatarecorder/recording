@@ -1,9 +1,9 @@
-.TH nicrec 1  "$Date: 2011-07-24 #$" "USER COMMANDS"
+.TH nicrec 1  "$Date: 2014-04-27 #$" "USER COMMANDS"
 .SH NAME
 nicrec \- NIC Recorder. Uses perl
 .SH SYNOPSIS
 .B nicrec
-[-hv] [-i int[,int...]] | [interval [count]]
+[-hvV] [-i int[,int...]] | [interval [count]]
 
 .SH DESCRIPTION
 nicrec records per per-NIC statistics:
@@ -29,6 +29,9 @@ monitor one or many interfaces with a specific name
 print help information
 .SS
 \-v
+print verbose information
+.SS
+\-V
 print revision information
 .SS
 interval
