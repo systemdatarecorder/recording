@@ -44,13 +44,10 @@ number of samples
 .PP
 .SH EXAMPLES
 .SS xenrec 5
-monitor all found NICs every 5 seconds 
+monitor all found domains every 5 seconds 
 
-.SS xenrec -i eth0 5 10
-monitor eth0 interface only, 10 times sampled every 5 seconds
-
-.SS xenrec -i wlan0,eth1,eth1:2 1.5
-monitor wlan0, eth1 and eth1:2 interfaces every 1.5 seconds
+.SS xenrec -d Domain-0 5 10
+monitor Domain-0, 10 times sampled every 5 seconds
 
 .PP
 .SH FIELDS
@@ -59,91 +56,87 @@ monitor wlan0, eth1 and eth1:2 interfaces every 1.5 seconds
 the time in seconds since Epoch
 
 .TP
-#2 interface
-the interface name, NIC name
+#2 name
+domain name, the guest domU name
 
 .TP
-#3 rxKB 
-number of KBytes received/sec
+#3 state
+domain state: blocked (b), dying (d), shutdown (s) crashed (c), paused (p), running (r) 
 
 .TP
-#4 rxpcks 
-number of packets received/sec
+#4 cputime
+displays cpu usage in seconds
 
 .TP
-#5 rxerrs 
-number of errors while received packets/sec
+#5 cpupct
+displays cpu usage in percentage
 
 .TP
-#6 rxdrop 
-number of packets that were dropped/sec
+#6 mem
+current memory
 
 .TP
-#7 rxfifo 
-number of FIFO overruns on received packets/sec
+#7 mempct
+current memory in percentage
 
 .TP
-#8 rxframe 
-number of carrier errors on received packets/sec
+#8 maxmem
+maximum domain memory stats, in KB
 
 .TP
-#9 rxcompr 
-number of compressed packets received/sec
+#9 maxmempct
+memory stats in percentage, ratio of current domain memory to total node memory 
 
 .TP
-#10 rxmulti 
-number of multicast packets received/sec
+#10 vpus
+number of virtual processing units, vCPUs
 
 .TP
-#11 txKB 
-number of KBytes transmitted/sec
+#11 nets
+number of virtual networks
 
 .TP
-#12 txpcks
-number of packets transmitted/sec
+#12 nettx
+data transmission rate in KB 
 
 .TP
-#13 txerrs
-number of errors transmitting packets/sec
+#13 netrx
+data receiving rate in KB
 
 .TP
-#14 txdrop
-number of packets that were dropped/sec
+#14 vbds
+total number of virtual block devices in the domain
 
 .TP
-#15 txfifo
-number of FIFO overruns on transmitted packets/sec
+#15 vbdoo
+total number of VBD OO requests
 
 .TP
-#16 txcolls
-number of collisions that were detected/sec
+#16 vbdrd
+VBD read rate
 
 .TP
-#17 txcarr
-number of carrier errors on transmitted packets/sec
+#17 vbdwr
+VBD write rate
 
 .TP
-#18 txcompr
-number of compressed packets transmitted/sec
+#18 vbdrsect
+VBD read sectors rate
 
 .TP
-#19 ttpcks
-number of total packets (received + transmitted)/sec
+#19 vbdwsect
+VBD write sectors rate
 
 .TP
-#20 ttKB
-number of total KBytes (received + transmitted)/sec
+#20 ssid
+domain security id
 
 .PP
 .SH NOTES
-This recorder supports interval values lower than second !  Running the
-recorder  with  values  lower than second for long periods of time will
-add an overhead in terms of CPU utilisation.  The  lower  the  interval
-value  the higher the CPU utilisation. We do not recommend using values
-lower than second for long historical recordings !
+This recorder does not support interval values lower than 2 seconds !  
 
 .PP
-xenrec records 18 Linux OS metrics on x64 and x86 platforms !
+xenrec records 20 Xen Hypervisor metrics on x64 and x86 platforms !
 
 
 .PP
