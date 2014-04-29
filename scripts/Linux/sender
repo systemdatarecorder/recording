@@ -24,7 +24,6 @@ use File::Tail;
 use File::Basename;
 use Digest::SHA;
 use WWW::Curl::Easy;
-use Net::SSH2;
 use Getopt::Std;
 use XML::LibXML;
 use XML::LibXML::XPathContext;
@@ -34,11 +33,9 @@ use Sys::Hostname;
 use Socket;
 use Time::HiRes;
 
-#
-#  Process command line args
-#
+###  Process command line args
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
-getopts('t:hvV') or usage();
+getopts('T:hvV') or usage();
 usage()    if defined $main::opt_h;
 revision() if defined $main::opt_V;
 
@@ -46,7 +43,7 @@ revision() if defined $main::opt_V;
 my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
 
 # timeout
-my $timeout = defined $main::opt_t ? $main::opt_t : 25;
+my $timeout = defined $main::opt_T ? $main::opt_T : 25;
 
 # process [interval]
 my $interval;
@@ -59,28 +56,29 @@ else {
     $interval = 60;
 }
 
-#
-#  Variables
-#
-$main::opt_h = 0;    # help option
-$main::opt_V = 0;    # revision option
-my $xmlcnf = 'sdr.conf';    # sdr configuration
-my $conf;
+
+###  Variables
+$main::opt_h        = 0;               # help option
+$main::opt_V        = 0;               # revision option
+my $xmlcnf          = 'sdr.xml';       # sdr configuration file
+my $conf;                              # object configuration 
+my $tcpka           = 0;               # transport TCP keepalive settings
+my $sdrid           = "";
+my ($dr, $dest);
 my ( @files, @dbs );
-my ( $sdr_baselog, $sdr_curlog, $pkey );
-my $hport = 80;
-my ( $hproxy, $hproxyport );
-my $sport = 22;
-my $tcpka = 0;
-my $trans = "http";
-my $sdrid = "";
-my $dr;
-my ( $dest, $user, $pass );
+my ( $sdr_baselog, $sdr_curlog );      # log settings
+
+my $transport_port  = 443;             # default transport port
+my $transport_proto = "https";         # default transport protocol
+
+my ( $transport_proxy, 
+     $transport_proxyport );          # transport proxy settings
+
 local $| = 1;
 
-# ######### #
-# MAIN BODY #
-# ######### #
+
+
+### MAIN BODY #
 
 # Default sdrd
 my @recs = qw(sys cpu disk nic hdw);
@@ -113,20 +111,6 @@ foreach my $node (@log_childs) {
         $sdr_curlog = $node->getAttribute('path');
     }
 
-    #given ( $node->nodeName() ) {
-    #
-    #        # base_log
-    #        when (/base/) {
-    #            $sdr_baselog = $node->getAttribute('path');
-    #        }
-    #
-    #        # current_log
-    #        when (/current/) {
-    #            $sdr_curlog = $node->getAttribute('path');
-    #        }
-    #
-    #}
-
     $rchilds++;
 }
 
@@ -142,11 +126,6 @@ my @scfg = $conf->findnodes("/sdr/recording/transport/*");
 
 foreach my $node (@scfg) {
 
-    # private_key
-    if ( $node->nodeName() =~ /private_key/ ) {
-        $pkey = $node->getAttribute('path');
-    }
-
     # subscription
     if ( $node->nodeName() =~ /subscription/ ) {
         $sdrid = $node->textContent();
@@ -159,7 +138,7 @@ foreach my $node (@scfg) {
 
     # instant mode, protocol type
     if ( $node->nodeName() =~ /protocol/ ) {
-        $trans = $node->textContent();
+        $transport_proto = $node->textContent();
     }
 
     # keepalive
@@ -187,26 +166,16 @@ die "error: main - no destination found, check sdr.conf\n"
 @dbs = @recs if ( $schilds == 0 );
 
 # transport modes
-my ( $ssh2trans, $httptrans ) = 0;
+my ( $https_flag, $http_flag ) = 0;
 
-# transport
+### transport
 
-   if ( $trans =~ /ssh2/ ) { $ssh2trans = 1; }
-elsif ( $trans =~ /http/ ) { $httptrans = 1; }
- else                      { $httptrans = 1; } 
+   if ( $transport_proto =~ /https/  ) { $https_flag  = 1; }
+elsif ( $transport_proto =~ /http/   ) { $http_flag   = 1; }
+ else                                  { $https_flag  = 1; }
    
 
-# given ($trans) {
-# 
-#    when (/ssh2/) { $ssh2trans = 1; }
-# 
-#    when (/http/) { $httptrans = 1; }
-# 
-#    default { $httptrans = 1; }
-# }
-
 # Reporting XML Configuration
-# XPATH Method
 my @res = $conf->findnodes('//host');
 
 foreach my $node (@res) {
@@ -214,51 +183,31 @@ foreach my $node (@res) {
     # destination
     $dest = $node->getAttribute('name');
 
-    # username, password
-    $user = $node->getElementsByTagName('username');
-    $pass = $node->getElementsByTagName('password');
-
     if ( $dr eq $dest ) {
-        if ( $node->getElementsByTagName('http') ) {
-            my @http_transport =
+
+        if ( $node->getElementsByTagName('https') ) {
+            my @tsettings =
+              get_transport( $conf,
+                "/sdr/reporting/host[\@name=\"$dest\"]/https/*" );
+
+            if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
+         elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
+                                      $transport_proxy     = $tsettings[1]; }
+         elsif ( $#tsettings == 2 ) { $transport_port      = $tsettings[0];
+                                      $transport_proxy     = $tsettings[1];
+                                      $transport_proxyport = $tsettings[2]; }
+
+        } elsif ( $node->getElementsByTagName('http') ) {
+            my @tsettings =
               get_transport( $conf,
                 "/sdr/reporting/host[\@name=\"$dest\"]/http/*" );
 
-            if ( $#http_transport == 0 ) { $hport      = $http_transport[0]; }
-         elsif ( $#http_transport == 1 ) { $hport      = $http_transport[0];
-                                           $hproxy     = $http_transport[1]; }
-         elsif ( $#http_transport == 2 ) { $hport      = $http_transport[0];
-                                           $hproxy     = $http_transport[1];
-                                           $hproxyport = $http_transport[2]; }
-            # given ($#http_transport) {
-            # 
-            #    when (0) { $hport = $http_transport[0]; }
-            #
-            #    when (1) {
-            #        $hport  = $http_transport[0];
-            #        $hproxy = $http_transport[1];
-            #    }
-
-            #    when (2) {
-            #        $hport      = $http_transport[0];
-            #        $hproxy     = $http_transport[1];
-            #        $hproxyport = $http_transport[2];
-            #    }
-            #}
-        }
-
-        if ( $node->getElementsByTagName('ssh2') ) {
-            my @ssh2_transport =
-              get_transport( $conf,
-                "/sdr/reporting/host[\@name=\"$dest\"]/ssh2/*" );
-
-            if ($#ssh2_transport == 0) { $sport = $ssh2_transport[0]; }
-
-            #given ($#ssh2_transport) {
-            #
-            #    when (0) { $sport = $ssh2_transport[0]; }
-            #}
-
+            if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
+         elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
+                                      $transport_proxy     = $tsettings[1]; }
+         elsif ( $#tsettings == 2 ) { $transport_port      = $tsettings[0];
+                                      $transport_proxy     = $tsettings[1];
+                                      $transport_proxyport = $tsettings[2]; }
         }
 
         ## we found a match
@@ -294,28 +243,16 @@ if ( Proc::PID::File->running( { dir => "$sdr_baselog" } ) ) {
     exit(0);
 }
 
-# Log basic information
-if ($ssh2trans) {
-    addlog(
-"info: main - destination=$dest, id=$sdrid, ssh2_user=$user, tcp_keepalive=$tcpka, ssh2_port=$sport"
-    );
-}
-else {
-    if ($httptrans) {
-        if ( $hproxy and $hproxyport ) {
-            addlog(
-"info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, http_port=$hport proxy=$hproxy proxy_port=$hproxyport"
-            );
-        }
-        else {
-            addlog(
-"info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, http_port=$hport"
-            );
-        }
-    }
+### Log basic information
+
+### HTTPS or HTTP
+if ( $transport_proxy and $transport_proxyport ) {
+    addlog("info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, HTTP port=$transport_port proxy=$transport_proxy proxy_port=$transport_proxyport");
+} else {
+    addlog("info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, HTTP port=$transport_port");
 }
 
-# cd raw data directory
+# cd sdrd raw data directory
 chdir("$sdr_curlog")
   or die "error: main - cannot open SDR sdrd raw data directory, $!\n";
 
@@ -484,6 +421,8 @@ sub addlog {
     return;
 }
 
+
+## return transport settings
 sub get_transport {
 
     my ( $conf, $path ) = @_;
@@ -494,18 +433,13 @@ sub get_transport {
     my @childs = $conf->findnodes($path);
 
     foreach my $node (@childs) {
-        #given ( $node->nodeName() ) {
-        #    when (/^port$/)      { $port      = $node->textContent(); }
-        ##    when (/^proxy$/)     { $proxy     = $node->textContent(); }
-        #    when (/^proxyport$/) { $proxyport = $node->textContent(); }
-        #}
 
         if ( $node->nodeName() =~ /^port$/ ) { 
             $port = $node->textContent();
         } elsif ( $node->nodeName() =~ /^proxy$/ ) {
             $proxy = $node->textContent(); 
-        } elsif ( $node->nodeName() =~ /^proxyport$/ ) { 
-            $proxyport = $node->textContent(); 
+        } elsif ( $node->nodeName() =~ /^proxyport$/ ) {
+            $proxyport = $node->textContent();
         }
     }
 
@@ -572,110 +506,6 @@ sub trans2http {
     return $retcode;
 }
 
-## send payload to SDR Reporting
-sub trans2ssh2 {
-
-    my ( $s, $sdrid, $dbid, $payload ) = @_;
-
-    my $c = $s->channel();
-
-    my ( $code, $error_name, $error_string ) = $s->error();
-    if ($code) {
-        addlog(
-"fatal: trans2ssh2 - cant init channel, code:$code error:$error_name $error_string"
-        );
-        return 0;
-    }
-
-    if ($c) {
-
-        # exec method
-        $c->exec("echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$host:$dbid\n");
-
-        # shell method
-        #$c->shell();
-        # print $c "echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$host:$dbid\n";
-
-        $c->close;
-
-        return 1;
-
-    }
-    else {
-        addlog("error: trans2ssh2 - cant operate on channel, check ssh2 backend");
-        return 0;
-    }
-
-    # otherwise
-    return 0;
-}
-
-## connect to SDR Reporting
-sub connect2rep {
-
-    my ( $dest, $sport, $user, $pass ) = @_;
-
-    my $ssh2 = Net::SSH2->new();
-
-    #$ssh2->poll(1000);
-    #$ssh2->debug(1);
-
-    if ( $ssh2->connect( $dest, $sport ) ) {
-
-        #$ssh2->blocking(1);
-
-        addlog(
-"info: connect2rep - connection established to destination=$dest ssh2_port=$sport"
-        ) if ( $verbose_flag == 1 );
-
-        # we have keepalive ON
-        if ($tcpka) {
-
-            my $sock = $ssh2->sock;
-            setsockopt( $sock, SOL_SOCKET, SO_KEEPALIVE, 1 )
-              or die
-              "fatal: connect2rep - cant set socket in SO_KEEPALIVE, mode $!";
-
-            addlog("info: connect2rep - tcp keepalive is on")
-              if ( $verbose_flag == 1 );
-        }
-        else {
-            addlog("info: connect2rep - tcp keepalive is off")
-              if ( $verbose_flag == 1 );
-        }
-
-        if ( $pass eq "" ) {
-
-            # authentication using private key
-            my $pubkey = "$pkey" . ".pub";
-
-            eval { $ssh2->auth_publickey( $user, $pubkey, $pkey ); 1 } or do {
-                addlog("error: connect2rep - ssh2 authkey failed $@");
-            };
-
-        }
-        else {
-
-            # authentication using private key
-            eval {
-                $ssh2->auth(
-                    username => "$user",
-                    password => "$pass"
-                );
-                1;
-            } or do {
-                addlog("error: connect2rep - ssh2 auth failed $@");
-            };
-        }
-
-    }
-    else {
-        addlog("error: connect2rep - ssh2 connect failed: $!");
-        return;
-    }
-
-    return $ssh2;
-}
 
 ## NIST SHA-256 message digest for sdrd raw data
 sub sha256sdrd {
@@ -704,6 +534,7 @@ sub sha256sdrd {
 
     return $sdrd;
 }
+
 
 ## open XML configuration file
 sub open_conf {
@@ -741,12 +572,13 @@ sub open_conf {
     return $tree;
 }
 
+
 ## usage - print usage and exit.
 sub usage {
     print STDERR <<END;
-USAGE: sender [-t secs] [-hV] | [interval]
+USAGE: sender [-T secs] [-hV] | [interval]
 OPTIONS:
-  -t        : timeout in seconds
+  -T        : timeout in seconds
   -h        : help information
   -V        : release version
   interval  : maximum number of seconds between samples, default 60, will 
