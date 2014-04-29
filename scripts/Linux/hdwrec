@@ -252,7 +252,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-hdwrec: 1.00, 2014-04-27
+hdwrec: 1.00, 2014-05-04
 END
     exit 0;
 }

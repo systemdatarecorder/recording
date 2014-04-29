@@ -200,7 +200,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-xenrec: 1.00, 2014-04-27
+xenrec: 1.00, 2014-05-04
 END
     exit (0);
 }
