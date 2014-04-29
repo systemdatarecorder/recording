@@ -22,7 +22,6 @@
 
     <!-- Transport Settings -->
     <transport description="Transport settings">
-      <private_key path="" description="The private authentication key" />
 
       <!-- Reporting Destination -->
       <destination>reporting</destination>
@@ -46,7 +45,6 @@
 
   </recording>
 
-
   <reporting description="SDR reporting module configuration">
 
     <!-- Destination Reporting Servers -->
@@ -65,17 +63,6 @@
         <proxyport></proxyport>
       </https>
 
-      <ssh2 description="default SSH2 port">
-        <port>22</port>
-      </ssh2>
-
-      <ftp description="default FTP port">
-        <port>21</port>
-      </ftp>
-
-      <username>sdr</username>
-      <!-- PLEASE USE SSH Public Key Based Authentication ! -->
-      <password></password>
     </host>
 
     <host name="test" ver="0.80" description="SDR reporting test server">
@@ -86,13 +73,6 @@
         <proxyport></proxyport>
       </http>
 
-      <ssh2 description="default SSH2 port">
-        <port>9022</port>
-      </ssh2>
-
-      <username>sdr</username>
-      <!-- PLEASE USE SSH Public Key Based Authentication ! -->
-      <password></password>
     </host>
 
   </reporting>
