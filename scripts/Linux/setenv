@@ -65,10 +65,6 @@ SDR_LIB=${SDR_ROOT}/lib
 SDR_LOG=${SDR_ROOT}/log
 SDR_CURRENT=${SDR_LOG}/current
 SDR_DAILY=${SDR_LOG}/daily
-SDRREP_ROOT=${SDR_ROOT}/report
-SDRREP_BIN=${SDRREP_ROOT}/bin
-SDRREP_DOCROOT=${SDRREP_ROOT}/docroot
-SDRREP_DB=${SDRREP_ROOT}/db
 #########################################
 
 
@@ -79,6 +75,7 @@ SDRREP_DB=${SDRREP_ROOT}/db
 #########################################
 SYSREC_CUR=${SDR_CURRENT}/sysrec.sdrd
 CPUREC_CUR=${SDR_CURRENT}/cpurec.sdrd
+DISKREC_CUR=${SDR_CURRENT}/diskrec.sdrd
 NICREC_CUR=${SDR_CURRENT}/nicrec.sdrd
 NETREC_CUR=${SDR_CURRENT}/netrec.sdrd
 JVMREC_CUR=${SDR_CURRENT}/jvmrec.sdrd
@@ -94,6 +91,7 @@ XENREC_CUR=${SDR_CURRENT}/xenrec.sdrd
 SYSREC_LOG=${SDR_LOG}/sysrec.log
 CPUREC_LOG=${SDR_LOG}/cpurec.log
 NETREC_LOG=${SDR_LOG}/netrec.log
+DISKREC_LOG=${SDR_LOG}/diskrec.log
 NICREC_LOG=${SDR_LOG}/nicrec.log
 JVMREC_LOG=${SDR_LOG}/jvmrec.log
 HDWREC_LOG=${SDR_LOG}/hdwrec.log
