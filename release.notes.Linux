@@ -18,6 +18,7 @@ Recording
 
 1.00
 ====
+    Bug 298 - xenrec reports incorrect domain state information
     Bug 297 - missing diskrec manual page
     Bug 296 - remove extended mode from sysrec manual page
     Bug 295 - procrec smart match operator warnings
