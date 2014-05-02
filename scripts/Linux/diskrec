@@ -228,7 +228,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-diskrec: 1.00, 2014-05-04
+diskrec: 1.00 build14, 2014-05-04
 END
     exit 0;
 }
