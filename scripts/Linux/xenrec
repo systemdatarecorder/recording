@@ -115,10 +115,16 @@ sub print_stat {
         return if ( all { $_ ne $domname } @def_doms);
     }
 
-    $entry =~ s/Domain/dom/;
+    $entry =~ s/Domain\-0/dom0/;
     $entry =~ s/n\/a/NA/g;
     $entry =~ s/no limit/NA/g;
-    for ($entry) { s/(\-)+//g; s/\///; }
+    my $size = (scalar(@{[$entry =~ /-/g]}));
+    if ($size == 5 ) {
+        # remove state leading char
+        for ($entry) { s/(\-)+//g; s/\///; }
+    } elsif ($size == 6) {
+        for ($entry) { s/(\-)+/NA/g; s/\///; } 
+    }
     for ($entry) { s/^\s+//; s/\s+/:/g; }
     
     printf "%.${tp}f:%s\n", $timestamp, $entry;
@@ -200,7 +206,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-xenrec: 1.00, 2014-05-04
+xenrec: 1.00, 2014-04-27
 END
     exit (0);
 }
