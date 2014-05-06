@@ -26,7 +26,7 @@
       <!-- Reporting Destination -->
       <destination>reporting</destination>
 
-      <!-- Instant Mode, Protocol Type: http|https|ssh2 -->
+      <!-- Protocol Type: http|https -->
       <protocol>http</protocol>
 
       <!-- TCP Keepalive 0: disabled, 1: enabled -->
@@ -42,7 +42,6 @@
       </data>
 
     </transport>
-
   </recording>
 
   <reporting description="SDR reporting module configuration">
