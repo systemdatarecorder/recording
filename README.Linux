@@ -1,15 +1,16 @@
 
-================
-README SDR Linux
-================
+========================
+SystemDataRecorder Linux
+========================
 
-SDR Recording Module
+Recording Module
 
 OS                   : RedHat Enterprise Linux 5.x+ 32/64bit
                        Ubuntu Server Edition 10.04+ 32/64bit
                        CentOS 5.x+ 32/64bit
+                       Debian 6,7,8 32/64bit
 
-Kernel               : Linux 2.6+ i386/X86_64 (32/64bit)
+Kernel               : minim 2.6+ 32/64bit
 
 
 Prerequisites
