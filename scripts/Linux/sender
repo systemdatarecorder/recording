@@ -513,6 +513,7 @@ sub usage {
     print STDERR <<END;
 USAGE: sender [-T secs] [-hV] | [interval]
 OPTIONS:
+  -n        : timeout in seconds
   -T        : timeout in seconds
   -h        : help information
   -V        : release version
@@ -524,6 +525,7 @@ OPTIONS:
 END
     exit 0;
 }
+
 
 # revision - print revision and exit
 #
