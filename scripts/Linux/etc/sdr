@@ -72,7 +72,6 @@ start() {
             RETVAL=$?
             [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
         fi
-        sleep 1
     done
 
     return $RETVAL
