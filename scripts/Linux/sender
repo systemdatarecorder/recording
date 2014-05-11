@@ -120,6 +120,14 @@ if ( $rchilds == 0 ) {
       "$rchilds recording elements found \n";
 }
 
+
+# check hostid
+
+
+
+# check subscription destination protocol keepalive
+
+# sender logfile
 my $slog = $sdr_baselog . "/sender.log";
 
 my @scfg = $conf->findnodes("/sdr/recording/transport/*");
@@ -136,7 +144,7 @@ foreach my $node (@scfg) {
         $dr = $node->textContent();
     }
 
-    # instant mode, protocol type
+    # protocol type
     if ( $node->nodeName() =~ /protocol/ ) {
         $transport_proto = $node->textContent();
     }
@@ -145,7 +153,6 @@ foreach my $node (@scfg) {
     if ( $node->nodeName() =~ /tcp_keepalive/ ) {
         $tcpka = $node->textContent();
     }
-
 }
 
 my @sdcfg = $conf->findnodes("/sdr/recording/transport/data/*");

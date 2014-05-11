@@ -11,7 +11,7 @@
       <daily path="/opt/sdr/log/daily" description="daily log directory" />
     </logs>
 
-    <!-- HostId -->
+    <!-- Host Id -->
     <hostid></hostid>
 
     <!-- Subscription Id -->
@@ -42,6 +42,7 @@
       </data>
 
     </transport>
+
   </recording>
 
   <reporting description="SDR reporting module configuration">
@@ -61,17 +62,15 @@
         <proxy></proxy>
         <proxyport></proxyport>
       </https>
-
     </host>
 
-    <host name="test" ver="0.80" description="SDR reporting test server">
-      <http description="default HTTP port">
-        <port>90</port>
+    <host name="test" ver="1.00" description="SDR reporting test server">
+      <http description="default HTTPS port">
+        <port>443</port>
         <!-- Via HTTP Proxy -->
         <proxy></proxy>
         <proxyport></proxyport>
       </http>
-
     </host>
 
   </reporting>
