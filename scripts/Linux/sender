@@ -511,9 +511,9 @@ sub open_conf {
 ## usage - print usage and exit.
 sub usage {
     print STDERR <<END;
-USAGE: sender [-T secs] [-hV] | [interval]
+USAGE: sender [-T secs] [-FhV] | [interval]
 OPTIONS:
-  -n        : timeout in seconds
+  -F        : force new host identification
   -T        : timeout in seconds
   -h        : help information
   -V        : release version
