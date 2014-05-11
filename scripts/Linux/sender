@@ -247,9 +247,12 @@ if ( Proc::PID::File->running( { dir => "$sdr_baselog" } ) ) {
 
 ### HTTPS or HTTP
 if ( $transport_proxy and $transport_proxyport ) {
-    addlog("info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, HTTP port=$transport_port proxy=$transport_proxy proxy_port=$transport_proxyport");
+    addlog("info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka,
+            HTTP port=$transport_port proxy=$transport_proxy
+            proxy_port=$transport_proxyport");
 } else {
-    addlog("info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, HTTP port=$transport_port");
+    addlog("info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka,
+            HTTP port=$transport_port");
 }
 
 # cd sdrd raw data directory
