@@ -1,0 +1,130 @@
+#!/bin/ksh
+
+# COPYRIGHT: Copyright (c) 2013 System Data Recorder
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  (http://www.gnu.org/copyleft/gpl.html)
+
+#########################################
+# Platform and OS
+#########################################
+OS_NAME=$(uname -s)
+PT_NAME=$(uname -p)
+MT_NAME=$(uname -m)
+HOSTNAME=$(uname -n | sed 's/\..*//')
+#########################################
+
+
+#########################################
+# USER ID
+#########################################
+case "$OS_NAME" in
+ SunOS)
+ USER_ID=$(/usr/xpg4/bin/id -u)
+ ;;
+
+ Linux)
+ USER_ID=$(/usr/bin/id -u)
+ ;;
+
+ *)
+ print "Not supported OS !"
+esac
+#########################################
+
+
+#########################################
+# JDK_PATH
+# - set here where your JDK is installed
+#########################################
+JDK_PATH=
+#########################################
+
+
+#########################################
+# System Data Recorder Settings
+# - the main installation dir
+#########################################
+SDR_ROOT=/opt/sdr
+SDR_BIN=${SDR_ROOT}/bin
+SDR_ETC=${SDR_ROOT}/ETC
+SDR_LIB=${SDR_ROOT}/lib
+SDR_LOG=${SDR_ROOT}/log
+SDR_CURRENT=${SDR_LOG}/current
+SDR_DAILY=${SDR_LOG}/daily
+SDRREP_ROOT=${SDR_ROOT}/report
+SDRREP_BIN=${SDRREP_ROOT}/bin
+SDRREP_DOCROOT=${SDRREP_ROOT}/docroot
+SDRREP_DB=${SDRREP_ROOT}/db
+#########################################
+
+
+#########################################
+# RAW COLLECTOR DATA DIRECTORY
+# - this is the place where all raw data
+#   will be saved
+#########################################
+SYSREC_CUR=${SDR_CURRENT}/sysrec.sdrd
+CPUREC_CUR=${SDR_CURRENT}/cpurec.sdrd
+NICREC_CUR=${SDR_CURRENT}/nicrec.sdrd
+NETREC_CUR=${SDR_CURRENT}/netrec.sdrd
+JVMREC_CUR=${SDR_CURRENT}/jvmrec.sdrd
+HDWREC_CUR=${SDR_CURRENT}/hdwrec.sdrd
+PROCREC_CUR=${SDR_CURRENT}/procrec.sdrd
+COREREC_CUR=${SDR_CURRENT}/corerec.sdrd
+ZONEREC_CUR=${SDR_CURRENT}/zonerec.sdrd
+########################################
+
+
+########################################
+# RECORDER LOG
+########################################
+SYSREC_LOG=${SDR_LOG}/sysrec.log
+CPUREC_LOG=${SDR_LOG}/cpurec.log
+NETREC_LOG=${SDR_LOG}/netrec.log
+NICREC_LOG=${SDR_LOG}/nicrec.log
+JVMREC_LOG=${SDR_LOG}/jvmrec.log
+HDWREC_LOG=${SDR_LOG}/hdwrec.log
+PROCREC_LOG=${SDR_LOG}/procrec.log
+WEBREC_LOG=${SDR_LOG}/webrec.log
+ZONEREC_LOG=${SDR_LOG}/zonerec.log
+COREREC_LOG=${SDR_LOG}/corerec.log
+
+
+
+########################################
+# OS UTILITIES
+# - used by all collectors
+########################################
+PERL_BIN=${SDR_ROOT}/perl/bin/perl
+MPSTAT_BIN=/usr/bin/mpstat
+PRSTAT_BIN=/usr/bin/prstat
+ZLOGIN_BIN=/usr/sbin/zlogin
+NETSTAT_BIN=/usr/bin/netstat
+ZONEADM_BIN=/usr/sbin/zoneadm
+########################################
+
+
+
+########################################
+# umask setting
+########################################
+#
+# umask 022
+
+export JDK_PATH HOSTNAME SDR_ROOT SDR_BIN SDR_LOG SDR_RAW SDR_DAILY \
+       SDRREP_ROOT SDRREP_BIN SDRREP_DOCROOT SDRREP_DB PERL_BIN MPSTAT_BIN \
+       PRSTAT_BIN ZLOGIN_BIN NETSTAT_BIN ZONEADM_BIN

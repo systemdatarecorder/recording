@@ -1,0 +1,736 @@
+#!/opt/sdr/perl/bin/perl
+
+# COPYRIGHT: Copyright (c) 2013 System Data Recorder
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  (http://www.gnu.org/copyleft/gpl.html)
+
+# SDR VERSION: 0.75
+
+use strict;
+use warnings;
+use 5.010;
+use File::Tail;
+use File::Basename;
+use Digest::SHA;
+use WWW::Curl::Easy;
+use HTTP::Response;
+use Net::SSH2;
+use Getopt::Std;
+use XML::LibXML;
+use XML::LibXML::XPathContext;
+use Proc::Daemon;
+use Proc::PID::File;
+use Sys::Hostname;
+use Socket;
+use Time::HiRes;
+
+#
+#  Process command line args
+#
+usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
+getopts('t:hvV') or usage();
+usage()    if defined $main::opt_h;
+revision() if defined $main::opt_V;
+
+# verbose flag
+my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
+
+# timeout
+my $timeout = defined $main::opt_t ? $main::opt_t : 25;
+
+# process [interval]
+my $interval;
+
+if ( defined $ARGV[0] ) {
+    $interval = $ARGV[0];
+    usage() if $interval == 0;
+}
+else {
+    $interval = 60;
+}
+
+#
+#  Variables
+#
+$main::opt_h = 0;    # help option
+$main::opt_V = 0;    # revision option
+my $xmlcnf = 'sdr.conf';    # sdr configuration
+my $conf;
+my ( @files, @dbs );
+my ( $sdr_baselog, $sdr_curlog, $pkey );
+my $hport = 80;
+my ( $hproxy, $hproxyport );
+my $sport = 22;
+my $tcpka = 0;
+my $trans = "http";
+my $sdrid = "";
+my $dr;
+my ( $dest, $user, $pass );
+local $| = 1;
+
+# ######### #
+# MAIN BODY #
+# ######### #
+
+# Default sdrd
+my @recs = qw(sys cpu disk nic hdw);
+
+# daemon name
+my $dname = basename($0);
+
+# hostname
+my $host = hostname;
+$host =~ s/\..*$// if $host =~ /\./;
+
+# read XML configurations
+# get sdr.conf config
+# validate and open configuration xml
+$conf = open_conf($xmlcnf);
+
+# Recording XML Configuration
+# check for: base_log current_log private_key
+my @log_childs = $conf->findnodes("/sdr/recording/logs/*");
+
+my $rchilds = 0;
+
+foreach my $node (@log_childs) {
+
+    next if $node->nodeName() !~ /base|current/;
+
+    given ( $node->nodeName() ) {
+
+        # base_log
+        when (/base/) {
+            $sdr_baselog = $node->getAttribute('path');
+        }
+
+        # current_log
+        when (/current/) {
+            $sdr_curlog = $node->getAttribute('path');
+        }
+
+    }
+
+    $rchilds++;
+}
+
+# check errors
+if ( $rchilds == 0 ) {
+    die "error: wrong configuration file: $xmlcnf, ",
+      "$rchilds recording elements found \n";
+}
+
+my $slog = $sdr_baselog . "/sender.log";
+
+my @scfg = $conf->findnodes("/sdr/recording/sender/*");
+
+foreach my $node (@scfg) {
+
+    # private_key
+    if ( $node->nodeName() =~ /private_key/ ) {
+        $pkey = $node->getAttribute('path');
+    }
+
+    # subscription
+    if ( $node->nodeName() =~ /subscription/ ) {
+        $sdrid = $node->textContent();
+    }
+
+    # destination
+    if ( $node->nodeName() =~ /destination/ ) {
+        $dr = $node->textContent();
+    }
+
+    # transport mode
+    if ( $node->nodeName() =~ /transport/ ) {
+        $trans = $node->textContent();
+    }
+
+    # keepalive
+    if ( $node->nodeName() =~ /tcp_keepalive/ ) {
+        $tcpka = $node->textContent();
+    }
+
+}
+
+my @sdcfg = $conf->findnodes("/sdr/recording/sender/data/*");
+my $schilds   = 0;
+
+foreach my $node (@sdcfg) {
+
+    # sdrd data
+    next if $node->nodeName() !~ /sdrd/;
+    push @dbs, $node->getAttribute('name');
+    $schilds++;
+}
+
+die "error: no destination found, check sdr.conf\n"
+  if ( !$dr );
+
+# check errors
+@dbs = @recs if ( $schilds == 0 );
+
+# transport modes
+my ( $ssh2trans, $httptrans ) = 0;
+
+# transport
+given ($trans) {
+
+    when (/ssh2/) { $ssh2trans = 1; }
+
+    when (/http/) { $httptrans = 1; }
+
+    default { $httptrans = 1; }
+}
+
+# Reporting XML Configuration
+# XPATH Method
+my @res = $conf->findnodes('//host');
+
+foreach my $node (@res) {
+
+    # destination
+    $dest = $node->getAttribute('name');
+
+    # username, password
+    $user = $node->getElementsByTagName('username');
+    $pass = $node->getElementsByTagName('password');
+
+    if ( $dr eq $dest ) {
+        if ( $node->getElementsByTagName('http') ) {
+            my @http_transport =
+              get_transport( $conf,
+                "/sdr/reporting/host[\@name=\"$dest\"]/http/*" );
+
+            given ($#http_transport) {
+
+                when (0) { $hport = $http_transport[0]; }
+
+                when (1) {
+                    $hport  = $http_transport[0];
+                    $hproxy = $http_transport[1];
+                }
+
+                when (2) {
+                    $hport      = $http_transport[0];
+                    $hproxy     = $http_transport[1];
+                    $hproxyport = $http_transport[2];
+                }
+            }
+        }
+
+        if ( $node->getElementsByTagName('ssh2') ) {
+            my @ssh2_transport =
+              get_transport( $conf,
+                "/sdr/reporting/host[\@name=\"$dest\"]/ssh2/*" );
+
+            given ($#ssh2_transport) {
+
+                when (0) { $sport = $ssh2_transport[0]; }
+            }
+
+        }
+
+        ## we found a match
+        last;
+    }
+}
+
+die "error: main - no subscription defined, check sdr.conf\n"
+    if (! $sdrid);
+
+die "error: main - no such \'$dr\' destination, check sdr.conf\n"
+  if ($dr ne $dest);
+
+# Daemonize
+eval {
+    Proc::Daemon::Init(
+        {
+            child_STDOUT => "+>>$slog",
+            child_STDERR => "+>>$slog"
+        }
+    );
+};
+
+if ($@) {
+    die "error: boot - cannot start daemon: $@";
+}
+else {
+    addlog("info: boot - daemon $dname initialized");
+}
+
+# If already running, then exit
+if ( Proc::PID::File->running( { dir => "$sdr_baselog" } ) ) {
+    exit(0);
+}
+
+# Log basic information
+if ($ssh2trans) {
+    addlog(
+"info: main - destination=$dest, id=$sdrid, ssh2_user=$user, tcp_keepalive=$tcpka, ssh2_port=$sport"
+    );
+}
+else {
+    if ($httptrans) {
+        if ( $hproxy and $hproxyport ) {
+            addlog(
+"info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, http_port=$hport proxy=$hproxy proxy_port=$hproxyport"
+            );
+        }
+        else {
+            addlog(
+"info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka, http_port=$hport"
+            );
+        }
+    }
+}
+
+# cd raw data directory
+chdir("$sdr_curlog")
+  or die "error: cannot open SDR sdrd raw data directory, $!\n";
+
+foreach (@dbs) {
+    my $n = $_ . "rec.sdrd";
+    push(
+        @files,
+        File::Tail->new(
+            name               => "$n",
+            interval           => 1,
+            maxinterval        => $interval,
+            ignore_nonexistant => 1
+        )
+    );
+}
+
+# check transport
+my ( $s2, $http );
+
+if ($ssh2trans) {
+
+    # init SSH2 transport
+    $s2 = connect2rep( $dest, $sport, $user, $pass );
+
+    #die "Cannot connect $dest ...\n" if (! defined($s2));
+
+}
+else {
+
+    # init HTTP transport
+    $http = WWW::Curl::Easy->new;
+
+    if ($tcpka) {
+        $http->setopt( WWW::Curl::Easy::CURLOPT_TCP_KEEPALIVE(), 1 );
+    }
+}
+
+# main loop
+while (1) {
+
+    my ( $nfound, $timeleft, @pending ) =
+      File::Tail::select( undef, undef, undef, $timeout, @files );
+
+    # timeout - do something else here, if you need to
+    unless ($nfound) {
+        addlog("info: main - no sdrd raw data found, checking...")
+          if ( $verbose_flag == 1 );
+
+        #my @ints;
+        #foreach(@files) {
+        #    push(@ints,$_->interval);
+        #}
+        #print "Nothing new! - ".localtime(time)."(".join(",",@ints).")\n";
+
+    }
+    else {
+        addlog("info: main - sdrd raw data found")
+          if ( $verbose_flag == 1 );
+
+        my $rcode = 0;
+        foreach (@pending) {
+            my $delta = $_->read;
+            chomp($delta);
+
+            # parse id
+            my $dbid;
+            given ( $_->{"input"} ) {
+
+                # sysrec
+                when (/sysrec/) { $dbid = 'sys'; }
+
+                # cpurec
+                when (/cpurec/) { $dbid = 'cpu'; }
+
+                # diskrec
+                when (/diskrec/) { $dbid = 'disk'; }
+
+                # nicrec
+                when (/nicrec/) { $dbid = 'nic'; }
+
+                # netrec
+                when (/netrec/) { $dbid = 'net'; }
+
+                # jvmrec
+                when (/jvmrec/) { $dbid = 'jvm'; }
+
+                # procrec
+                when (/procrec/) { $dbid = 'proc'; }
+
+                # zonerec
+                when (/zonerec/) { $dbid = 'zone'; }
+
+                # webrec
+                when (/webrec/) { $dbid = 'web'; }
+
+                # hdwrec
+                when (/hdwrec/) { $dbid = 'hdw'; }
+            }
+
+            print "\n" . $_->{"input"} . " payload[" . $delta . "]"
+              if ( $verbose_flag == 1 );
+
+            if ($ssh2trans) {
+
+                ## ssh2 transport mode
+                if ( defined($s2) ) {
+
+                    $rcode = sendssh2( $s2, $sdrid, $dbid, $delta );
+                    if ( $rcode == 0 ) {
+                        addlog(
+"error: main - no ssh2 connection available, trying again..."
+                        );
+                        sleep(10);
+                        $s2 = connect2rep( $dest, $sport, $user, $pass );
+                        next if ( !defined($s2) );
+                        addlog("info: main - ssh2 connection re-established");
+                        $rcode = sendssh2( $s2, $sdrid, $dbid, $delta );
+                    }
+                }
+                else {
+                    addlog("info: main - waiting for ssh2...");
+                    sleep(20);
+                    $s2 = connect2rep( $dest, $sport, $user, $pass );
+                    addlog("info: main - ssh2 connection re-established")
+                      if ( defined($s2) );
+                }
+            }
+            else {
+                ## http transport mode
+                my $hstat =
+                  sendhttp( $http, $dest, $sdrid, $dbid, $delta, $hport, $hproxy,
+                    $hproxyport );
+            }
+        }
+    }
+}
+
+# Subroutines
+
+## add log message
+sub addlog {
+
+    my ($logbuf) = @_;
+    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
+      localtime(time);
+
+    my $dt = sprintf "%4d-%02d-%02d %02d:%02d:%02d",
+      $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
+
+    print "\n$dt $logbuf";
+
+    return;
+}
+
+sub get_transport {
+
+    my ( $conf, $path ) = @_;
+    my ( $port, $proxy, $proxyport );
+    my @result;
+
+    #XPath Walking
+    my @childs = $conf->findnodes($path);
+
+    foreach my $node (@childs) {
+        given ( $node->nodeName() ) {
+            when (/^port$/)      { $port      = $node->textContent(); }
+            when (/^proxy$/)     { $proxy     = $node->textContent(); }
+            when (/^proxyport$/) { $proxyport = $node->textContent(); }
+        }
+    }
+
+    if ( defined($proxy) and defined($proxyport) ) {
+        push @result, ( $port, $proxy, $proxyport );
+    }
+    else {
+        push @result, $port;
+    }
+
+    ## debug
+    # print "port=$port proxy=$proxy proxyport=$proxyport \n";
+
+    # return array of coordinates for http or ssh2
+    return @result;
+}
+
+## send payload over HTTP
+sub sendhttp {
+
+    my ( $curl, $dest, $sdrid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
+    my $response;
+
+    ## uri
+    my $uri = "http://" . $dest . ":" . $hport . "/cgi-bin/trans.cgi";
+
+    ## payload
+    my $payload = sha256sdrd($delta);
+    addlog("info: sendhttp - id=$sdrid&h=$host&db=$dbid&$payload")
+      if ( $verbose_flag == 1 );
+
+    ## test for HTTP proxy
+    ## CURLOPT_PROXY CURLOPT_PROXYPORT
+    if ($hproxy) {
+        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(),     $hproxy );
+        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXYPORT(), $hproxyport );
+    }
+    else {
+        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(), '' );
+    }
+
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_HEADER(), 1 );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_URL(),    $uri );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_HTTPHEADER(),
+        ['Content-Type: text/plain'] );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
+        "id=$sdrid&h=$host&db=$dbid&$payload" );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
+
+    my $retcode = $curl->perform;
+
+    if ( $retcode == 0 ) {
+        if ( $verbose_flag == 1 ) {
+            addlog("info: sendhttp - HTTP response");
+            #$response = HTTP::Response->parse($response);
+            #my $xml = $response->decoded_content;
+        }
+    }
+    else {
+        addlog("error: sendhttp - cant send $dbid sdrd data, transport error");
+    }
+
+    return $retcode;
+}
+
+## send payload to SDR Reporting
+sub sendssh2 {
+
+    my ( $s, $sdrid, $dbid, $payload ) = @_;
+
+    my $c = $s->channel();
+
+    my ( $code, $error_name, $error_string ) = $s->error();
+    if ($code) {
+        addlog(
+"fatal: sendssh2 - cant init channel, code:$code error:$error_name $error_string"
+        );
+        return 0;
+    }
+
+    if ($c) {
+
+        # exec method
+        $c->exec("echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$host:$dbid\n");
+
+        # shell method
+        #$c->shell();
+        # print $c "echo $payload | /opt/sdr/report/bin/hostadm -I $sdrid:$host:$dbid\n";
+
+        $c->close;
+
+        return 1;
+
+    }
+    else {
+        addlog("error: sendssh2 - cant operate on channel, check ssh2 backend");
+        return 0;
+    }
+
+    # otherwise
+    return 0;
+}
+
+## connect to SDR Reporting
+sub connect2rep {
+
+    my ( $dest, $sport, $user, $pass ) = @_;
+
+    my $ssh2 = Net::SSH2->new();
+
+    #$ssh2->poll(1000);
+    #$ssh2->debug(1);
+
+    if ( $ssh2->connect( $dest, $sport ) ) {
+
+        #$ssh2->blocking(1);
+
+        addlog(
+"info: connect2rep - connection established to destination=$dest ssh2_port=$sport"
+        ) if ( $verbose_flag == 1 );
+
+        # we have keepalive ON
+        if ($tcpka) {
+
+            my $sock = $ssh2->sock;
+            setsockopt( $sock, SOL_SOCKET, SO_KEEPALIVE, 1 )
+              or die
+              "fatal: connect2rep - cant set socket in SO_KEEPALIVE, mode $!";
+
+            addlog("info: connect2rep - tcp keepalive is on")
+              if ( $verbose_flag == 1 );
+        }
+        else {
+            addlog("info: connect2rep - tcp keepalive is off")
+              if ( $verbose_flag == 1 );
+        }
+
+        if ( $pass eq "" ) {
+
+            # authentication using private key
+            my $pubkey = "$pkey" . ".pub";
+
+            eval { $ssh2->auth_publickey( $user, $pubkey, $pkey ); 1 } or do {
+                addlog("error: connect2rep - ssh2 authkey failed $@");
+            };
+
+        }
+        else {
+
+            # authentication using private key
+            eval {
+                $ssh2->auth(
+                    username => "$user",
+                    password => "$pass"
+                );
+                1;
+            } or do {
+                addlog("error: connect2rep - ssh2 auth failed $@");
+            };
+        }
+
+    }
+    else {
+        addlog("error: connect2rep - ssh2 connect failed: $!");
+        return;
+    }
+
+    return $ssh2;
+}
+
+## NIST SHA-256 message digest for sdrd raw data
+sub sha256sdrd {
+    my ($sdrd) = @_;
+
+    # idkey
+    my $tid = ':73:79:73:74:65:6d:64:61:74:61:72:65:63:6f:72:64:65:72';
+
+    my $tsdrd = $sdrd . $tid;
+
+    addlog("info: sha256sdrd - payload=$tsdrd")
+      if ( $verbose_flag == 1 );
+
+    # split up the sdrd data
+    my @fields = split( /:/, $tsdrd );
+
+    # compute SHA-256
+    my $state = Digest::SHA->new(256);
+    for (@fields) {
+        $state->add($_);
+    }
+
+    my $digest = $state->hexdigest;
+
+    $sdrd = "p=" . $sdrd . "&c=$digest";
+
+    return $sdrd;
+}
+
+## open XML configuration file
+sub open_conf {
+
+    my ($conf) = @_;
+    my $tree;
+
+    my $parser = XML::LibXML->new();
+    $parser->keep_blanks(0);
+
+    # we will validate sdr.conf later releases
+    # $parser->validation(1);
+
+    # we will parse now the file
+    if ( defined $ENV{'SDR_ROOT'} ) {
+        if ( -e "$ENV{'SDR_ROOT'}/etc/$conf" ) {
+            $tree = $parser->parse_file("$ENV{'SDR_ROOT'}/etc/$conf");
+        }
+        else {
+            print "error: $! $ENV{'SDR_ROOT'}/etc/$conf \n";
+            usage();
+        }
+    }
+    else {
+        if ( -e "/opt/sdr/etc/$conf" ) {
+            $tree = $parser->parse_file("/opt/sdr/etc/$conf");
+        }
+        else {
+            print "error: $! /opt/sdr/etc/$conf \n";
+            usage();
+        }
+    }
+
+    # return the tree configuration
+    return $tree;
+}
+
+## usage - print usage and exit.
+sub usage {
+    print STDERR <<END;
+USAGE: sender [-t secs] [-hV] | [interval]
+OPTIONS:
+  -t        : timeout in seconds
+  -h        : help information
+  -V        : release version
+  interval  : maximum number of seconds between samples, default 60, will 
+              never spend more than that without checking data
+
+ e.g. sender     check and send sdrd raw data, every 60 secs
+      sender 10  check and send sdrd raw data, every 10 secs
+
+NOTES:
+ sdr.conf: sender uses sdr.conf XML configuration file ! Make sure you
+ have a functional sdr.conf installed or define where sdr.conf
+ is found using SDR_ROOT variable
+END
+    exit 0;
+}
+
+# revision - print revision and exit
+#
+sub revision {
+    print STDERR <<END;
+sender: 0.75, 2013-08-31
+END
+    exit 0;
+}
+
