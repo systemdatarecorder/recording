@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/bin/sh
 
 #  Copyright (c) 2014 Stefan Parvu (www.systemdatarecorder.org).
 #
@@ -21,10 +21,10 @@
 #########################################
 # Platform and OS
 #########################################
-OS_NAME=$(uname -s)
-PT_NAME=$(uname -p)
-MT_NAME=$(uname -m)
-HOSTNAME=$(uname -n | sed 's/\..*//')
+OS_NAME=`uname -s | tr '[A-Z]' '[a-z]'`
+PT_NAME=`uname -p | tr '[A-Z]' '[a-z]'`
+MT_NAME=`uname -m | tr '[A-Z]' '[a-z]'`
+HOSTNAME=`uname -n | sed 's/\..*//'`
 #########################################
 
 
@@ -32,16 +32,16 @@ HOSTNAME=$(uname -n | sed 's/\..*//')
 # USER ID
 #########################################
 case "$OS_NAME" in
- SunOS)
+ sunos)
  USER_ID=$(/usr/xpg4/bin/id -u)
  ;;
 
- Linux)
+ linux)
  USER_ID=$(/usr/bin/id -u)
  ;;
 
  *)
- print "Not supported OS !"
+ echo "Not supported OS !"
 esac
 #########################################
 

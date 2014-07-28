@@ -1,4 +1,4 @@
-#!/bin/ksh -p
+#!/bin/sh
 #
 #  Copyright (c) 2014 Stefan Parvu (www.systemdatarecorder.org).
 #
@@ -22,24 +22,24 @@
 PWD=$(dirname $0)
 . ${PWD}/setenv
 
-if [[ ! -d $SDR_LIB ]]; then
-    print "Error: Cannot find webrec lib directory"
+if [ ! -d "$SDR_LIB" ]; then
+    echo "Error: Cannot find webrec lib directory"
     exit 1
 fi
 
-if [[ ! -z $JDK_PATH ]]; then
+if [ ! -z "$JDK_PATH" ]; then
     # we have JDK set in setenv, use it
     JAVA_BIN=${JDK_PATH}/bin/java
-    if [[ ! -f $JAVA_BIN ]]; then
-        print "Error: Check your setenv settings, JDK_PATH"
+    if [ ! -f "$JAVA_BIN" ]; then
+        echo "Error: Check your setenv settings, JDK_PATH"
         exit 1
     fi
 else
-    if [[ ! -f /usr/java/bin/java ]]; then
-        if [[ -f /usr/jdk/latest/bin/java ]]; then
+    if [ ! -f /usr/java/bin/java ]; then
+        if [ -f /usr/jdk/latest/bin/java ]; then
             JAVA_BIN=/usr/jdk/latest/bin/java
         else
-            print "Error: cannot find a valid java runtime environment"
+            echo "Error: cannot find a valid java runtime environment"
             exit 1
         fi
     else

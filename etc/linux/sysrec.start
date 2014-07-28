@@ -1,4 +1,4 @@
-#!/bin/ksh -p
+#!/bin/sh
 #
 #  Copyright (c) 2014 Stefan Parvu (www.systemdatarecorder.org).
 #
@@ -23,13 +23,13 @@
 # MAIN BODY #
 # ######### #
 
-PWD=$(dirname $0)
-if [[ $PWD == "." ]]
-then
+PWD=`dirname $0`
+if [ "$PWD" = "." ]; then
     . ../bin/setenv
 else
-    . ${PWD%%etc*}bin/setenv
+    PWD=`echo $PWD | sed 's/etc.*//'`
+    . ${PWD}bin/setenv
 fi
 
 ${SDR_BIN}/sysrec 60 >> ${SYSREC_CUR} 2>> ${SYSREC_LOG} &
-print "$!" > ${SDR_LOG}/sysrec.pid
+echo "$!" > ${SDR_LOG}/sysrec.pid
