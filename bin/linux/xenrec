@@ -23,7 +23,7 @@ use warnings;
 use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use POSIX qw(pause);
-use List::MoreUtils qw(all);
+use List::Util qw(all);
 
 # Command line arguments
 #

@@ -24,7 +24,7 @@ use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use Sys::Statistics::Linux qw(NetStats);
 use POSIX qw(pause);
-use List::MoreUtils qw(all);
+use List::Util qw(all);
 
 ### Command line arguments
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
