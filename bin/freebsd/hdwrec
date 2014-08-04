@@ -109,7 +109,7 @@ while (1) {
 
 
     ## get NICs
-    $nic = $nic - 1;
+    my $num_nic = $nic - 1;
 
     # hostname# hostname
     my $host = hostname;
@@ -143,10 +143,10 @@ while (1) {
     #}
 
     # fetch JVMS
-    # my $num_jvm = `pgrep java 2>/dev/null | wc -l`;
-    # chomp($num_jvm);
+    my $num_jvm = `pgrep java 2>/dev/null | wc -l`;
+    chomp($num_jvm);
 
-    # $num_jvm = "NA" if ($num_jvm == 0);
+    $num_jvm = "NA" if ($num_jvm == 0);
 
     # print metrics
     # printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%d:%s:%s:%d:%d:%s:%s\n",
@@ -157,8 +157,8 @@ while (1) {
      #  $num_disk, $num_nic, $num_jvm, $si->{uptime};
 
 
-    printf "%.${tp}f:%s:%s:%s:%s:%d:%d\n", 
-        time, $host, $hdw, $os, $osver, $num_disk, $nic;
+    printf "%.${tp}f:%s:%s:%s:%s:%d:%d:%d\n", 
+        time, $host, $hdw, $os, $osver, $num_disk, $num_nic, $num_jvm;
 
     ### Check for end
     last if ++$loop == $loop_max;
