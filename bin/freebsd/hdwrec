@@ -131,7 +131,8 @@ while (1) {
     $hypervisor = $guest if $guest;
 
     # pcpu
-    $pcpu = get_dmesg(1); 
+    $pcpu = get_dmesg(1);
+    $pcpu = 1 if ! $pcpu;
  
     # get disks
     my $num_disk = 0;
