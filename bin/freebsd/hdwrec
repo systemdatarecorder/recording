@@ -52,6 +52,7 @@ $main::opt_h = 0;  # help option
 $main::opt_V = 0;  # revision option
 my $loop = 0;      # current loop number
 my $tp   = 0;      # time precision
+my $dmesg = "/sbin/dmesg";
 local $| = 1;
 
 
@@ -61,12 +62,17 @@ local $| = 1;
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
-my $lhdw  = BSD::Sysctl->new( 'hw.machine_arch' );
-my $ldisk = BSD::Sysctl->new( 'kern.disks' );
-my $los   = BSD::Sysctl->new( 'kern.ostype' );
-my $lver  = BSD::Sysctl->new( 'kern.version' );
-my $lnic  = BSD::Sysctl->new( 'net.link.generic.system.ifcount' );
-my $ltime = BSD::Sysctl->new( 'kern.boottime' );
+my $bhdw     = BSD::Sysctl->new( 'hw.machine_arch' );
+my $bdisk    = BSD::Sysctl->new( 'kern.disks' );
+my $bos      = BSD::Sysctl->new( 'kern.ostype' );
+my $bcode    = BSD::Sysctl->new( 'kern.version' );
+my $bnic     = BSD::Sysctl->new( 'net.link.generic.system.ifcount' );
+my $bboot    = BSD::Sysctl->new( 'kern.boottime' );
+my $bguest   = BSD::Sysctl->new( 'kern.vm_guest' );
+my $bkernel  = BSD::Sysctl->new( 'kern.ident' );
+my $bvcpu    = BSD::Sysctl->new( 'hw.ncpu' );
+my $bphysmem = BSD::Sysctl->new( 'hw.physmem' );
+my $bswapmem = BSD::Sysctl->new( 'vm.swap_total' );
 ### 0.1sec sleep using a timer
 pause;
 
@@ -85,34 +91,53 @@ if ( $interval =~ /\./ ) {
 
 while (1) {
 
+    ## initial values
+    my $swapmem    = "NA";
+    my $hypervisor = "NA";
+    my $pcpu = 1;
+
     ## get stats
-    my $hdw   = $lhdw->get();
-    my $os    = $los->get();
-    my $ver   = $lver->get();
-    my $disk  = $ldisk->get();
-    my $nic   = $lnic->get();
-    my $btime = sprintf("%d",$ltime->get());
+    my $arch    = $bhdw->get();
+    my $os      = $bos->get();
+    my $code    = $bcode->get();
+    my $disk    = $bdisk->get();
+    my $nic     = $bnic->get();
+    my $btime   = sprintf("%d",$bboot->get());
+    my $guest   = $bguest->get();
+    my $kernel  = $bkernel->get();
+    my $vcpu    = $bvcpu->get();
+    my $physmem = $bphysmem->get();
+    $swapmem = $bswapmem->get() if $bswapmem;
+
 
     # hostname# hostname
     my $host = hostname;
     $host =~ s/\..*$// if $host =~ /\./;
 
     # OS Release
-    my $osver;
-    foreach my $l (split /^/ ,$ver) {
+    my $codename;
+    foreach my $l (split /^/ ,$code) {
         chomp($l);
         $l =~ s/[\h\v]+//g;
         $l =~ s/\#.*//;
-        $osver=$l;
+        $codename=$l;
         last;
     }
 
+    # distributor
+    my $dist = "freebsd.org";
+
+    # hypervisor type
+    $hypervisor = $guest if $guest;
+
+    # pcpu
+    $pcpu = get_dmesg(1); 
+ 
     # get disks
     my $num_disk = 0;
     foreach my $i (split / /, $disk ) {
-        $num_disk++ if $i =~ /cd0/;
+        $num_disk++ if $i !~ /cd0/;
     }
-
 
     # get NICs
     my $num_nic = $nic - 1;
@@ -121,38 +146,11 @@ while (1) {
     my $u = sprintf("%d", time - $btime);
     my $uptime = sec2human($u);
     
-    # hypervisor type
-    # my $hypervisor = "NA";
-
-    # if (-e "/sys/hypervisor/type") {
-    #     open my $hv, "<", "/sys/hypervisor/type"
-    #         or die "error: cannot find hypervisor type file: $!\n";
-    #     while (<$hv>) {
-    #             chomp;
-    #             $hypervisor = $_;
-    #         }
-    #         close $hv;
-    #     
-    # }
- 
-    # disks might become available, check disks every sample
-    # my $num_disk = 0;
-
-    # get disks
-    # my $rdisks = get_disks();
-    # $num_disk =  scalar(@$rdisks);
-
-    # fetch NICS, reset here if NIC is removed/added
-    # my $num_nic = 0;
-    # foreach my $i (split /, /, $si->{interfaces} ) {
-    #     $num_nic++ if $i =~ /eth|wlan/;
-    #}
-
     # fetch JVMS
     my $num_jvm = `pgrep java 2>/dev/null | wc -l`;
     chomp($num_jvm);
-
     $num_jvm = "NA" if ($num_jvm == 0);
+
 
     # print metrics
     # printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%d:%s:%s:%d:%d:%s:%s\n",
@@ -162,9 +160,12 @@ while (1) {
      #  $si->{memtotal}, $si->{swaptotal}, 
      #  $num_disk, $num_nic, $num_jvm, $si->{uptime};
 
+    # swapmem can be NA or value, defaults to string
+    # num_jvm can be NA or value, defaults to string
 
-    printf "%.${tp}f:%s:%s:%s:%s:%d:%d:%s:%s\n", 
-        time, $host, $hdw, $os, $osver, $num_disk, $num_nic, $num_jvm, $uptime;
+    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%d:%d:%s:%d:%d:%s:%s\n", 
+        time, $host, $arch, $hypervisor, $os, $codename, $dist,
+        $kernel, $pcpu, $vcpu, $physmem, $swapmem, $num_disk, $num_nic, $num_jvm, $uptime;
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -199,6 +200,65 @@ sub sec2human {
     $t = $d . $h . $m . $s . 's';
 
     return $t;
+}
+
+
+sub get_param {
+    my ($dm) = @_;
+    my $p;
+
+    while (<$dm>) {
+        next if $_ !~ /FreeBSD\/SMP\: \d+/;
+        $_ =~ s/FreeBSD\/SMP\://;
+        $p = $_; 
+    }
+
+    my @cpu_info;
+
+    # last occurance
+    if ($p) {
+
+        # 2 package(s) x 8 core(s) x 2 SMT threads
+        foreach my $l (split( /x/, $p )) {
+
+            if ( $l =~ /(\d+)\s*package/ ) {
+                $l =~ s/package\(s\)//;
+                push @cpu_info, $l;
+            }
+            elsif ( $l =~ /(\d+)\s*core/ ) {
+                $l =~ s/core\(s\)//;
+                push @cpu_info, $l;
+            }
+            elsif ( $l =~ /(\d+)\s*SMT threads/ ) {
+                $l =~ s/SMT threads//;
+                push @cpu_info, $l;
+            }
+        }
+
+    }
+
+    return @cpu_info;
+}
+
+
+sub get_dmesg {
+
+    my $position = shift;
+
+    open my $fh, "-|", "$dmesg", "-a"
+      or die "cannot execute '$dmesg -a' - $!";
+
+    my @cpu_stat = get_param($fh);
+
+    if ($position == 1) {
+        return $cpu_stat[0];
+    } elsif ( $position == 2) {
+        return $cpu_stat[1];
+    } elsif ( $position == 3) {
+        return $cpu_stat[2];
+    }
+
+    close $fh;
 }
 
 
