@@ -61,11 +61,12 @@ local $| = 1;
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
-my $lhdw = BSD::Sysctl->new( 'hw.machine_arch' );
+my $lhdw  = BSD::Sysctl->new( 'hw.machine_arch' );
 my $ldisk = BSD::Sysctl->new( 'kern.disks' );
-my $los = BSD::Sysctl->new( 'kern.ostype' );
-my $lver = BSD::Sysctl->new( 'kern.version' );
-my $lnic = BSD::Sysctl->new( 'net.link.generic.system.ifcount' );
+my $los   = BSD::Sysctl->new( 'kern.ostype' );
+my $lver  = BSD::Sysctl->new( 'kern.version' );
+my $lnic  = BSD::Sysctl->new( 'net.link.generic.system.ifcount' );
+my $ltime = BSD::Sysctl->new( 'kern.boottime' );
 ### 0.1sec sleep using a timer
 pause;
 
@@ -85,13 +86,18 @@ if ( $interval =~ /\./ ) {
 while (1) {
 
     ## get stats
-    my $hdw = $lhdw->get();
-    my $os = $los->get();
-    my $ver = $lver->get();
-    my $disk = $ldisk->get();
-    my $nic = $lnic->get();
+    my $hdw   = $lhdw->get();
+    my $os    = $los->get();
+    my $ver   = $lver->get();
+    my $disk  = $ldisk->get();
+    my $nic   = $lnic->get();
+    my $btime = sprintf("%d",$ltime->get());
 
-    ## OS Release
+    # hostname# hostname
+    my $host = hostname;
+    $host =~ s/\..*$// if $host =~ /\./;
+
+    # OS Release
     my $osver;
     foreach my $l (split /^/ ,$ver) {
         chomp($l);
@@ -101,20 +107,20 @@ while (1) {
         last;
     }
 
-    ## get disks
+    # get disks
     my $num_disk = 0;
     foreach my $i (split / /, $disk ) {
         $num_disk++ if $i =~ /cd0/;
     }
 
 
-    ## get NICs
+    # get NICs
     my $num_nic = $nic - 1;
 
-    # hostname# hostname
-    my $host = hostname;
-    $host =~ s/\..*$// if $host =~ /\./;
-
+    # uptime
+    my $u = sprintf("%d", time - $btime);
+    my $uptime = sec2human($u);
+    
     # hypervisor type
     # my $hypervisor = "NA";
 
@@ -157,8 +163,8 @@ while (1) {
      #  $num_disk, $num_nic, $num_jvm, $si->{uptime};
 
 
-    printf "%.${tp}f:%s:%s:%s:%s:%d:%d:%d\n", 
-        time, $host, $hdw, $os, $osver, $num_disk, $num_nic, $num_jvm;
+    printf "%.${tp}f:%s:%s:%s:%s:%d:%d:%d:%s\n", 
+        time, $host, $hdw, $os, $osver, $num_disk, $num_nic, $num_jvm, $uptime;
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -172,37 +178,31 @@ while (1) {
 
 ### SUBROUTINES
 
-#sub get_disks {
-#
-#    my @d;
-#
-#    # get disks
-#    opendir(my $dh, $sb)
-#        or die "Error: Cannot find block directory: $!\n";
-#
-#    while(readdir $dh) {
-#        # discard parent dir
-#        next if ($_ =~ m/^\./);
-#
-#        # exceptions
-#        next if ($_ =~ m/^loop|^ram/);
-#        next if ($_ =~ m/^fd0|^hdc/);
-#        next if ($_ =~ m/^md(?:[0-9])/);
-#        next if ($_ =~ m/^sr(?:[0-9])$/);
-#
-#        # print disks
-#        # print "Disk: $_\n";
-#        push @d, "$_"; 
-#    }
-#    closedir $dh;
-#    
-#    # return array ref
-#    return \@d;
-#}  
+## sec2human
+sub sec2human {
+    my $t = shift;
+    my ($d, $h, $m, $s);
+
+    $d = int($t / 86400);
+    $t -= ($d * 86400);
+
+    $h = int($t / 3600);
+    $t -= ($h * 3600);
+
+    $m = int($t / 60);
+
+    $s = $t % 60;
+
+    $d = $d < 1 ? '' : $d . 'd ';
+    $h = $h < 1 ? '' : $h . 'h ';
+    $m = $m < 1 ? '' : $m . 'm ';
+    $t = $d . $h . $m . $s . 's';
+
+    return $t;
+}
 
 
-# usage - print usage and exit.
-#
+## usage - print usage and exit.
 sub usage {
     print STDERR <<END;
 USAGE: hdwrec [-hV] | [interval [count]]
@@ -231,8 +231,7 @@ END
 }
 
 
-# revision - print revision and exit
-#
+## revision - print revision and exit
 sub revision {
     print STDERR <<END;
 hdwrec: 1.00 build14, 2014-05-04
