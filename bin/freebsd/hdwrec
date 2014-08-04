@@ -163,7 +163,7 @@ while (1) {
      #  $num_disk, $num_nic, $num_jvm, $si->{uptime};
 
 
-    printf "%.${tp}f:%s:%s:%s:%s:%d:%d:%d:%s\n", 
+    printf "%.${tp}f:%s:%s:%s:%s:%d:%d:%s:%s\n", 
         time, $host, $hdw, $os, $osver, $num_disk, $num_nic, $num_jvm, $uptime;
 
     ### Check for end
