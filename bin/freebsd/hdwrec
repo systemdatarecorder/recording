@@ -24,7 +24,7 @@ use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use POSIX qw(pause);
 use Sys::Hostname;
-use BSD::Sysctl;
+use BSD::Sysctl qw(sysctl);
 
 # Debug Only
 #use Data::Dumper;
@@ -181,7 +181,7 @@ while (1) {
     my $pmem = convert ("$physmem");
     my $smem = convert ("$swapmem");
 
-    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%s:%s:%d:%s:%s:%d:%d:%s:%s\n", 
+    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%s:%d:%s:%s:%s:%d:%d:%s:%s\n", 
         time, $host, $arch, $hypervisor, $os, $codename, $dist,
         $kernel, $pcpu, $ncores, $vcpu, $ht, $pmem, $smem, 
         $num_disk, $num_nic, $num_jvm, $uptime;
