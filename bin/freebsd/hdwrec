@@ -219,7 +219,7 @@ sub sec2human {
 }
 
 
-## convert
+## convert, perl-monks
 sub convert {
     my( $size, $n ) = ( shift, 0 );
     ++$n and $size /= 1024 until $size < 1024;
