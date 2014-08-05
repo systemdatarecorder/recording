@@ -135,6 +135,7 @@ while (1) {
     # pcpu
     my @pcpu_stats = get_dmesg();
 
+    
     if (@pcpu_stats) {
 
         if ($#pcpu_stats == 2) {
@@ -232,6 +233,7 @@ sub get_param {
     my $p;
 
     while (<$dm>) {
+        chomp;
         next if $_ !~ /FreeBSD\/SMP\: \d+/;
         $_ =~ s/FreeBSD\/SMP\://;
         $p = $_; 
@@ -251,14 +253,17 @@ sub get_param {
 
             if ( $l =~ /(\d+)\s*package/ ) {
                 $l =~ s/package\(s\)//;
+                $l =~ s/[\h\v]+//g;
                 push @cpu_info, $l;
             }
             elsif ( $l =~ /(\d+)\s*core/ ) {
                 $l =~ s/core\(s\)//;
+                $l =~ s/[\h\v]+//g;
                 push @cpu_info, $l;
             }
             elsif ( $l =~ /(\d+)\s*SMT threads/ ) {
                 $l =~ s/SMT threads//;
+                $l =~ s/[\h\v]+//g;
                 push @cpu_info, $l;
             }
         }
