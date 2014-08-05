@@ -95,6 +95,8 @@ while (1) {
     my $swapmem    = "NA";
     my $hypervisor = "NA";
     my $pcpu = 1;
+    my $ncores = 1;
+    my $ht = "NA";
 
     ## get stats
     my $arch    = $bhdw->get();
@@ -131,9 +133,25 @@ while (1) {
     $hypervisor = $guest if $guest;
 
     # pcpu
-    $pcpu = get_dmesg(1);
-    $pcpu = 1 if ! $pcpu;
- 
+    my @pcpu_stats = get_dmesg();
+
+    if (@pcpu_stats) {
+
+        if ($#pcpu_stats == 2) {
+            $pcpu = $pcpu_stats[0];
+            $ncores = $pcpu_stats[1];
+            $ht = 1;
+        } else {
+            $pcpu = $pcpu_stats[0];
+            $ncores = $pcpu_stats[1];
+            $ht = 0;
+        }
+    } else {
+        $pcpu = 1;
+        $ncores="NA";
+        $ht = "NA";
+    }
+
     # get disks
     my $num_disk = 0;
     foreach my $i (split / /, $disk ) {
@@ -152,21 +170,17 @@ while (1) {
     chomp($num_jvm);
     $num_jvm = "NA" if ($num_jvm == 0);
 
-
-    # print metrics
-    # printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%d:%s:%s:%d:%d:%s:%s\n",
-     #  time, $host, $si->{arch}, $hypervisor, $os, $codename, $distid, 
-     #  $si->{kernel} . " " . $si->{release},
-     #  $si->{pcpucount}, $si->{tcpucount},
-     #  $si->{memtotal}, $si->{swaptotal}, 
-     #  $num_disk, $num_nic, $num_jvm, $si->{uptime};
-
     # swapmem can be NA or value, defaults to string
     # num_jvm can be NA or value, defaults to string
+    # HT can be NA or value, defaults to string
 
-    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%d:%d:%s:%d:%d:%s:%s\n", 
+    my $pmem = convert ("$physmem");
+    my $smem = convert ("$swapmem");
+
+    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%s:%s:%d:%s:%s:%d:%d:%s:%s\n", 
         time, $host, $arch, $hypervisor, $os, $codename, $dist,
-        $kernel, $pcpu, $vcpu, $physmem, $swapmem, $num_disk, $num_nic, $num_jvm, $uptime;
+        $kernel, $pcpu, $ncores, $ht, $vcpu, $pmem, $smem, 
+        $num_disk, $num_nic, $num_jvm, $uptime;
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -204,6 +218,15 @@ sub sec2human {
 }
 
 
+## convert
+sub convert {
+    my( $size, $n ) = ( shift, 0 );
+    ++$n and $size /= 1024 until $size < 1024;
+    return sprintf "%.2f %s", $size, ( qw[ bytes KB MB GB ] )[ $n ];
+}
+
+
+## get_param
 sub get_param {
     my ($dm) = @_;
     my $p;
@@ -219,7 +242,11 @@ sub get_param {
     # last occurance
     if ($p) {
 
+        # HT ON
         # 2 package(s) x 8 core(s) x 2 SMT threads
+
+        # HT OFF
+        # 2 package(s) x 8 core(s)
         foreach my $l (split( /x/, $p )) {
 
             if ( $l =~ /(\d+)\s*package/ ) {
@@ -244,22 +271,16 @@ sub get_param {
 
 sub get_dmesg {
 
-    my $position = shift;
+    my @cpu_stats;
 
     open my $fh, "-|", "$dmesg", "-a"
       or die "cannot execute '$dmesg -a' - $!";
 
-    my @cpu_stat = get_param($fh);
-
-    if ($position == 1) {
-        return $cpu_stat[0];
-    } elsif ( $position == 2) {
-        return $cpu_stat[1];
-    } elsif ( $position == 3) {
-        return $cpu_stat[2];
-    }
+    @cpu_stats = get_param($fh);
 
     close $fh;
+
+    return @cpu_stats;
 }
 
 
@@ -272,21 +293,23 @@ USAGE: hdwrec [-hV] | [interval [count]]
 
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
-  #02 hostname   : hostname
-  #03 hdw        : machine hardware name
-  #04 hypervisor : name of the hypervisor
-  #05 os         : name of the operating system
-  #06 codename   : codename of the operating system
-  #07 distributor: name of the operating system distributor
-  #08 kernel     : kernel version and release number
+  #02 hostname   : hostname, string
+  #03 hdw        : machine hardware name, string
+  #04 hypervisor : name of the hypervisor, string
+  #05 os         : name of the operating system, string
+  #06 codename   : codename of the operating system, string
+  #07 distributor: name of the operating system distributor, string
+  #08 kernel     : kernel version and release number, string
   #09 pcpu       : number of physical installed CPUs, number
-  #10 vcpu       : number of virtual CPUs, number
-  #11 memtotal   : total physical memory installed, number
-  #12 swaptotal  : total physical swap installed, number
-  #13 disks      : total number of disks, number
-  #14 nics       : total number of NICs, number
-  #15 jvms       : total number of running JVMs, number
-  #16 uptime     : how long the system has been running, number 
+  #10 cores      : number of physical CPU cores , number
+  #11 vcpu       : number of virtual CPUs, number
+  #12 ht         : hyper-thgreading: 0 off, 1 on , number
+  #13 memtotal   : total physical memory installed, number
+  #14 swaptotal  : total physical swap installed, number
+  #15 disks      : total number of disks, number
+  #16 nics       : total number of NICs, number
+  #17 jvms       : total number of running JVMs, number
+  #18 uptime     : how long the system has been running, string
 END
     exit 0;
 }
