@@ -63,7 +63,7 @@ local $| = 1;      # autoflush
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
-my $lxs = Sys::Statistics::Linux->new( cpustats => 1 );
+my $bcpu = BSD::Sysctl->new( 'kern.cp_times' );
 ### 0.1sec sleep using a timer
 pause;
 
