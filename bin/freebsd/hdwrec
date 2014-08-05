@@ -131,6 +131,9 @@ while (1) {
 
     # hypervisor type
     $hypervisor = $guest if $guest;
+    if ($hypervisor eq "none" ) {
+        $hypervisor = "NA";
+    }
 
     # pcpu
     my @pcpu_stats = get_dmesg();
@@ -219,7 +222,7 @@ sub sec2human {
 }
 
 
-## convert, perl-monks
+## convert
 sub convert {
     my( $size, $n ) = ( shift, 0 );
     ++$n and $size /= 1024 until $size < 1024;
