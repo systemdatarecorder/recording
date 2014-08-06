@@ -111,18 +111,23 @@ while (1) {
             $old_u = $old_n = $old_s = $old_r = $old_i = 0;
         }
 
-        my $percent = 100;
-      
+        #
+        $HZ = 1000;
+        my $percent = 100 / $HZ;
+     
+        # get 5tuple values 
         my $user = ($u - $old_u) * $percent;
         my $nice = ($n - $old_n) * $percent;
         my $sys  = ($s - $old_s) * $percent;
         my $intr = ($r - $old_r) * $percent;
         my $idle = ($i - $old_i) * $percent;
 
-        $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
-
+        # print per cpu stats
         printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f\n",
                 time,$cid,$user,$nice,$sys,$intr,$idle;
+
+        # store current values as old in a hash
+        $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
 
     }
 
@@ -168,7 +173,7 @@ END
 }
 
 
-## getcpu
+## getcpu - return per cpu data as an array
 sub getcpu {
 
     my @cdata = ();
@@ -205,6 +210,7 @@ sub getcpu {
          }
     }
 
+    # all values per cpu
     return @cdata;
 }
 
