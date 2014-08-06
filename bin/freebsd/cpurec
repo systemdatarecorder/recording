@@ -47,8 +47,6 @@ else {
 }
 
 ### Variables
-my $HZ;
-my $update;        # used for deltas
 my %old_cpudata;   # cpu_stats data
 my $loop = 0;      # current loop number
 $main::opt_h = 0;  # help option
@@ -75,8 +73,6 @@ local $SIG{ALRM} = sub { };
 
 # first value is the initial wait, second is the wait thereafter
 setitimer( ITIMER_REAL, $first_interval, $interval );
-
-my @order = qw(user nice system idle total irq softirq iowait steal);
 
 # check interval input
 if ( $interval =~ /\./ ) {
@@ -106,7 +102,7 @@ while (1) {
         if (defined $old_cpudata{$cid}) {
             ($old_u, $old_n, $old_s, $old_r, $old_i) = 
                 split /:/, $old_cpudata{$cid};
-            ##
+            ## debug
             # print "old: $old_u, $old_n, $old_s, $old_r, $old_i\n";
 
         } else {
@@ -120,20 +116,19 @@ while (1) {
         $ticks = $ticks + cpu_ticks($old_r, $r);
         $ticks = $ticks + cpu_ticks($old_i, $i);
 
-        my $etime = $ticks / 127;
-        if ($etime == 0) { $etime = 1; }
-
-        my $percent = 100 / $etime / 127;
+        my $percent = 100 / $ticks;
       
-        my $user = delta($old_u, $u) * $percent;
-        my $nice = delta($old_n, $n) * $percent;
-        my $sys  = delta($old_s, $s) * $percent;
-        my $intr = delta($old_r, $r) * $percent;
-        my $idle = delta($old_i, $i) * $percent;
+        my $user  = delta($old_u, $u) * $percent;
+        my $nice  = delta($old_n, $n) * $percent;
+        my $sys   = delta($old_s, $s) * $percent;
+        my $intr  = delta($old_r, $r) * $percent;
+        my $idle  = delta($old_i, $i) * $percent;
+        my $total = $user + $nice + $sys + $intr;
 
-        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f\n",
-                time,$cid,$user,$nice,$sys,$intr,$idle;
+        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+                time, $cid, $user, $nice, $sys, $intr, $idle, $total;
 
+        # save old data
         $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
 
     }
