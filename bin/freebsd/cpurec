@@ -49,7 +49,7 @@ else {
 ### Variables
 my $HZ;
 my $update;        # used for deltas
-my %cpudataOld;    # cpu_stats data
+my %old_cpudata;   # cpu_stats data
 my $loop = 0;      # current loop number
 $main::opt_h = 0;  # help option
 $main::opt_V = 0;  # revision option
@@ -85,23 +85,47 @@ if ( $interval =~ /\./ ) {
 
 while (1) {
 
-    ### Get Stats
-    my $stat = $lxs->get;
+    my @cpudata = getcpu();
 
-    # Dump $lx variable
-    # use Data::Dumper;
-    # print Dumper($stat);
+    ## debug
+    # print @cpudata;
+    # print $#cpudata;
 
-    my $cpu = $stat->cpustats;
+    foreach my $values (@cpudata) {
 
-    # get the cpu-ids
-    my @cpus = sort $stat->cpustats;
+        $values =~ s/\:$//;
 
-    # loop over all cpus
-    foreach (@cpus) {
-        next if ( $_ eq "cpu" );
-        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
-          time, $_, @{ $cpu->{$_} }{@order};
+        my ($cid, $u, $n, $s, $r, $i ) = split /:/, $values;
+
+        ## debug
+        # print "new: $cid, $u, $n, $s, $r, $i\n";
+
+        # old values
+        my ($old_u, $old_n, $old_s, $old_r, $old_i);
+
+        if (defined $old_cpudata{$cid}) {
+            ($old_u, $old_n, $old_s, $old_r, $old_i) = 
+                split /:/, $old_cpudata{$cid};
+            ##
+            # print "old: $old_u, $old_n, $old_s, $old_r, $old_i\n";
+
+        } else {
+            $old_u = $old_n = $old_s = $old_r = $old_i = 0;
+        }
+
+        my $percent = 100;
+      
+        my $user = ($u - $old_u) * $percent;
+        my $nice = ($n - $old_n) * $percent;
+        my $sys  = ($s - $old_s) * $percent;
+        my $intr = ($r - $old_r) * $percent;
+        my $idle = ($i - $old_i) * $percent;
+
+        $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
+
+        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+                time,$cid,$user,$nice,$sys,$intr,$idle;
+
     }
 
     ### Check for end
@@ -137,11 +161,52 @@ END
 }
 
 
-# revision - print revision and exit
-#
+## revision - print revision and exit
 sub revision {
     print STDERR <<END;
 cpurec: 1.00 build14, 2014-05-04
 END
     exit 0;
 }
+
+
+## getcpu
+sub getcpu {
+
+    my @cdata = ();
+
+    ### Get Stats
+    my $cpu_times = $bcpu->get();
+
+    my $len = $#{ $cpu_times };
+
+    my $count = 0;
+    my $cpuid = 0;
+    my $cpusem = 0;
+    my ($payload, $cid);
+    for (my $i=0; $i<$len+1; $i++) {
+         ## debug
+         #print "cpu$cpuid:${ $ cpu_times}[$i]:";
+
+         if ($cpusem == 0) {
+             $cid = "$cpuid:";
+             $cpusem=1;
+         }
+
+         $payload = $payload . "${ $ cpu_times}[$i]:";
+
+         $count++;
+         if ($count == 5) {
+             my $rec = $cid . $payload;
+             push @cdata, $rec;
+             $count=0;
+             $cpuid++;
+             $cpusem=0;
+             $payload = "";
+             $cid = "";
+         }
+    }
+
+    return @cdata;
+}
+
