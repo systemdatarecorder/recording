@@ -76,8 +76,6 @@ local $SIG{ALRM} = sub { };
 # first value is the initial wait, second is the wait thereafter
 setitimer( ITIMER_REAL, $first_interval, $interval );
 
-my @order = qw(user nice system idle total irq softirq iowait steal);
-
 # check interval input
 if ( $interval =~ /\./ ) {
     $tp = 3;
