@@ -111,9 +111,7 @@ while (1) {
             $old_u = $old_n = $old_s = $old_r = $old_i = 0;
         }
 
-        #
-        $HZ = 1000;
-        my $percent = 100 / $HZ;
+        my $percent = 100;
      
         # get 5tuple values 
         my $user = ($u - $old_u) * $percent;
