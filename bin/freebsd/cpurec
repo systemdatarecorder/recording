@@ -76,6 +76,8 @@ local $SIG{ALRM} = sub { };
 # first value is the initial wait, second is the wait thereafter
 setitimer( ITIMER_REAL, $first_interval, $interval );
 
+my @order = qw(user nice system idle total irq softirq iowait steal);
+
 # check interval input
 if ( $interval =~ /\./ ) {
     $tp = 3;
@@ -111,20 +113,27 @@ while (1) {
             $old_u = $old_n = $old_s = $old_r = $old_i = 0;
         }
 
-        my $percent = 100;
-     
-        # get 5tuple values 
-        my $user = ($u - $old_u) * $percent;
-        my $nice = ($n - $old_n) * $percent;
-        my $sys  = ($s - $old_s) * $percent;
-        my $intr = ($r - $old_r) * $percent;
-        my $idle = ($i - $old_i) * $percent;
 
-        # print per cpu stats
+        my $ticks = cpu_ticks($old_u, $u);
+        $ticks = $ticks + cpu_ticks($old_n, $n);
+        $ticks = $ticks + cpu_ticks($old_s, $s);
+        $ticks = $ticks + cpu_ticks($old_r, $r);
+        $ticks = $ticks + cpu_ticks($old_i, $i);
+
+        my $etime = $ticks / 127;
+        if ($etime == 0) { $etime = 1; }
+
+        my $percent = 100 / $etime / 127;
+      
+        my $user = delta($old_u, $u) * $percent;
+        my $nice = delta($old_n, $n) * $percent;
+        my $sys  = delta($old_s, $s) * $percent;
+        my $intr = delta($old_r, $r) * $percent;
+        my $idle = delta($old_i, $i) * $percent;
+
         printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f\n",
                 time,$cid,$user,$nice,$sys,$intr,$idle;
 
-        # store current values as old in a hash
         $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
 
     }
@@ -171,7 +180,7 @@ END
 }
 
 
-## getcpu - return per cpu data as an array
+## getcpu
 sub getcpu {
 
     my @cdata = ();
@@ -208,7 +217,22 @@ sub getcpu {
          }
     }
 
-    # all values per cpu
     return @cdata;
 }
 
+
+sub cpu_ticks {
+    my ($old, $new) = @_;
+    my $lticks = 0;
+
+    my $d = delta($old, $new);
+    $lticks += $d;
+
+    return $lticks;
+}
+
+
+sub delta {
+    my ($old, $new) = @_;
+    return $new - $old;
+}
