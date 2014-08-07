@@ -47,6 +47,8 @@ else {
 }
 
 ### Variables
+my $HZ;
+my $update;        # used for deltas
 my %old_cpudata;   # cpu_stats data
 my $loop = 0;      # current loop number
 $main::opt_h = 0;  # help option
@@ -62,6 +64,7 @@ local $| = 1;      # autoflush
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
 my $bcpu = BSD::Sysctl->new( 'kern.cp_times' );
+my $bvcpu    = BSD::Sysctl->new( 'hw.ncpu' );
 ### 0.1sec sleep using a timer
 pause;
 
@@ -74,6 +77,8 @@ local $SIG{ALRM} = sub { };
 # first value is the initial wait, second is the wait thereafter
 setitimer( ITIMER_REAL, $first_interval, $interval );
 
+my @order = qw(user nice system idle total irq softirq iowait steal);
+
 # check interval input
 if ( $interval =~ /\./ ) {
     $tp = 3;
@@ -81,7 +86,10 @@ if ( $interval =~ /\./ ) {
 
 while (1) {
 
-    my @cpudata = getcpu();
+    my $cid = 0;
+    
+    my $nproc    = $bvcpu->get();
+    my @cpudata = getcpu($nproc);
 
     ## debug
     # print @cpudata;
@@ -91,10 +99,12 @@ while (1) {
 
         $values =~ s/\:$//;
 
-        my ($cid, $u, $n, $s, $r, $i ) = split /:/, $values;
+        my ($u, $n, $s, $r, $i ) = split /:/, $values;
+
+        # across all cpus
 
         ## debug
-        # print "new: $cid, $u, $n, $s, $r, $i\n";
+        # print "new: $u, $n, $s, $r, $i\n";
 
         # old values
         my ($old_u, $old_n, $old_s, $old_r, $old_i);
@@ -102,7 +112,7 @@ while (1) {
         if (defined $old_cpudata{$cid}) {
             ($old_u, $old_n, $old_s, $old_r, $old_i) = 
                 split /:/, $old_cpudata{$cid};
-            ## debug
+            ##
             # print "old: $old_u, $old_n, $old_s, $old_r, $old_i\n";
 
         } else {
@@ -116,19 +126,23 @@ while (1) {
         $ticks = $ticks + cpu_ticks($old_r, $r);
         $ticks = $ticks + cpu_ticks($old_i, $i);
 
-        my $percent = 100 / $ticks;
+        my $etime = $ticks; 
+        if ($etime == 0) { $etime = 1; }
+
+        my $percent = 100 / $etime;
       
-        my $user  = delta($old_u, $u) * $percent;
-        my $nice  = delta($old_n, $n) * $percent;
-        my $sys   = delta($old_s, $s) * $percent;
-        my $intr  = delta($old_r, $r) * $percent;
-        my $idle  = delta($old_i, $i) * $percent;
-        my $total = $user + $nice + $sys + $intr;
+        my $user     = delta($old_u, $u) * $percent;
+        my $nice     = delta($old_n, $n) * $percent;
+        my $sys      = delta($old_s, $s) * $percent;
+        my $intr     = delta($old_r, $r) * $percent;
+        my $idle     = delta($old_i, $i) * $percent;
+        my $cpupct   = $user + $nice + $sys + $intr;
+        my $sumpct   = $cpupct * $nproc;
+        my $headpct  = ($nproc * 100) - $sumpct;
 
-        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
-                time, $cid, $user, $nice, $sys, $intr, $idle, $total;
+        printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+                time, $cpupct, $sumpct, $headpct, $user, $nice, $sys, $intr, $idle;
 
-        # save old data
         $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
 
     }
@@ -148,19 +162,26 @@ while (1) {
 #
 sub usage {
     print STDERR <<END;
-USAGE: cpurec [-hV] | [interval [count]]
- e.g. cpurec 5       print continuously, every 5 seconds
-      cpurec 1 5     print 5 times, every 1 second
+USAGE: sysrec [-hV] | [interval [count]]
+ e.g. sysrec 5       print continuously, every 5 seconds
+      sysrec 1 5     print 5 times, every 1 second
 
  FIELDS:
-  #01 timestamp  : seconds since Epoch, time
-  #02 cpuid      : cpuid, number
-  #03 userpct    : cpu utilization, user space, number
-  #04 nicepct    : cpu utilization, user space nice priority, number
-  #05 syspct     : cpu utilization, system space, number
-  #06 irqpct     : cpu percentage servicing interrupts, number
-  #07 idlepct    : cpu utilization, idle state, number
-  #08 totalpct   : total cpu utilization, number
+  CPU
+   #01 timestamp  : seconds since Epoch, time
+   #02 cpupct     : cpu utilization, across all cpus, number
+   #03 sumpct     : sum of all cpus utilization, number
+   #04 headpct    : headroom cpu available, all cpus, number
+   #05 userpct    : cpu utilization, user space in percent, number
+   #06 nicepct    : cpu utilization, user space with nice priority, number
+   #07 sysct      : cpu utilization, system space, number
+   #08 irqpct     : cpu percentage servicing interrupts, number
+   #09 idlepct    : cpu utilization, idle state, number
+   #10 runqsz     : run queue length, tasks waiting for run time, number
+
+   #41 avg_1      : LA of the last minute, number
+   #42 avg_5      : LA of the last 5 minutes, number
+   #43 avg_15     : LA of the last 15 minutes, number
 END
     exit 0;
 }
@@ -169,7 +190,7 @@ END
 ## revision - print revision and exit
 sub revision {
     print STDERR <<END;
-cpurec: 1.00 build14, 2014-05-04
+sysrec: 1.00 build14, 2014-05-04
 END
     exit 0;
 }
@@ -178,6 +199,7 @@ END
 ## getcpu
 sub getcpu {
 
+    my $ncpu = shift;
     my @cdata = ();
 
     ### Get Stats
@@ -188,29 +210,51 @@ sub getcpu {
     my $count = 0;
     my $cpuid = 0;
     my $cpusem = 0;
-    my ($payload, $cid);
+    my ($us, $ni, $sy, $iq, $id) = 0;
+
     for (my $i=0; $i<$len+1; $i++) {
          ## debug
-         #print "cpu$cpuid:${ $ cpu_times}[$i]:";
+         # print "|${ $ cpu_times}[$i]|";
 
-         if ($cpusem == 0) {
-             $cid = "$cpuid:";
-             $cpusem=1;
+         if ($count == 0) {
+              $us += "${$cpu_times}[$i]";
          }
 
-         $payload = $payload . "${ $ cpu_times}[$i]:";
+         if ($count == 1) {
+             $ni += "${$cpu_times}[$i]";
+         }
+ 
+         if ($count == 2 ) {
+             $sy += "${$cpu_times}[$i]";
+         }
+
+         if ($count == 3) {
+             $iq += "${$cpu_times}[$i]";
+         }
+
+         if ($count == 4) {
+             $id += "${$cpu_times}[$i]";
+         }
 
          $count++;
+
          if ($count == 5) {
-             my $rec = $cid . $payload;
-             push @cdata, $rec;
              $count=0;
-             $cpuid++;
-             $cpusem=0;
-             $payload = "";
-             $cid = "";
          }
     }
+
+    $us = sprintf("%.2f", $us / $ncpu);
+    $ni = sprintf("%.2f", $ni / $ncpu);
+    $sy = sprintf("%.2f", $sy / $ncpu);
+    $iq = sprintf("%.2f", $iq / $ncpu);
+    $id = sprintf("%.2f", $id / $ncpu);
+
+    ## debug
+    # print "$us $ni $sy $iq $id"; 
+
+    my $payload = $us . ":" .  $ni . ":" . $sy . ":" . $iq . ":" . $id;
+
+    push @cdata, $payload;
 
     return @cdata;
 }
