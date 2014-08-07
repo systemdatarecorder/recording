@@ -63,8 +63,9 @@ local $| = 1;      # autoflush
 # Set a timer for S::S::L object
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
-my $bcpu = BSD::Sysctl->new( 'kern.cp_times' );
-my $bvcpu    = BSD::Sysctl->new( 'hw.ncpu' );
+my $bcpu  = BSD::Sysctl->new( 'kern.cp_times' );
+my $bvcpu = BSD::Sysctl->new( 'hw.ncpu' );
+my $bla   = BSD::Sysctl->new( 'vm.loadavg' );
 ### 0.1sec sleep using a timer
 pause;
 
@@ -89,6 +90,7 @@ while (1) {
     my $cid = 0;
     
     my $nproc    = $bvcpu->get();
+    my $la       = $bla->get();
     my @cpudata = getcpu($nproc);
 
     ## debug
@@ -140,8 +142,10 @@ while (1) {
         my $sumpct   = $cpupct * $nproc;
         my $headpct  = ($nproc * 100) - $sumpct;
 
-        printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
-                time, $cpupct, $sumpct, $headpct, $user, $nice, $sys, $intr, $idle;
+        printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+                time, $cpupct, $sumpct, $headpct, 
+                $user, $nice, $sys, $intr, $idle,
+                $la->[0], $la->[1], $la->[2];
 
         $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
 
