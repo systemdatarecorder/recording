@@ -64,7 +64,14 @@ local $| = 1;      # autoflush
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
 my $bcpu  = BSD::Sysctl->new( 'kern.cp_times' );
-my $bvcpu = BSD::Sysctl->new( 'hw.ncpu' );
+my $bhdw  = BSD::Sysctl->new( 'hw.ncpu' );
+my $bpage = BSD::Sysctl->new( 'hw.pagesize' );
+my $bvma  = BSD::Sysctl->new( 'vm.stats.vm.v_active_count' );
+my $bvmi  = BSD::Sysctl->new( 'vm.stats.vm.v_inactive_count' );
+my $bvmw  = BSD::Sysctl->new( 'vm.stats.vm.v_wire_count' );
+my $bvmc  = BSD::Sysctl->new( 'vm.stats.vm.v_cache_count' );
+my $bvmf  = BSD::Sysctl->new( 'vm.stats.vm.v_free_count' );
+my $bvmt  = BSD::Sysctl->new( 'vm.vmtotal' );
 my $bla   = BSD::Sysctl->new( 'vm.loadavg' );
 ### 0.1sec sleep using a timer
 pause;
@@ -78,8 +85,6 @@ local $SIG{ALRM} = sub { };
 # first value is the initial wait, second is the wait thereafter
 setitimer( ITIMER_REAL, $first_interval, $interval );
 
-my @order = qw(user nice system idle total irq softirq iowait steal);
-
 # check interval input
 if ( $interval =~ /\./ ) {
     $tp = 3;
@@ -87,15 +92,28 @@ if ( $interval =~ /\./ ) {
 
 while (1) {
 
-    my $cid = 0;
-    
-    my $nproc    = $bvcpu->get();
+    # fetch new values 
     my $la       = $bla->get();
-    my @cpudata = getcpu($nproc);
+    my $nproc    = $bhdw->get();
+    my $pagesize = $bpage->get();
+    my $pgfactor = 4;
+
+    # Get pagesize factor
+    if ($pagesize) {
+        my $pgfactor = $pagesize / 1024;
+    }
+    ## debug
+    # print "pagesize=$pagesize, factor=$pgfactor\n";
+
+    my $cid = 0;
 
     ## debug
     # print @cpudata;
     # print $#cpudata;
+
+    ## CPU stats
+    my @cpudata = get_cpustat($nproc);
+    my ($cpupct,$sumpct,$headpct,$user,$nice,$sys,$intr,$idle);
 
     foreach my $values (@cpudata) {
 
@@ -133,23 +151,30 @@ while (1) {
 
         my $percent = 100 / $etime;
       
-        my $user     = delta($old_u, $u) * $percent;
-        my $nice     = delta($old_n, $n) * $percent;
-        my $sys      = delta($old_s, $s) * $percent;
-        my $intr     = delta($old_r, $r) * $percent;
-        my $idle     = delta($old_i, $i) * $percent;
-        my $cpupct   = $user + $nice + $sys + $intr;
-        my $sumpct   = $cpupct * $nproc;
-        my $headpct  = ($nproc * 100) - $sumpct;
+        $user     = delta($old_u, $u) * $percent;
+        $nice     = delta($old_n, $n) * $percent;
+        $sys      = delta($old_s, $s) * $percent;
+        $intr     = delta($old_r, $r) * $percent;
+        $idle     = delta($old_i, $i) * $percent;
+        $cpupct   = $user + $nice + $sys + $intr;
+        $sumpct   = $cpupct * $nproc;
+        $headpct  = ($nproc * 100) - $sumpct;
 
-        printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
-                time, $cpupct, $sumpct, $headpct, 
-                $user, $nice, $sys, $intr, $idle,
-                $la->[0], $la->[1], $la->[2];
 
         $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
 
     }
+
+    ## memory stats
+    my @vm = get_vmstat($pgfactor);
+
+    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+            time, $cpupct, $sumpct, $headpct,
+            $user, $nice, $sys, $intr, $idle,
+            $vm[0], $vm[1], $vm[2], $vm[3], $vm[4],
+            $vm[5], $vm[6], $vm[7], $vm[8], $vm[9], $vm[10],
+            $la->[0], $la->[1], $la->[2];
+
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -182,6 +207,25 @@ USAGE: sysrec [-hV] | [interval [count]]
    #08 irqpct     : cpu percentage servicing interrupts, number
    #09 idlepct    : cpu utilization, idle state, number
    #10 runqsz     : run queue length, tasks waiting for run time, number
+   #11 blocked    : processes blocked for resources, number
+   #12 pagewait   : processes blocked for paging, number
+   #13 diskwait   : processes blocked for disk io, number
+   #14 sleeping   : processes sleeping, number
+
+  MEM
+   #15 active     : size of active memory pages in kilobytes, number
+   #16 inactive   : size of inactive memory pages in kilobytes, number
+   #17 wired      : size of wired memory pages in kilobytes, number
+   #18 cache      : size of memory pages on cache queue in kilobytes, number
+   #19 free       : size of free memory pages in kilobytes, number
+   #20 realfree   : size of real free memory in kilobytes, number
+                     (inactive + cache + free)
+   #23 swapusedpct: size of used swap space in percent, number
+   #24 swapused   : size of swap space is used is kilobytes, number
+   #25 swapfree   : size of swap space is free in kilobytes, number
+   #26 swaptotal  : size of swap space in kilobytes, number
+   #27 swapcached : memory that once was swapped out, is swapped back in 
+                     but still also is in the swapfile, number
 
    #41 avg_1      : LA of the last minute, number
    #42 avg_5      : LA of the last 5 minutes, number
@@ -201,7 +245,7 @@ END
 
 
 ## getcpu
-sub getcpu {
+sub get_cpustat {
 
     my $ncpu = shift;
     my @cdata = ();
@@ -279,3 +323,54 @@ sub delta {
     my ($old, $new) = @_;
     return $new - $old;
 }
+
+
+sub get_vmstat {
+
+    my $factor = shift;
+
+    ### get mem stats
+    my $vmtotal  = $bvmt->get();
+    my $active   = $bvma->get();
+    my $inactive = $bvmi->get();
+    my $wired    = $bvmw->get();
+    my $cache    = $bvmc->get();
+    my $free     = $bvmf->get();
+
+    # vmtotal keys
+    # my @keys = keys % { $vmtotal };
+    # keys: vmsharedactive sleeping vmshared realshared diskwait 
+    # realsharedactive pagewait vmactive pagefree realactive 
+    # runqueue pagesize vmtotal realtotal
+
+    # runqueue
+    my $rq = $vmtotal->{runqueue} -1;
+
+    # pagewait, diskwait
+    my $pw = $vmtotal->{pagewait};
+    my $dw = $vmtotal->{diskwait};
+    my $bl = $pw + $dw;
+
+    # sleeps
+    my $sp = $vmtotal->{sleeping};
+
+    my @stats;
+    push(@stats, $rq, $bl, $pw, $dw, $sp);
+
+    # vm stats
+    $active   = $active   * $factor;
+    $inactive = $inactive * $factor;
+    $wired    = $wired    * $factor;
+    $cache    = $cache    * $factor;
+    $free     = $free     * $factor;
+    my $rfree = $inactive + $cache + $free;
+
+    push(@stats, $active, $inactive, $wired, $cache, $free, $rfree);
+
+    # print "@stats";
+    # print "len=$#stats+1";
+
+    return @stats; 
+}
+
+
