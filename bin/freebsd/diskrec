@@ -82,6 +82,7 @@ if ( $interval =~ /\./ ) {
 
 while (1) {
 
+    $bds = BSD::devstat->new();
     printf "Number of devices: %d\n", $bds->numdevs;
     
     for(my $i=0; $i<$bds->numdevs; $i++) {
