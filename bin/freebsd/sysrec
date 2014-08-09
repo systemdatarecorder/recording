@@ -47,13 +47,13 @@ else {
 }
 
 ### Variables
-my $HZ;
 my $update;        # used for deltas
 my %old_cpudata;   # cpu_stats data
 my $loop = 0;      # current loop number
 $main::opt_h = 0;  # help option
 $main::opt_V = 0;  # revision option
 my $tp = 0;        # time precision
+my $pgfactor = 4;  # default pagesize factor
 local $| = 1;      # autoflush
 
 
@@ -96,11 +96,10 @@ while (1) {
     my $la       = $bla->get();
     my $nproc    = $bhdw->get();
     my $pagesize = $bpage->get();
-    my $pgfactor = 4;
 
     # Get pagesize factor
     if ($pagesize) {
-        my $pgfactor = $pagesize / 1024;
+        $pgfactor = $pagesize / 1024;
     }
     ## debug
     # print "pagesize=$pagesize, factor=$pgfactor\n";
@@ -159,7 +158,6 @@ while (1) {
         $cpupct   = $user + $nice + $sys + $intr;
         $sumpct   = $cpupct * $nproc;
         $headpct  = ($nproc * 100) - $sumpct;
-
 
         $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
 
@@ -300,7 +298,7 @@ sub get_cpustat {
     ## debug
     # print "$us $ni $sy $iq $id"; 
 
-    my $payload = $us . ":" .  $ni . ":" . $sy . ":" . $iq . ":" . $id;
+    my $payload = "$us:$ni:$sy:$iq:$id";
 
     push @cdata, $payload;
 
@@ -344,7 +342,7 @@ sub get_vmstat {
     # runqueue pagesize vmtotal realtotal
 
     # runqueue
-    my $rq = $vmtotal->{runqueue} -1;
+    my $rq = $vmtotal->{runqueue} - 1;
 
     # pagewait, diskwait
     my $pw = $vmtotal->{pagewait};
@@ -354,9 +352,6 @@ sub get_vmstat {
     # sleeps
     my $sp = $vmtotal->{sleeping};
 
-    my @stats;
-    push(@stats, $rq, $bl, $pw, $dw, $sp);
-
     # vm stats
     $active   = $active   * $factor;
     $inactive = $inactive * $factor;
@@ -365,7 +360,8 @@ sub get_vmstat {
     $free     = $free     * $factor;
     my $rfree = $inactive + $cache + $free;
 
-    push(@stats, $active, $inactive, $wired, $cache, $free, $rfree);
+    my @stats;
+    push(@stats, $rq, $bl, $pw, $dw, $sp, $active, $inactive, $wired, $cache, $free, $rfree);
 
     # print "@stats";
     # print "len=$#stats+1";
