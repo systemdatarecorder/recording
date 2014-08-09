@@ -59,7 +59,7 @@ local $| = 1;      # autoflush
 
 ### MAIN BODY
 
-# Set a timer for S::S::L object
+# Set a timer for BSD::Sysctl object
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
 my $bds = BSD::devstat->new();
@@ -82,7 +82,9 @@ if ( $interval =~ /\./ ) {
 
 while (1) {
 
+    # get new devstats
     $bds = BSD::devstat->new();
+
     printf "Number of devices: %d\n", $bds->numdevs;
     
     for(my $i=0; $i<$bds->numdevs; $i++) {

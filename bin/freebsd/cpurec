@@ -58,7 +58,7 @@ local $| = 1;      # autoflush
 
 ### MAIN BODY
 
-# Set a timer for S::S::L object
+# Set a timer for BSD::Sysctl object
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
 my $bcpu = BSD::Sysctl->new( 'kern.cp_times' );
