@@ -154,12 +154,6 @@ sub get_devstat {
          # filter the names
          next if $dev->{device_name} =~ /pass|cd/;
 
-         printf "%s%d %d %d\n", $dev->{device_name}, 
-                              $dev->{unit_number}, 
-                              $dev->{operations_read},
-                              $dev->{operations_write};
-
-
          my $stat = $bds->compute_statistics($i, 0.1);
          
          my @keys = keys % { $stat };
