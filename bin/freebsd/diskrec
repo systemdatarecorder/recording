@@ -85,29 +85,13 @@ while (1) {
     # get new devstats
     $bds = BSD::devstat->new();
 
-    printf "Number of devices: %d\n", $bds->numdevs;
-    
-    for(my $i=0; $i<$bds->numdevs; $i++) {
-        my $dev = $bds->devices($i);
-        print "$dev->{device_name}$dev->{unit_number}\n";
-    }
-
-    my $devidx = $bds->numdevs;    # this is last device.
-
-    # my $dev = $bds->devices(0);
-    # my @keys = keys % { $dev };
-
-    # foreach my $k (@keys) {
-    #     print "$k\n";
-    # }
-
-    # printf "%s%d %d %d \n", $dev->{device_name},
-    # $dev->{unit_number}, $dev->{block_size}, $dev->{bytes_written};
-
-    # Stat in 2 seconds.
-    # my $stat = $bds->compute_statistics($devidx, 2.0);
-    # printf "BUSY_PCT=%.2f\n", $stat->{BUSY_PCT};
-
+ 
+    # get dev stats
+    ## debug
+    # printf "Number of devices: %d\n", $bds->numdevs;
+   
+    get_devstat($bds);
+ 
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -150,3 +134,60 @@ END
     exit 0;
 }
 
+
+sub get_devstat {
+
+    my $bdev = shift;
+
+    ## get disk stats
+    # priority creation_time_frac duration_free_sec operations_other 
+    # device_name busy_time_sec duration_read_sec tag_simple duration_write_sec i
+    # block_size operations_write duration_free_frac flags duration_read_frac 
+    # duration_write_frac bytes_write creation_time_sec operations_free 
+    # busy_time_frac bytes_free bytes_read tag_ordered device_type tag_head 
+    # operations_read unit_number
+
+    for(my $i=0; $i < $bdev->numdevs; $i++) {
+
+         my $dev = $bdev->devices($i);
+
+         # filter the names
+         next if $dev->{device_name} =~ /pass|cd/;
+
+         printf "%s%d %d %d\n", $dev->{device_name}, 
+                              $dev->{unit_number}, 
+                              $dev->{operations_read},
+                              $dev->{operations_write};
+
+
+         my $stat = $bds->compute_statistics($i, 0.1);
+         
+         my @keys = keys % { $stat };
+         print "@keys";
+
+    }
+
+    # my $devidx = $bds->numdevs;    # this is last device.
+
+    # my $dev = $bds->devices(0);
+    # my @keys = keys % { $dev };
+
+    # foreach my $k (@keys) {
+    #     print "$k\n";
+    # }
+
+    # printf "%s%d %d %d \n", $dev->{device_name},
+    # $dev->{unit_number}, $dev->{block_size}, $dev->{bytes_written};
+
+    # Stat in 2 seconds.
+    # my $stat = $bds->compute_statistics($devidx, 2.0);
+    # printf "BUSY_PCT=%.2f\n", $stat->{BUSY_PCT};
+
+    # my @stats;
+    # push(@stats, $rq, $bl, $pw, $dw, $sp, $active, $inactive);
+
+    # print "@stats";
+    # print "len=$#stats+1";
+
+    # return @stats; 
+}
