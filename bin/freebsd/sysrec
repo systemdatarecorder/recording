@@ -64,16 +64,20 @@ local $| = 1;      # autoflush
 # Set a timer for BSD::Sysctl objects
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
-my $bcpu  = BSD::Sysctl->new( 'kern.cp_times' );
-my $bhdw  = BSD::Sysctl->new( 'hw.ncpu' );
-my $bpage = BSD::Sysctl->new( 'hw.pagesize' );
-my $bvma  = BSD::Sysctl->new( 'vm.stats.vm.v_active_count' );
-my $bvmi  = BSD::Sysctl->new( 'vm.stats.vm.v_inactive_count' );
-my $bvmw  = BSD::Sysctl->new( 'vm.stats.vm.v_wire_count' );
-my $bvmc  = BSD::Sysctl->new( 'vm.stats.vm.v_cache_count' );
-my $bvmf  = BSD::Sysctl->new( 'vm.stats.vm.v_free_count' );
-my $bvmt  = BSD::Sysctl->new( 'vm.vmtotal' );
-my $bla   = BSD::Sysctl->new( 'vm.loadavg' );
+my $bcpu     = BSD::Sysctl->new( 'kern.cp_times' );
+my $bhdw     = BSD::Sysctl->new( 'hw.ncpu' );
+my $bpage    = BSD::Sysctl->new( 'hw.pagesize' );
+my $bvma     = BSD::Sysctl->new( 'vm.stats.vm.v_active_count' );
+my $bvmi     = BSD::Sysctl->new( 'vm.stats.vm.v_inactive_count' );
+my $bvmw     = BSD::Sysctl->new( 'vm.stats.vm.v_wire_count' );
+my $bvmc     = BSD::Sysctl->new( 'vm.stats.vm.v_cache_count' );
+my $bvmf     = BSD::Sysctl->new( 'vm.stats.vm.v_free_count' );
+my $bvmt     = BSD::Sysctl->new( 'vm.vmtotal' );
+my $bla      = BSD::Sysctl->new( 'vm.loadavg' );
+my $bswapi   = BSD::Sysctl->new( 'vm.stats.vm.v_swapin' );
+my $bswappi  = BSD::Sysctl->new( 'vm.stats.vm.v_swappgsin' );
+my $bswapo   = BSD::Sysctl->new( 'vm.stats.vm.v_swapout' );
+my $bswappo  = BSD::Sysctl->new( 'vm.stats.vm.v_swappgsout' );
 ### 0.1sec sleep using a timer
 pause;
 
@@ -170,11 +174,12 @@ while (1) {
     ## disk stats
     my @ds = get_diskstat();
 
-    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%d:%d:%d:%d:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
             time, $cpupct, $sumpct, $headpct,
             $user, $nice, $sys, $intr, $idle,
             $vm[0], $vm[1], $vm[2], $vm[3], $vm[4],
             $vm[5], $vm[6], $vm[7], $vm[8], $vm[9], $vm[10],
+            $vm[11], $vm[12], $vm[13], $vm[14],
             $ds[0], $ds[1], $ds[2], $ds[3], $ds[4], $ds[5], 
             $ds[6], $ds[7], $ds[8],
             $la->[0], $la->[1], $la->[2];
@@ -224,12 +229,31 @@ USAGE: sysrec [-hV] | [interval [count]]
    #19 free       : size of free memory pages in kilobytes, number
    #20 realfree   : size of real free memory in kilobytes, number
                      (inactive + cache + free)
-   #23 swapusedpct: size of used swap space in percent, number
-   #24 swapused   : size of swap space is used is kilobytes, number
-   #25 swapfree   : size of swap space is free in kilobytes, number
-   #26 swaptotal  : size of swap space in kilobytes, number
-   #27 swapcached : memory that once was swapped out, is swapped back in 
-                     but still also is in the swapfile, number
+   #21 swapin     : swap pager pageins, rate
+   #22 swappgsin  : swap pager pages paged in, rate 
+   #23 swapout    : swap pager pageouts, rate
+   #24 swappgsout : swap pager pages paged out, rate
+
+  DISK
+   #25 reads      : read requests per second, rate
+   #26 rkbytes    : read KBytes per second,rate
+   #27 readtime   : time per read transaction in milliseconds, number
+   #28 writes     : write requests per second, rate
+   #29 wkbytes    : write KBytes per second, rate
+   #30 writetime  : time per write transaction in milliseconds, number
+   #31 time       : time per transaction in miliseconds, number 
+   #32 queue      : the number of not yet completed transactions, rate
+   #33 busy       : the percentage of time the device had one or more 
+                     transactions outstanding, number
+
+  NET
+   #34 rxByt      : received bytes per seccond, in KB, rate
+   #35 txByt      : transmitted bytes per second, in KB, rate 
+   #36 ntByt      : received + transmitted bytes per second, in KB, rate
+   #37 rxerr      : number of errors while received pkt per second, rate
+   #38 txerr      : number of errors while transmitting pkt per second, rate
+   #39 rxdrp      : number of rx packets that were dropped per second, rate
+   #40 txdrp      : number of tx packets that were dropped per second, rate
 
    #41 avg_1      : LA of the last minute, number
    #42 avg_5      : LA of the last 5 minutes, number
@@ -340,6 +364,10 @@ sub get_vmstat {
     my $wired    = $bvmw->get();
     my $cache    = $bvmc->get();
     my $free     = $bvmf->get();
+    my $swapin   = $bswapi->get();
+    my $swappin  = $bswappi->get();
+    my $swapout  = $bswapo->get();
+    my $swappout = $bswappo->get();
 
     # vmtotal keys
     # my @keys = keys % { $vmtotal };
@@ -367,7 +395,7 @@ sub get_vmstat {
     my $rfree = $inactive + $cache + $free;
 
     my @stats;
-    push(@stats, $rq, $bl, $pw, $dw, $sp, $active, $inactive, $wired, $cache, $free, $rfree);
+    push(@stats, $rq, $bl, $pw, $dw, $sp, $active, $inactive, $wired, $cache, $free, $rfree, $swapin, $swappin, $swapout, $swappout);
 
     # print "@stats";
     # print "len=$#stats+1";
