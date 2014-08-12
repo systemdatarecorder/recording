@@ -111,10 +111,10 @@ USAGE: diskrec [-hV] | [interval [count]]
   #02 name       : disk name, string
   #03 reads      : read requests per second, rate
   #04 rkbytes    : read KBytes per seconds, rate 
-  #05 readtime   : time per read transaction in miliseconds, number
+  #05 readtime   : time per read transaction in milliseconds, number
   #06 writes     : write requests per second, rate
   #07 wkbytes    : write KBytes per seconds, rate 
-  #08 writetime  : time per write transaction in miliseconds, number
+  #08 writetime  : time per write transaction in milliseconds, number
   #09 time       : time per transaction in miliseconds, number
   #10 queue      : the number of not yet completed transactions, rate
   #11 busy       : the percentage of time the device had one or more 
