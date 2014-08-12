@@ -148,8 +148,8 @@ while ( 1 ) {
             print "  total bytes:  $totByt ( reads: $readByt writes: $writeByt) \n";
         }
 
-        printf "%.${tp}f:%s:%.f:%.f:%.f:%.2f:%.2f:%.2f\n",
-            $print_time, $d, $readReq, $writeReq, $totReq, $readByt, $writeByt, $totByt;
+        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+            $print_time, $d, $readReq, $readByt, $writeReq, $writeByt, $totReq, $totByt;
 
     }
 
@@ -211,13 +211,13 @@ OPTIONS:
 
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
-  #02 disk       : disk name, LUN name
-  #03 readreq    : read requests per second, rate
-  #04 writereq   : write requests per second, rate
-  #05 totreq     : total read + write requests per second, rate
-  #06 readbyt    : read bytes per second, in KB, rate
-  #07 writebyt   : write bytes per second, in KB, rate
-  #08 totbyt     : total read + write bytes per second, in KB, rate
+  #02 name       : disk name, LUN name
+  #03 reads      : read requests per second, rate
+  #04 rkbytes    : read KBytes per second, rate
+  #05 writes     : write requests per second, rate
+  #06 wkbytes    : write KBytes per second, rate
+  #07 requests   : total read + write requests per second, rate
+  #08 kbytes     : total read + write bytes per second, in KB, rate
 END
     exit 0;
 }
