@@ -23,6 +23,7 @@ use warnings;
 use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use BSD::Sysctl qw(sysctl);
+use BSD::devstat;
 use POSIX qw(pause);
 
 # Debug Only
@@ -166,11 +167,16 @@ while (1) {
     ## memory stats
     my @vm = get_vmstat($pgfactor);
 
-    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+    ## disk stats
+    my @ds = get_diskstat();
+
+    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
             time, $cpupct, $sumpct, $headpct,
             $user, $nice, $sys, $intr, $idle,
             $vm[0], $vm[1], $vm[2], $vm[3], $vm[4],
             $vm[5], $vm[6], $vm[7], $vm[8], $vm[9], $vm[10],
+            $ds[0], $ds[1], $ds[2], $ds[3], $ds[4], $ds[5], 
+            $ds[6], $ds[7], $ds[8],
             $la->[0], $la->[1], $la->[2];
 
 
@@ -370,3 +376,51 @@ sub get_vmstat {
 }
 
 
+sub get_diskstat {
+
+    my $bds = BSD::devstat->new();
+
+    my ($xr, $xbr, $rr, $xw, $xbw, $rw, $r, $q, $b) = 0;
+
+    my $diskcount = 0;
+
+    ## get disk stats
+    for(my $i=0; $i < $bds->numdevs; $i++) {
+
+        my $dev = $bds->devices($i);
+
+        # filter the names
+        next if $dev->{device_name} =~ /pass|cd/;
+
+        $diskcount++;
+
+        my $stat = $bds->compute_statistics($i, $interval / $bds->numdevs);
+         
+        $xr  += $stat->{TRANSFERS_PER_SECOND_READ};
+        $xbr += ($stat->{MB_PER_SECOND_READ} * 1024);
+        $rr  += $stat->{MS_PER_TRANSACTION_READ};
+        $xw  += $stat->{TRANSFERS_PER_SECOND_WRITE};
+        $xbw += ($stat->{MB_PER_SECOND_WRITE} * 1024);
+        $rw  += $stat->{MS_PER_TRANSACTION_WRITE};
+        $r   += $stat->{MS_PER_TRANSACTION};
+        $q   += $stat->{QUEUE_LENGTH};
+        $b   += $stat->{BUSY_PCT};
+    }
+
+    $xr  /= $diskcount;
+    $xbr /= $diskcount;
+    $rr  /= $diskcount;
+
+    $xw  /= $diskcount;
+    $xbw /= $diskcount;
+    $rw  /= $diskcount;
+ 
+    $r   /= $diskcount;
+    $q   /= $diskcount;
+    $b   /= $diskcount;
+
+    my @stats;
+    push(@stats, $xr, $xbr, $rr, $xw, $xbw, $rw, $r, $q, $b);
+
+    return @stats; 
+}
