@@ -142,39 +142,39 @@ sub get_devstat {
     ## get disk stats
     for(my $i=0; $i < $bdev->numdevs; $i++) {
 
-         my $dev = $bdev->devices($i);
+        my $dev = $bdev->devices($i);
 
-         # filter the names
-         next if $dev->{device_name} =~ /pass|cd/;
+        # filter the names
+        next if $dev->{device_name} =~ /pass|cd/;
 
-         my $d = "$dev->{device_name}$dev->{unit_number}";
+        my $d = "$dev->{device_name}$dev->{unit_number}";
 
-         my $stat = $bdev->compute_statistics($i, $interval / $bdev->numdevs);
+        my $stat = $bdev->compute_statistics($i, $interval / $bdev->numdevs);
          
-         # MB_PER_SECOND BLOCKS_PER_SECOND_WRITE MS_PER_TRANSACTION_WRITE 
-         # KB_PER_TRANSFER TRANSFERS_PER_SECOND_OTHER TOTAL_TRANSFERS 
-         # MB_PER_SECOND_READ QUEUE_LENGTH BLOCKS_PER_SECOND_READ TOTAL_BYTES_FREE 
-         # BLOCKS_PER_SECOND_FREE TOTAL_TRANSFERS_WRITE MB_PER_SECOND_WRITE 
-         # TOTAL_BYTES_READ TOTAL_BYTES TOTAL_BLOCKS_FREE TRANSFERS_PER_SECOND 
-         # KB_PER_TRANSFER_READ MS_PER_TRANSACTION_OTHER TOTAL_TRANSFERS_READ 
-         # BUSY_PCT BLOCKS_PER_SECOND TOTAL_TRANSFERS_FREE TOTAL_BLOCKS_WRITE 
-         # TOTAL_TRANSFERS_OTHER TOTAL_BLOCKS MB_PER_SECOND_FREE 
-         # TRANSFERS_PER_SECOND_WRITE TOTAL_BLOCKS_READ TRANSFERS_PER_SECOND_READ 
-         # TOTAL_BYTES_WRITE MS_PER_TRANSACTION_FREE TRANSFERS_PER_SECOND_FREE 
-         # KB_PER_TRANSFER_WRITE MS_PER_TRANSACTION KB_PER_TRANSFER_FREE 
-         # MS_PER_TRANSACTION_READ
+        # MB_PER_SECOND BLOCKS_PER_SECOND_WRITE MS_PER_TRANSACTION_WRITE 
+        # KB_PER_TRANSFER TRANSFERS_PER_SECOND_OTHER TOTAL_TRANSFERS 
+        # MB_PER_SECOND_READ QUEUE_LENGTH BLOCKS_PER_SECOND_READ TOTAL_BYTES_FREE 
+        # BLOCKS_PER_SECOND_FREE TOTAL_TRANSFERS_WRITE MB_PER_SECOND_WRITE 
+        # TOTAL_BYTES_READ TOTAL_BYTES TOTAL_BLOCKS_FREE TRANSFERS_PER_SECOND 
+        # KB_PER_TRANSFER_READ MS_PER_TRANSACTION_OTHER TOTAL_TRANSFERS_READ 
+        # BUSY_PCT BLOCKS_PER_SECOND TOTAL_TRANSFERS_FREE TOTAL_BLOCKS_WRITE 
+        # TOTAL_TRANSFERS_OTHER TOTAL_BLOCKS MB_PER_SECOND_FREE 
+        # TRANSFERS_PER_SECOND_WRITE TOTAL_BLOCKS_READ TRANSFERS_PER_SECOND_READ 
+        # TOTAL_BYTES_WRITE MS_PER_TRANSACTION_FREE TRANSFERS_PER_SECOND_FREE 
+        # KB_PER_TRANSFER_WRITE MS_PER_TRANSACTION KB_PER_TRANSFER_FREE 
+        # MS_PER_TRANSACTION_READ
 
-         my $xr  = $stat->{TRANSFERS_PER_SECOND_READ};
-         my $xbr = $stat->{MB_PER_SECOND_READ} * 1024;
-         my $rr  = $stat->{MS_PER_TRANSACTION_READ};
+        my $xr  = $stat->{TRANSFERS_PER_SECOND_READ};
+        my $xbr = $stat->{MB_PER_SECOND_READ} * 1024;
+        my $rr  = $stat->{MS_PER_TRANSACTION_READ};
          
-         my $xw  = $stat->{TRANSFERS_PER_SECOND_WRITE};
-         my $xbw = $stat->{MB_PER_SECOND_WRITE} * 1024;
-         my $rw  = $stat->{MS_PER_TRANSACTION_WRITE};
+        my $xw  = $stat->{TRANSFERS_PER_SECOND_WRITE};
+        my $xbw = $stat->{MB_PER_SECOND_WRITE} * 1024;
+        my $rw  = $stat->{MS_PER_TRANSACTION_WRITE};
 
-         my $r   = $stat->{MS_PER_TRANSACTION};
-         my $q   = $stat->{QUEUE_LENGTH};
-         my $b   = $stat->{BUSY_PCT};
+        my $r   = $stat->{MS_PER_TRANSACTION};
+        my $q   = $stat->{QUEUE_LENGTH};
+        my $b   = $stat->{BUSY_PCT};
  
         printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
                time, $d, 
