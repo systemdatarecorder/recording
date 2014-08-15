@@ -58,11 +58,11 @@ local $| = 1;      # autoflush
 ### MAIN BODY
 
 # Set a timer for BSD::devstat object
-local $SIG{ALRM} = sub { };
-setitimer( ITIMER_REAL, .1, .1 );
-my $bds = BSD::devstat->new();
-### 0.1sec sleep using a timer
-pause;
+# local $SIG{ALRM} = sub { };
+# setitimer( ITIMER_REAL, .1, .1 );
+# my $bds = BSD::devstat->new();
+# ### 0.1sec sleep using a timer
+# pause;
 
 # how often do we trigger (seconds)?
 my $first_interval = $interval;
@@ -77,6 +77,8 @@ setitimer( ITIMER_REAL, $first_interval, $interval );
 if ( $interval =~ /\./ ) {
     $tp = 3;
 }
+
+my $bds;
 
 while (1) {
 
@@ -182,4 +184,6 @@ sub get_devstat {
                $xw, $xbw, $rw, 
                $r, $q, $b;
     }
+
+    return;
 }

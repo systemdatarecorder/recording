@@ -24,6 +24,7 @@ use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
 use Unix::Statgrab;
 use POSIX qw(pause);
+use Test::LeakTrace;
 
 # Debug Only
 # use Data::Dumper;
@@ -72,17 +73,20 @@ if ( $interval =~ /\./ ) {
     $tp = 3;
 }
 
+my $current;
+my @stats;
+
 while (1) {
 
-    my $current = get_network_io_stats() or 
+    $current = get_network_io_stats() or 
         croak( get_error()->strperror() );
 
 
-    my @stats = $current->as_list();
+    @stats = $current->as_list();
 
     for my $id ( 0 .. $#stats ) {
 
-        next if $stats[$id]{interface_name} =~ /lo/;
+        # next if $stats[$id]{interface_name} =~ /lo/;
 
         my $tx = $stats[$id]{tx};
         my $rx = $stats[$id]{rx};
