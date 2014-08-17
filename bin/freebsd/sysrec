@@ -172,16 +172,17 @@ while (1) {
     my @vm = get_vmstat($pgfactor);
 
     ## disk stats
-    my @ds = get_diskstat();
+    my $ts = $interval / 3;
+    my @ds = get_diskstat($ts);
 
-    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%d:%d:%d:%d:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%d:%d:%d:%d:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
             time, $cpupct, $sumpct, $headpct,
             $user, $nice, $sys, $intr, $idle,
             $vm[0], $vm[1], $vm[2], $vm[3], $vm[4],
             $vm[5], $vm[6], $vm[7], $vm[8], $vm[9], $vm[10],
             $vm[11], $vm[12], $vm[13], $vm[14],
             $ds[0], $ds[1], $ds[2], $ds[3], $ds[4], $ds[5], 
-            $ds[6], $ds[7], $ds[8],
+            $ds[6],
             $la->[0], $la->[1], $la->[2];
 
 
@@ -237,27 +238,25 @@ USAGE: sysrec [-hV] | [interval [count]]
   DISK
    #25 reads      : read requests per second, rate
    #26 rkbytes    : read KBytes per second,rate
-   #27 readtime   : time per read transaction in milliseconds, number
-   #28 writes     : write requests per second, rate
-   #29 wkbytes    : write KBytes per second, rate
-   #30 writetime  : time per write transaction in milliseconds, number
-   #31 time       : time per transaction in miliseconds, number 
-   #32 queue      : the number of not yet completed transactions, rate
-   #33 busy       : the percentage of time the device had one or more 
+   #27 writes     : write requests per second, rate
+   #28 wkbytes    : write KBytes per second, rate
+   #29 queue      : the number of not yet completed transactions, rate
+   #30 time       : time per transaction in miliseconds, number 
+   #31 busy       : the percentage of time the device had one or more 
                      transactions outstanding, number
 
   NET
-   #34 rxByt      : received bytes per seccond, in KB, rate
-   #35 txByt      : transmitted bytes per second, in KB, rate 
-   #36 ntByt      : received + transmitted bytes per second, in KB, rate
-   #37 rxerr      : number of errors while received pkt per second, rate
-   #38 txerr      : number of errors while transmitting pkt per second, rate
-   #39 rxdrp      : number of rx packets that were dropped per second, rate
-   #40 txdrp      : number of tx packets that were dropped per second, rate
+   #32 rxByt      : received bytes per seccond, in KB, rate
+   #33 txByt      : transmitted bytes per second, in KB, rate 
+   #34 ntByt      : received + transmitted bytes per second, in KB, rate
+   #35 rxerr      : number of errors while received pkt per second, rate
+   #36 txerr      : number of errors while transmitting pkt per second, rate
+   #37 rxdrp      : number of rx packets that were dropped per second, rate
+   #38 txdrp      : number of tx packets that were dropped per second, rate
 
-   #41 avg_1      : LA of the last minute, number
-   #42 avg_5      : LA of the last 5 minutes, number
-   #43 avg_15     : LA of the last 15 minutes, number
+   #39 avg_1      : LA of the last minute, number
+   #40 avg_5      : LA of the last 5 minutes, number
+   #41 avg_15     : LA of the last 15 minutes, number
 END
     exit 0;
 }
@@ -266,7 +265,7 @@ END
 ## revision - print revision and exit
 sub revision {
     print STDERR <<END;
-sysrec: 1.00 build14, 2014-05-04
+sysrec: 1.00, 2014-09-01
 END
     exit 0;
 }
@@ -406,49 +405,71 @@ sub get_vmstat {
 
 sub get_diskstat {
 
-    my $bds = BSD::devstat->new();
+    my ($tsample) = @_;
 
-    my ($xr, $xbr, $rr, $xw, $xbw, $rw, $r, $q, $b) = 0;
+    my $iostat = "/usr/sbin/iostat";
+    my ($xr, $xbr, $xw, $xbw, $q, $r, $b) = 0;
+    my ($t) = @_;
+
+    open my $fh, "-|", "$iostat", "-x", "$tsample", "2"
+      or die "cannot execute '$iostat' - $!";
+
+    my @ds = compute_diskstat($fh);
+    
+    close $fh;
+
+    return @ds;
+}
+
+
+sub compute_diskstat {
+ 
+    my ($f) = @_;
+
+    my ($reads,$kbreads,$writes,$kbwrites,$qlen,$svc,$busy) = 0;
 
     my $diskcount = 0;
 
-    ## get disk stats
-    for(my $i=0; $i < $bds->numdevs; $i++) {
+    while (<$f>) {
 
-        my $dev = $bds->devices($i);
-
-        # filter the names
-        next if $dev->{device_name} =~ /pass|cd/;
+        # filter out
+        next if /extended/ ... /extended/;
+        next if /^device|pass|cd/;
 
         $diskcount++;
 
-        my $stat = $bds->compute_statistics($i, $interval / $bds->numdevs);
-         
-        $xr  += $stat->{TRANSFERS_PER_SECOND_READ};
-        $xbr += ($stat->{MB_PER_SECOND_READ} * 1024);
-        $rr  += $stat->{MS_PER_TRANSACTION_READ};
-        $xw  += $stat->{TRANSFERS_PER_SECOND_WRITE};
-        $xbw += ($stat->{MB_PER_SECOND_WRITE} * 1024);
-        $rw  += $stat->{MS_PER_TRANSACTION_WRITE};
-        $r   += $stat->{MS_PER_TRANSACTION};
-        $q   += $stat->{QUEUE_LENGTH};
-        $b   += $stat->{BUSY_PCT};
+        my ($name,$xr,$xw,$xkbr,$xkbw,$q,$s,$b) = split /\s+/, $_;
+
+        # reads
+        $reads += $xr;
+        $kbreads += $xkbr;
+
+        # writes 
+        $writes += $xw;
+        $kbwrites += $xkbw;
+          
+        # queue length
+        $qlen += $q;
+
+        # service time
+        $svc += $s;
+
+        # busy
+        $busy += $b;
     }
 
-    $xr  /= $diskcount;
-    $xbr /= $diskcount;
-    $rr  /= $diskcount;
+    $reads    /= $diskcount;
+    $kbreads  /= $diskcount;
 
-    $xw  /= $diskcount;
-    $xbw /= $diskcount;
-    $rw  /= $diskcount;
- 
-    $r   /= $diskcount;
-    $q   /= $diskcount;
-    $b   /= $diskcount;
+    $writes   /= $diskcount;
+    $kbwrites /= $diskcount;
+
+    $qlen     /= $diskcount;
+    $svc      /= $diskcount;
+    $busy     /= $diskcount;
 
     my @stats;
-    push(@stats, $xr, $xbr, $rr, $xw, $xbw, $rw, $r, $q, $b);
+    push(@stats, $reads, $kbreads, $writes, $kbwrites, $qlen, $svc, $busy);
 
     return @stats; 
 }

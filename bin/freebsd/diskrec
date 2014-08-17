@@ -71,8 +71,6 @@ if ( $interval =~ /\./ ) {
     $tp = 3;
 }
 
-my $elapsed = 0.20;
-
 while (1) {
 
     # get new devstats
@@ -119,8 +117,7 @@ END
 ## revision - print revision and exit
 sub revision {
     print STDERR <<END;
-diskrec: 1.00 build14, 2014-05-04
-B
+diskrec: 1.00, 2014-09-01
 END
     exit 0;
 }
@@ -149,10 +146,10 @@ sub print_diskstat {
         next if /extended/ ... /extended/;
         next if /^device|pass|cd/;
 
-        my ($name,$xr,$xw,$xbr,$xbw,$q,$s,$b) = split /\s+/, $_;
+        my ($name,$xr,$xw,$xkbr,$xkbw,$q,$s,$b) = split /\s+/, $_;
 
         printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
-               $t, $name, $xr, $xbr, $xw, $xbw, $q, $s, $b;
+               $t, $name, $xr, $xkbr, $xw, $xkbw, $q, $s, $b;
     }
 }
 
