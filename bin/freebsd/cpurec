@@ -38,7 +38,7 @@ revision() if defined $main::opt_V;
 my ( $interval, $loop_max );
 if ( defined $ARGV[0] ) {
     $interval = $ARGV[0];
-    $loop_max = defined $ARGV[1] ? $ARGV[1] : 2**32;
+    $loop_max = defined $ARGV[1] ? $ARGV[1] : 2**64;
     usage() if $interval == 0;
 }
 else {

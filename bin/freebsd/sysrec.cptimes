@@ -63,7 +63,7 @@ local $| = 1;      # autoflush
 # Set a timer for BSD::Sysctl objects
 local $SIG{ALRM} = sub { };
 setitimer( ITIMER_REAL, .1, .1 );
-my $bcpu     = BSD::Sysctl->new( 'kern.cp_time' );
+my $bcpu     = BSD::Sysctl->new( 'kern.cp_times' );
 my $bhdw     = BSD::Sysctl->new( 'hw.ncpu' );
 my $bpage    = BSD::Sysctl->new( 'hw.pagesize' );
 my $bvma     = BSD::Sysctl->new( 'vm.stats.vm.v_active_count' );
@@ -77,7 +77,7 @@ my $bswapi   = BSD::Sysctl->new( 'vm.stats.vm.v_swapin' );
 my $bswappi  = BSD::Sysctl->new( 'vm.stats.vm.v_swappgsin' );
 my $bswapo   = BSD::Sysctl->new( 'vm.stats.vm.v_swapout' );
 my $bswappo  = BSD::Sysctl->new( 'vm.stats.vm.v_swappgsout' );
-### 0.2sec sleep using a timer
+### 0.1sec sleep using a timer
 pause;
 
 # how often do we trigger (seconds)?
@@ -115,14 +115,12 @@ while (1) {
     # print $#cpudata;
 
     ## CPU stats
-    my @cpudata = get_cpustat();
-    # print @cpudata;
-    
+    my @cpudata = get_cpustat($nproc);
     my ($cpupct,$sumpct,$headpct,$user,$nice,$sys,$intr,$idle);
 
     foreach my $values (@cpudata) {
 
-        # $values =~ s/\:$//;
+        $values =~ s/\:$//;
 
         my ($u, $n, $s, $r, $i ) = split /:/, $values;
 
@@ -275,38 +273,41 @@ END
 ## getcpu
 sub get_cpustat {
 
-    ### Get Stats
-    my $cpu_time = $bcpu->get();
-
+    my $ncpu = shift;
     my @cdata = ();
-    my $len = $#{ $cpu_time };
+
+    ### Get Stats
+    my $cpu_times = $bcpu->get();
+
+    my $len = $#{ $cpu_times };
 
     my $count = 0;
-
+    my $cpuid = 0;
+    my $cpusem = 0;
     my ($us, $ni, $sy, $iq, $id) = 0;
 
     for (my $i=0; $i<$len+1; $i++) {
          ## debug
-         # print "|${ $ cpu_time}[$i]|";
+         # print "|${ $ cpu_times}[$i]|";
 
          if ($count == 0) {
-              $us = "${$cpu_time}[$i]";
+              $us += "${$cpu_times}[$i]";
          }
 
          if ($count == 1) {
-             $ni = "${$cpu_time}[$i]";
+             $ni += "${$cpu_times}[$i]";
          }
  
          if ($count == 2 ) {
-             $sy = "${$cpu_time}[$i]";
+             $sy += "${$cpu_times}[$i]";
          }
 
          if ($count == 3) {
-             $iq = "${$cpu_time}[$i]";
+             $iq += "${$cpu_times}[$i]";
          }
 
          if ($count == 4) {
-             $id = "${$cpu_time}[$i]";
+             $id += "${$cpu_times}[$i]";
          }
 
          $count++;
@@ -316,8 +317,14 @@ sub get_cpustat {
          }
     }
 
+    $us = sprintf("%.2f", $us / $ncpu);
+    $ni = sprintf("%.2f", $ni / $ncpu);
+    $sy = sprintf("%.2f", $sy / $ncpu);
+    $iq = sprintf("%.2f", $iq / $ncpu);
+    $id = sprintf("%.2f", $id / $ncpu);
+
     ## debug
-    # print "$us $ni $sy $iq $id\n"; 
+    # print "$us $ni $sy $iq $id"; 
 
     my $payload = "$us:$ni:$sy:$iq:$id";
 
