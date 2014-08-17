@@ -78,8 +78,11 @@ my @stats;
 
 while (1) {
 
+# verbose output
+    leaktrace{
     $current = get_network_io_stats() or 
         croak( get_error()->strperror() );
+    } -verbose;
 
 
     @stats = $current->as_list();

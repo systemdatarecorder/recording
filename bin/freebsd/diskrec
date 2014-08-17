@@ -22,7 +22,6 @@ use strict;
 use warnings;
 use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
-use BSD::devstat;
 use POSIX qw(pause);
 
 # Debug Only
@@ -53,16 +52,10 @@ $main::opt_V = 0;  # revision option
 my $tp = 0;        # time precision
 local $| = 1;      # autoflush
 
+my $iostat = "/usr/sbin/iostat";
 
 
 ### MAIN BODY
-
-# Set a timer for BSD::devstat object
-# local $SIG{ALRM} = sub { };
-# setitimer( ITIMER_REAL, .1, .1 );
-# my $bds = BSD::devstat->new();
-# ### 0.1sec sleep using a timer
-# pause;
 
 # how often do we trigger (seconds)?
 my $first_interval = $interval;
@@ -78,16 +71,11 @@ if ( $interval =~ /\./ ) {
     $tp = 3;
 }
 
-my $bds;
 
 while (1) {
 
     # get new devstats
-    $bds = BSD::devstat->new();
-
-    ## per disk stats 
-    get_devstat($bds);
-
+    get_diskstat();
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -135,55 +123,34 @@ END
 }
 
 
-sub get_devstat {
+sub get_diskstat {
 
-    my ($bdev) = @_;
+    open my $fh, "-|", "$iostat", "-dKx", "0.2", "2"
+      or die "cannot execute '$iostat' - $!";
 
-    my (@stats);
+    print_diskstat($fh);
+    
+    close $fh;
 
-    ## get disk stats
-    for(my $i=0; $i < $bdev->numdevs; $i++) {
+}
 
-        my $dev = $bdev->devices($i);
 
-        # filter the names
-        next if $dev->{device_name} =~ /pass|cd/;
-
-        my $d = "$dev->{device_name}$dev->{unit_number}";
-
-        my $stat = $bdev->compute_statistics($i, $interval / $bdev->numdevs);
-         
-        # MB_PER_SECOND BLOCKS_PER_SECOND_WRITE MS_PER_TRANSACTION_WRITE 
-        # KB_PER_TRANSFER TRANSFERS_PER_SECOND_OTHER TOTAL_TRANSFERS 
-        # MB_PER_SECOND_READ QUEUE_LENGTH BLOCKS_PER_SECOND_READ TOTAL_BYTES_FREE 
-        # BLOCKS_PER_SECOND_FREE TOTAL_TRANSFERS_WRITE MB_PER_SECOND_WRITE 
-        # TOTAL_BYTES_READ TOTAL_BYTES TOTAL_BLOCKS_FREE TRANSFERS_PER_SECOND 
-        # KB_PER_TRANSFER_READ MS_PER_TRANSACTION_OTHER TOTAL_TRANSFERS_READ 
-        # BUSY_PCT BLOCKS_PER_SECOND TOTAL_TRANSFERS_FREE TOTAL_BLOCKS_WRITE 
-        # TOTAL_TRANSFERS_OTHER TOTAL_BLOCKS MB_PER_SECOND_FREE 
-        # TRANSFERS_PER_SECOND_WRITE TOTAL_BLOCKS_READ TRANSFERS_PER_SECOND_READ 
-        # TOTAL_BYTES_WRITE MS_PER_TRANSACTION_FREE TRANSFERS_PER_SECOND_FREE 
-        # KB_PER_TRANSFER_WRITE MS_PER_TRANSACTION KB_PER_TRANSFER_FREE 
-        # MS_PER_TRANSACTION_READ
-
-        my $xr  = $stat->{TRANSFERS_PER_SECOND_READ};
-        my $xbr = $stat->{MB_PER_SECOND_READ} * 1024;
-        my $rr  = $stat->{MS_PER_TRANSACTION_READ};
-         
-        my $xw  = $stat->{TRANSFERS_PER_SECOND_WRITE};
-        my $xbw = $stat->{MB_PER_SECOND_WRITE} * 1024;
-        my $rw  = $stat->{MS_PER_TRANSACTION_WRITE};
-
-        my $r   = $stat->{MS_PER_TRANSACTION};
-        my $q   = $stat->{QUEUE_LENGTH};
-        my $b   = $stat->{BUSY_PCT};
+sub print_diskstat {
  
-        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
-               time, $d, 
-               $xr, $xbr, $rr,
-               $xw, $xbw, $rw, 
-               $r, $q, $b;
+    my ($f) = @_;
+
+    my $otime = time;
+
+    while (<$f>) {
+
+        # filter out
+        next if /extended/ ... /extended/;
+        next if /device|pass|cd/;
+
+        my ($name,$xr,$xw,$xbr,$xbw,$q,$s,$b) = split /\s+/, $_;
+
+        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+               time, $name, $xr, $xbr, $xw, $xbw, $q, $s, $b;
     }
 
-    return;
 }

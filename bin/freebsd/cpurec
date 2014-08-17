@@ -179,9 +179,10 @@ END
 sub getcpu {
 
     my @cdata = ();
+    my $cpu_times;
 
     ### Get Stats
-    my $cpu_times = $bcpu->get();
+    $cpu_times = $bcpu->get();
 
     my $len = $#{ $cpu_times };
 
