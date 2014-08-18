@@ -144,37 +144,6 @@ while (1) {
 
 ### SUBROUTINES
 
-# usage - print usage and exit.
-#
-sub usage {
-    print STDERR <<END;
-USAGE: cpurec [-hV] | [interval [count]]
- e.g. cpurec 5       print continuously, every 5 seconds
-      cpurec 1 5     print 5 times, every 1 second
-
- FIELDS:
-  #01 timestamp  : seconds since Epoch, time
-  #02 cpuid      : cpuid, number
-  #03 userpct    : cpu utilization, user space, number
-  #04 nicepct    : cpu utilization, user space nice priority, number
-  #05 syspct     : cpu utilization, system space, number
-  #06 irqpct     : cpu percentage servicing interrupts, number
-  #07 idlepct    : cpu utilization, idle state, number
-  #08 totalpct   : total cpu utilization, number
-END
-    exit 0;
-}
-
-
-## revision - print revision and exit
-sub revision {
-    print STDERR <<END;
-cpurec: 1.00, 2014-09-01
-END
-    exit 0;
-}
-
-
 ## getcpu
 sub getcpu {
 
@@ -231,4 +200,35 @@ sub cpu_ticks {
 sub delta {
     my ($old, $new) = @_;
     return $new - $old;
+}
+
+
+# usage - print usage and exit.
+#
+sub usage {
+    print STDERR <<END;
+USAGE: cpurec [-hV] | [interval [count]]
+ e.g. cpurec 5       print continuously, every 5 seconds
+      cpurec 1 5     print 5 times, every 1 second
+
+ FIELDS:
+  #01 timestamp  : seconds since Epoch, time
+  #02 cpuid      : cpuid, number
+  #03 userpct    : cpu utilization, user space, number
+  #04 nicepct    : cpu utilization, user space nice priority, number
+  #05 syspct     : cpu utilization, system space, number
+  #06 irqpct     : cpu percentage servicing interrupts, number
+  #07 idlepct    : cpu utilization, idle state, number
+  #08 totalpct   : total cpu utilization, number
+END
+    exit 0;
+}
+
+
+## revision - print revision and exit
+sub revision {
+    print STDERR <<END;
+cpurec: 1.00, 2014-09-01
+END
+    exit 0;
 }

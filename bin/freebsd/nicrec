@@ -52,8 +52,6 @@ $main::opt_V = 0;  # revision option
 my $tp = 0;        # time precision
 local $| = 1;      # autoflush
 
-my $iostat = "/usr/sbin/iostat";
-
 
 ### MAIN BODY
 
@@ -71,15 +69,10 @@ if ( $interval =~ /\./ ) {
     $tp = 3;
 }
 
-my $elapsed = 0.20;
-
 while (1) {
 
-    # get new devstats
-
-    my $ts = $interval / 3;
- 
-    get_diskstat($ts);
+    # get NIC stats
+    get_nicstat();
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -105,13 +98,11 @@ USAGE: diskrec [-hV] | [interval [count]]
   #02 name       : disk name, string
   #03 reads      : read requests per second, rate
   #04 rkbytes    : read KBytes per seconds, rate 
-  #05 readtime   : time per read transaction in milliseconds, number
-  #06 writes     : write requests per second, rate
-  #07 wkbytes    : write KBytes per seconds, rate 
-  #08 writetime  : time per write transaction in milliseconds, number
-  #09 time       : time per transaction in miliseconds, number
-  #10 queue      : the number of not yet completed transactions, rate
-  #11 busy       : the percentage of time the device had one or more 
+  #05 writes     : write requests per second, rate
+  #06 wkbytes    : write KBytes per seconds, rate 
+  #08 queue      : the number of not yet completed transactions, rate
+  #07 service    : service time per transaction in miliseconds, number
+  #09 busy       : the percentage of time the device had one or more 
                    transactions outstanding, number
 END
     exit 0;
@@ -121,7 +112,7 @@ END
 ## revision - print revision and exit
 sub revision {
     print STDERR <<END;
-diskrec: 1.00 build14, 2014-05-04
+nicrec: 1.00, 2014-09-01
 B
 END
     exit 0;
@@ -131,7 +122,10 @@ END
 sub get_diskstat {
     
     my ($t) = @_;
-    my $pt = time;
+
+    my $iostat = "/usr/sbin/iostat";
+    my $pt     = time;
+
     open my $fh, "-|", "$iostat", "-x", "$t", "2"
       or die "cannot execute '$iostat' - $!";
 

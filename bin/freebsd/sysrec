@@ -198,80 +198,6 @@ while (1) {
 
 ### SUBROUTINES
 
-# usage - print usage and exit.
-#
-sub usage {
-    print STDERR <<END;
-USAGE: sysrec [-hV] | [interval [count]]
- e.g. sysrec 5       print continuously, every 5 seconds
-      sysrec 1 5     print 5 times, every 1 second
-
- FIELDS:
-  CPU
-   #01 timestamp  : seconds since Epoch, time
-   #02 cpupct     : cpu utilization, across all cpus, number
-   #03 sumpct     : sum of all cpus utilization, number
-   #04 headpct    : headroom cpu available, all cpus, number
-   #05 userpct    : cpu utilization, user space in percent, number
-   #06 nicepct    : cpu utilization, user space with nice priority, number
-   #07 sysct      : cpu utilization, system space, number
-   #08 irqpct     : cpu percentage servicing interrupts, number
-   #09 idlepct    : cpu utilization, idle state, number
-   #10 runqsz     : run queue length, tasks waiting for run time, number
-   #11 blocked    : processes blocked for resources, number
-   #12 pagewait   : processes blocked for paging, number
-   #13 diskwait   : processes blocked for disk io, number
-   #14 sleeping   : processes sleeping, number
-
-  MEM
-   #15 active     : size of active memory pages in kilobytes, number
-   #16 inactive   : size of inactive memory pages in kilobytes, number
-   #17 wired      : size of wired memory pages in kilobytes, number
-   #18 cache      : size of memory pages on cache queue in kilobytes, number
-   #19 free       : size of free memory pages in kilobytes, number
-   #20 realfree   : size of real free memory in kilobytes, number
-                     (inactive + cache + free)
-   #21 swapin     : swap pager pageins, rate
-   #22 swappgsin  : swap pager pages paged in, rate 
-   #23 swapout    : swap pager pageouts, rate
-   #24 swappgsout : swap pager pages paged out, rate
-
-  DISK
-   #25 reads      : read requests per second, rate
-   #26 rkbytes    : read KBytes per second,rate
-   #27 writes     : write requests per second, rate
-   #28 wkbytes    : write KBytes per second, rate
-   #29 queue      : the number of not yet completed transactions, rate
-   #30 service    : service time per transaction in miliseconds, number 
-   #31 busy       : the percentage of time the device had one or more 
-                     transactions outstanding, number
-
-  NET
-   #32 rxByt      : received bytes per seccond, in KB, rate
-   #33 txByt      : transmitted bytes per second, in KB, rate 
-   #34 ntByt      : received + transmitted bytes per second, in KB, rate
-   #35 rxerr      : number of errors while received pkt per second, rate
-   #36 txerr      : number of errors while transmitting pkt per second, rate
-   #37 rxdrp      : number of rx packets that were dropped per second, rate
-   #38 txdrp      : number of tx packets that were dropped per second, rate
-
-   #39 avg_1      : LA of the last minute, number
-   #40 avg_5      : LA of the last 5 minutes, number
-   #41 avg_15     : LA of the last 15 minutes, number
-END
-    exit 0;
-}
-
-
-## revision - print revision and exit
-sub revision {
-    print STDERR <<END;
-sysrec: 1.00, 2014-09-01
-END
-    exit 0;
-}
-
-
 ## getcpu
 sub get_cpustat {
 
@@ -455,4 +381,78 @@ sub get_diskstat {
     push(@stats, $reads, $kbreads, $writes, $kbwrites, $qlen, $svc, $busy);
 
     return @stats; 
+}
+
+
+# usage - print usage and exit.
+#
+sub usage {
+    print STDERR <<END;
+USAGE: sysrec [-hV] | [interval [count]]
+ e.g. sysrec 5       print continuously, every 5 seconds
+      sysrec 1 5     print 5 times, every 1 second
+
+ FIELDS:
+  CPU
+   #01 timestamp  : seconds since Epoch, time
+   #02 cpupct     : cpu utilization, across all cpus, number
+   #03 sumpct     : sum of all cpus utilization, number
+   #04 headpct    : headroom cpu available, all cpus, number
+   #05 userpct    : cpu utilization, user space in percent, number
+   #06 nicepct    : cpu utilization, user space with nice priority, number
+   #07 sysct      : cpu utilization, system space, number
+   #08 irqpct     : cpu percentage servicing interrupts, number
+   #09 idlepct    : cpu utilization, idle state, number
+   #10 runqsz     : run queue length, tasks waiting for run time, number
+   #11 blocked    : processes blocked for resources, number
+   #12 pagewait   : processes blocked for paging, number
+   #13 diskwait   : processes blocked for disk io, number
+   #14 sleeping   : processes sleeping, number
+
+  MEM
+   #15 active     : size of active memory pages in kilobytes, number
+   #16 inactive   : size of inactive memory pages in kilobytes, number
+   #17 wired      : size of wired memory pages in kilobytes, number
+   #18 cache      : size of memory pages on cache queue in kilobytes, number
+   #19 free       : size of free memory pages in kilobytes, number
+   #20 realfree   : size of real free memory in kilobytes, number
+                     (inactive + cache + free)
+   #21 swapin     : swap pager pageins, rate
+   #22 swappgsin  : swap pager pages paged in, rate 
+   #23 swapout    : swap pager pageouts, rate
+   #24 swappgsout : swap pager pages paged out, rate
+
+  DISK
+   #25 reads      : read requests per second, rate
+   #26 rkbytes    : read KBytes per second,rate
+   #27 writes     : write requests per second, rate
+   #28 wkbytes    : write KBytes per second, rate
+   #29 queue      : the number of not yet completed transactions, rate
+   #30 service    : service time per transaction in miliseconds, number 
+   #31 busy       : the percentage of time the device had one or more 
+                     transactions outstanding, number
+
+  NET
+   #32 rxByt      : received bytes per seccond, in KB, rate
+   #33 txByt      : transmitted bytes per second, in KB, rate 
+   #34 ntByt      : received + transmitted bytes per second, in KB, rate
+   #35 rxerr      : number of errors while received pkt per second, rate
+   #36 txerr      : number of errors while transmitting pkt per second, rate
+   #37 rxdrp      : number of rx packets that were dropped per second, rate
+   #38 txdrp      : number of tx packets that were dropped per second, rate
+
+   #39 avg_1      : LA of the last minute, number
+   #40 avg_5      : LA of the last 5 minutes, number
+   #41 avg_15     : LA of the last 15 minutes, number
+END
+    exit 0;
+}
+
+
+## revision - print revision and exit
+sub revision {
+    print STDERR <<END;
+sysrec: 1.00, 2014-09-01
+END
+    exit 0;
 }
