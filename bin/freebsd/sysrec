@@ -400,46 +400,36 @@ sub get_diskstat {
     my ($tsample) = @_;
 
     my $iostat = "/usr/sbin/iostat";
-    my ($xr, $xbr, $xw, $xbw, $q, $r, $b) = 0;
-    my ($t) = @_;
-
-    open my $fh, "-|", "$iostat", "-x", "$tsample", "2"
-      or die "cannot execute '$iostat' - $!";
-
-    my @ds = compute_diskstat($fh);
-    
-    close $fh;
-
-    return @ds;
-}
-
-
-sub compute_diskstat {
- 
-    my ($f) = @_;
 
     my ($reads,$kbreads,$writes,$kbwrites,$qlen,$svc,$busy) = 0;
 
     my $diskcount = 0;
 
-    while (<$f>) {
+    open my $fh, "-|", "$iostat", "-x", "$tsample", "2"
+      or die "cannot execute '$iostat' - $!";
+    
+    my @ds = <$fh>;
+    
+    close $fh;
+
+    foreach ( @ds ) {
 
         # filter out
         next if /extended/ ... /extended/;
         next if /^device|pass|cd/;
-
+ 
         $diskcount++;
-
+    
         my ($name,$xr,$xw,$xkbr,$xkbw,$q,$s,$b) = split /\s+/, $_;
-
+        
         # reads
         $reads += $xr;
         $kbreads += $xkbr;
-
-        # writes 
+ 
+        # writes
         $writes += $xw;
         $kbwrites += $xkbw;
-          
+    
         # queue length
         $qlen += $q;
 
@@ -448,7 +438,8 @@ sub compute_diskstat {
 
         # busy
         $busy += $b;
-    }
+
+    }    
 
     $reads    /= $diskcount;
     $kbreads  /= $diskcount;
