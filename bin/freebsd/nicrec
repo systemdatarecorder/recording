@@ -22,9 +22,7 @@ use strict;
 use warnings;
 use Getopt::Std;
 use Time::HiRes qw(time alarm setitimer ITIMER_REAL);
-use Unix::Statgrab;
 use POSIX qw(pause);
-use Test::LeakTrace;
 
 # Debug Only
 # use Data::Dumper;
@@ -48,13 +46,13 @@ else {
 }
 
 ### Variables
-my %old_nicdata;   # nic stats data
 my $loop = 0;      # current loop number
 $main::opt_h = 0;  # help option
 $main::opt_V = 0;  # revision option
 my $tp = 0;        # time precision
 local $| = 1;      # autoflush
 
+my $iostat = "/usr/sbin/iostat";
 
 
 ### MAIN BODY
@@ -73,36 +71,15 @@ if ( $interval =~ /\./ ) {
     $tp = 3;
 }
 
-my $current;
-my @stats;
+my $elapsed = 0.20;
 
 while (1) {
 
-# verbose output
-    leaktrace{
-    $current = get_network_io_stats() or 
-        croak( get_error()->strperror() );
-    } -verbose;
+    # get new devstats
 
-
-    @stats = $current->as_list();
-
-    for my $id ( 0 .. $#stats ) {
-
-        # next if $stats[$id]{interface_name} =~ /lo/;
-
-        my $tx = $stats[$id]{tx};
-        my $rx = $stats[$id]{rx};
-        my $ipck = $stats[$id]{ipackets};
-        my $opck = $stats[$id]{opackets};
-        my $ierr = $stats[$id]{ierrors};
-        my $oerr = $stats[$id]{oerrors};
-        my $coll = $stats[$id]{collisions};
-        my $stime = $stats[$id]{systime};
-
-        print "$stats[$id]{interface_name}:$tx:$rx:$ipck:$opck:$ierr:$oerr:$coll:$stime\n";
-
-    }
+    my $ts = $interval / 3;
+ 
+    get_diskstat($ts);
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -119,19 +96,23 @@ while (1) {
 #
 sub usage {
     print STDERR <<END;
-USAGE: nicrec [-hV] | [interval [count]]
- e.g. nicrec 5       print continuously, every 5 seconds
-      nicrec 1 5     print 5 times, every 1 second
+USAGE: diskrec [-hV] | [interval [count]]
+ e.g. diskrec 5       print continuously, every 5 seconds
+      diskrec 1 5     print 5 times, every 1 second
 
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
-  #02 nicname    : network interface name, number
-  #03 userpct    : cpu utilization, user space, number
-  #04 nicepct    : cpu utilization, user space nice priority, number
-  #05 syspct     : cpu utilization, system space, number
-  #06 irqpct     : cpu percentage servicing interrupts, number
-  #07 idlepct    : cpu utilization, idle state, number
-  #08 totalpct   : total cpu utilization, number
+  #02 name       : disk name, string
+  #03 reads      : read requests per second, rate
+  #04 rkbytes    : read KBytes per seconds, rate 
+  #05 readtime   : time per read transaction in milliseconds, number
+  #06 writes     : write requests per second, rate
+  #07 wkbytes    : write KBytes per seconds, rate 
+  #08 writetime  : time per write transaction in milliseconds, number
+  #09 time       : time per transaction in miliseconds, number
+  #10 queue      : the number of not yet completed transactions, rate
+  #11 busy       : the percentage of time the device had one or more 
+                   transactions outstanding, number
 END
     exit 0;
 }
@@ -140,7 +121,33 @@ END
 ## revision - print revision and exit
 sub revision {
     print STDERR <<END;
-nicrec: 1.00 build14, 2014-05-04
+diskrec: 1.00 build14, 2014-05-04
+B
 END
     exit 0;
+}
+
+
+sub get_diskstat {
+    
+    my ($t) = @_;
+    my $pt = time;
+    open my $fh, "-|", "$iostat", "-x", "$t", "2"
+      or die "cannot execute '$iostat' - $!";
+
+    my @ds = <$fh>;
+    
+    close $fh;
+
+    foreach ( @ds ) {
+
+        # filter out
+        next if /extended/ ... /extended/;
+        next if /^device|pass|cd/;
+
+        my ($name,$xr,$xw,$xbr,$xbw,$q,$s,$b) = split /\s+/, $_;
+
+        printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+               $pt, $name, $xr, $xbr, $xw, $xbw, $q, $s, $b;
+    }    
 }

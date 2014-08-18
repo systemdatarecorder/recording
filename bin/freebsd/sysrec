@@ -242,7 +242,7 @@ USAGE: sysrec [-hV] | [interval [count]]
    #27 writes     : write requests per second, rate
    #28 wkbytes    : write KBytes per second, rate
    #29 queue      : the number of not yet completed transactions, rate
-   #30 time       : time per transaction in miliseconds, number 
+   #30 service    : service time per transaction in miliseconds, number 
    #31 busy       : the percentage of time the device had one or more 
                      transactions outstanding, number
 
