@@ -86,12 +86,15 @@ while (1) {
 
 
         # old values
-        my ($old_ipkt,$old_ierr,$old_idrop,$old_ibyt,$old_opkt,$old_oerr,$old_obyt,$old_col,$old_drop);
+        my ($old_ipkt,$old_ierr,$old_idrop,$old_ibyt,
+            $old_opkt,$old_oerr,$old_obyt,$old_col,$old_drop);
 
         if (defined $old_nicdata{$n}) {
-            ($old_ipkt,$old_ierr,$old_idrop,$old_ibyt,$old_opkt,$old_oerr,$old_obyt,$old_col,$old_drop) = split / /, $old_nicdata{$n};
+            ($old_ipkt,$old_ierr,$old_idrop,$old_ibyt,
+             $old_opkt,$old_oerr,$old_obyt,$old_col,$old_drop) = split / /, $old_nicdata{$n};
         } else {
-            $old_ipkt = $old_ierr = $old_idrop = $old_ibyt = $old_opkt = $old_oerr = $old_obyt = $old_col = $old_drop = 0;
+            $old_ipkt = $old_ierr = $old_idrop = $old_ibyt = 
+            $old_opkt = $old_oerr = $old_obyt = $old_col = $old_drop = 0;
         }
 
         my $rpkt  = delta($old_ipkt, $ipkt);
