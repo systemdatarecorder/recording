@@ -49,6 +49,7 @@ else {
 ### Variables
 my $update;        # used for deltas
 my %old_cpudata;   # cpu_stats data
+my %old_nicdata;   # nic_stats data
 my $loop = 0;      # current loop number
 $main::opt_h = 0;  # help option
 $main::opt_V = 0;  # revision option
@@ -109,6 +110,7 @@ while (1) {
     # print "pagesize=$pagesize, factor=$pgfactor\n";
 
     my $cid = 0;
+    my $nid = 0;
 
     ## debug
     # print @cpudata;
@@ -176,14 +178,53 @@ while (1) {
     my $ts = $interval / 3;
     my @ds = get_diskstat($ts);
 
-    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%d:%d:%d:%d:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
+    ## nic stats
+    my @ns = get_nicstat();
+
+    my ($rxpkt,$rxerr,$rxdrop,$rxbyte,$txpkt,$txerr,$txbyte,$cols,$drops);
+
+    foreach (@ns) {
+ 
+        my ($ipkt,$ierr,$idrop,$ibyt,$opkt,$oerr,$obyt,$col,$drop) = split /:/, $_;
+ 
+        # old values
+        my ($old_ipkt,$old_ierr,$old_idrop,$old_ibyt,
+            $old_opkt,$old_oerr,$old_obyt,$old_col,$old_drop);
+
+        if (defined $old_nicdata{$nid}) {
+            ($old_ipkt,$old_ierr,$old_idrop,$old_ibyt,
+             $old_opkt,$old_oerr,$old_obyt,$old_col,$old_drop) = split /:/, $old_nicdata{$nid};
+        } else {
+            $old_ipkt = $old_ierr = $old_idrop = $old_ibyt =
+            $old_opkt = $old_oerr = $old_obyt = $old_col = $old_drop = 0;
+        }
+ 
+        $rxpkt  = delta($old_ipkt, $ipkt);
+        $rxerr  = delta($old_ierr, $ierr);
+        $rxdrop = delta($old_idrop, $idrop);
+        $rxbyte = delta($old_ibyt, $ibyt);
+
+        $txpkt  = delta($old_opkt, $opkt);
+        $txerr  = delta($old_oerr, $oerr);
+        $txbyte = delta($old_obyt, $obyt);
+
+        $cols  = delta($old_col, $col);
+        $drops = delta($old_drop, $drop);
+
+        # save old data
+        $old_nicdata{$nid} = "$ipkt:$ierr:$idrop:$ibyt:$opkt:$oerr:$obyt:$col:$drop";
+
+    }
+
+    printf "%.${tp}f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%d:%d:%d:%d:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f:%d:%d:%d:%d:%d:%d:%d:%d:%d:%.2f:%.2f:%.2f\n",
             time, $cpupct, $sumpct, $headpct,
             $user, $nice, $sys, $intr, $idle,
             $vm[0], $vm[1], $vm[2], $vm[3], $vm[4],
             $vm[5], $vm[6], $vm[7], $vm[8], $vm[9], $vm[10],
             $vm[11], $vm[12], $vm[13], $vm[14],
             $ds[0], $ds[1], $ds[2], $ds[3], $ds[4], $ds[5], 
-            $ds[6],
+            $ds[6], $rxpkt, $rxbyte, $rxerr, $rxdrop,
+            $txpkt, $txbyte, $txerr, $cols, $drops,
             $la->[0], $la->[1], $la->[2];
 
 
@@ -381,6 +422,76 @@ sub get_diskstat {
     push(@stats, $reads, $kbreads, $writes, $kbwrites, $qlen, $svc, $busy);
 
     return @stats; 
+}
+
+
+sub get_nicstat {
+    
+    my $netstat = "/usr/bin/netstat";
+
+    my ($rxpkt,$rxerr,$rxdrop,$rxbyte,$txpkt,$txerr,$txbyte,$cols,$drops) = 0;
+
+    my $nicount = 0;
+
+    open my $fh, "-|", "$netstat", "-ibnd", "-f", "link"
+      or die "cannot execute '$netstat' - $!";
+
+    my @ns = <$fh>;
+    
+    close $fh;
+
+    #Name Mtu Network Address Ipkts Ierrs Idrop Ibytes Opkts Oerrs Obytes Coll Drop
+    foreach ( @ns ) {
+
+        # filter out
+        next if /^Name|lo/;
+        $nicount++;
+
+        my ($name,$mtu,$net,$mac,$ipkt,$ierr,$idrop,$ibyt,$opkt,$oerr,$obyt,$c,$d) = split;
+
+        # rx
+        $rxpkt += $ipkt;
+        $rxerr += $ierr;
+        $rxdrop += $idrop;
+        $rxbyte += $ibyt;
+
+        # tx
+        $txpkt += $opkt;
+        $txerr += $oerr;
+        $txbyte += $obyt;
+
+        # collisions 
+        $cols += $c;
+
+        # droped
+        $drops += $d;
+
+    }
+
+    $rxpkt  /= $nicount;
+    $rxerr  /= $nicount;
+    $rxdrop /= $nicount;
+    $rxbyte /= $nicount;
+
+    $txpkt  /= $nicount;
+    $txerr  /= $nicount;
+    $txbyte /= $nicount;
+
+    $cols   /= $nicount;
+    $drops  /= $nicount;
+
+    ## debug 
+    # printf "%.${tp}f:%d:%d:%d:%d:%d:%d:%d:%d:%d\n",
+    #           time,
+    #           $rxpkt, $rxbyte, $rxerr, $rxdrop,
+    #           $txpkt, $txbyte, $txerr,
+    #           $cols, $drops;
+
+    my @stats;
+    my $payload = "$rxpkt:$rxerr:$rxdrop:$rxbyte:$txpkt:$txerr:$txbyte:$cols:$drops";
+    push @stats, $payload;
+
+    return @stats;
 }
 
 
