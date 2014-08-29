@@ -35,7 +35,7 @@ use Time::HiRes;
 
 ###  Process command line args
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
-getopts('T:hvV') or usage();
+getopts('t:hvV') or usage();
 usage()    if defined $main::opt_h;
 revision() if defined $main::opt_V;
 
@@ -521,10 +521,10 @@ sub open_conf {
 ## usage - print usage and exit.
 sub usage {
     print STDERR <<END;
-USAGE: sender [-T secs] [-FhV] | [interval]
+USAGE: sender [-t seconds] [-fhV] | [interval]
 OPTIONS:
-  -F        : force new host identification
-  -T        : timeout in seconds
+  -f        : force new host identification
+  -t        : timeout in seconds
   -h        : help information
   -V        : release version
   interval  : maximum number of seconds between samples, default 60, will 

@@ -1,78 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<sdr>
+<systemdatarecorder>
 
-  <recording description="SDR recording module configuration">
+  <logs>
+    <!-- Default Path -->
+    <base path="/opt/sdr/log" description="base log directory" />
+    <current path="/opt/sdr/log/current" description="current log directory" />
+    <daily path="/opt/sdr/log/daily" description="daily log directory" />
+  </logs>
 
-    <logs>
-      <!-- Default Path -->
-      <base path="/opt/sdr/log" description="base log directory" />
-      <current path="/opt/sdr/log/current" description="current log directory" />
-      <daily path="/opt/sdr/log/daily" description="daily log directory" />
-    </logs>
+  <!-- Host Id -->
+  <hostid></hostid>
 
-    <!-- Host Id -->
-    <hostid></hostid>
+  <!-- Transport Analytic Settings -->
+  <transport description="Transport settings">
 
-    <!-- Subscription Id -->
-    <subscription>demo</subscription>
+    <host name="188.127.209.196" ver="1.0.0" description="Analytics">
 
-    <!-- Group Name -->
-    <group>development</group>
+      <subscription>2ff9851ecfa8f07d39b367a70c1c4f34</subscription>
 
-    <!-- Transport Settings -->
-    <transport description="Transport settings">
-
-      <!-- Reporting Destination -->
-      <destination>reporting</destination>
-
-      <!-- Protocol Type: http|https -->
       <protocol>http</protocol>
-
-      <!-- TCP Keepalive 0: disabled, 1: enabled -->
+      <port>9001</port>
       <tcp_keepalive>0</tcp_keepalive>
 
-      <!-- Raw Data sdrd Files -->
-      <data>
-        <sdrd name="sys"  description="system data, sysrec.sdrd" />
-        <sdrd name="cpu"  description="per-cpu data, cpurec.sdrd"  />
-        <sdrd name="disk" description="per-disk data, diskrec.sdrd" />
-        <sdrd name="nic"  description="per-NIC data, nicrec.sdrd"  />
-        <sdrd name="hdw"  description="inventory data, hdwrec.sdrd"  />
-      </data>
+      <!-- Via HTTP Proxy -->
+      <proxy>
+        <server></server>
+        <port></port>
+      </proxy>
 
-    </transport>
-
-  </recording>
-
-  <reporting description="SDR reporting module configuration">
-
-    <!-- Destination Reporting Servers -->
-    <host name="reporting" ver="1.00" description="SDR reporting server">
-      <http description="default HTTP port">
-        <port>80</port>
-        <!-- Via HTTP Proxy -->
-        <proxy></proxy>
-        <proxyport></proxyport>
-      </http>
-
-      <https description="default HTTPS port">
-        <port>443</port>
-        <!-- Via HTTP Proxy -->
-        <proxy></proxy>
-        <proxyport></proxyport>
-      </https>
     </host>
 
-    <host name="test" ver="1.00" description="SDR reporting test server">
-      <http description="default HTTPS port">
-        <port>443</port>
-        <!-- Via HTTP Proxy -->
-        <proxy></proxy>
-        <proxyport></proxyport>
-      </http>
+    <host name="88.27.09.1" ver="1.0.0" description="Analytics">
+
+      <subscription>1000851ecfa8f07d39b367a70c1c4f34</subscription>
+
+      <protocol>https</protocol>
+      <port>443</port>
+      <tcp_keepalive>0</tcp_keepalive>
+
+      <!-- Via HTTP Proxy -->
+      <proxy>
+        <server></server>
+        <port></port>
+      </proxy>
+
     </host>
 
-  </reporting>
+    <!-- Raw Data sdrd Files -->
+    <data>
+      <sdrd name="sys"  description="system data, sysrec.sdrd" />
+      <sdrd name="cpu"  description="per-cpu data, cpurec.sdrd"  />
+      <sdrd name="disk" description="per-disk data, diskrec.sdrd" />
+      <sdrd name="nic"  description="per-NIC data, nicrec.sdrd"  />
+      <sdrd name="hdw"  description="inventory data, hdwrec.sdrd"  />
+    </data>
+  </transport>
 
-</sdr>
+</systemdatarecorder>
