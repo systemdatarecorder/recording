@@ -32,6 +32,8 @@ use Proc::PID::File;
 use Sys::Hostname;
 use Socket;
 use Time::HiRes;
+use UUID::Tiny ':std';
+
 
 ###  Process command line args
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
@@ -61,9 +63,9 @@ else {
 $main::opt_h        = 0;               # help option
 $main::opt_V        = 0;               # revision option
 my $xmlcnf          = 'sdr.xml';       # sdr configuration file
-my $conf;                              # object configuration 
 my $tcpka           = 0;               # transport TCP keepalive settings
-my $sdrid           = "";
+my $sid             = "";              # subscription id
+my $conf;                              # object configuration 
 my ($dr, $dest);
 my ( @files, @dbs );
 my ( $sdr_baselog, $sdr_curlog );      # log settings
@@ -86,9 +88,12 @@ my @recs = qw(sys cpu disk nic hdw);
 # daemon name
 my $dname = basename($0);
 
-# hostname
-my $host = hostname;
-$host =~ s/\..*$// if $host =~ /\./;
+# host UUID
+my $hostid;
+
+# osname
+my $osname= "$^O";
+
 
 # read XML configurations
 # get sdr.conf config
@@ -97,7 +102,7 @@ $conf = open_conf($xmlcnf);
 
 # Recording XML Configuration
 # check for: base_log current_log private_key
-my @log_childs = $conf->findnodes("/sdr/recording/logs/*");
+my @log_childs = $conf->findnodes("/systemdatarecorder/logs/*");
 
 my $rchilds = 0;
 
@@ -122,7 +127,9 @@ if ( $rchilds == 0 ) {
 
 
 # check hostid
-
+$hostid = $conf->getChildrenByTagName('hostid');
+print "hostid=$hostid\n";
+exit 0;
 
 
 # check subscription destination protocol keepalive
@@ -130,13 +137,13 @@ if ( $rchilds == 0 ) {
 # sender logfile
 my $slog = $sdr_baselog . "/sender.log";
 
-my @scfg = $conf->findnodes("/sdr/recording/transport/*");
+my @scfg = $conf->findnodes("/systemdatarecorder/transport/*");
 
 foreach my $node (@scfg) {
 
     # subscription
     if ( $node->nodeName() =~ /subscription/ ) {
-        $sdrid = $node->textContent();
+        $sid = $node->textContent();
     }
 
     # destination
@@ -155,7 +162,7 @@ foreach my $node (@scfg) {
     }
 }
 
-my @sdcfg = $conf->findnodes("/sdr/recording/transport/data/*");
+my @sdcfg = $conf->findnodes("/systemdatarecorder/transport/data/*");
 my $schilds   = 0;
 
 foreach my $node (@sdcfg) {
@@ -182,7 +189,7 @@ elsif ( $transport_proto =~ /http/   ) { $http_flag   = 1; }
  else                                  { $https_flag  = 1; }
    
 
-# Reporting XML Configuration
+# Analytics Destination
 my @res = $conf->findnodes('//host');
 
 foreach my $node (@res) {
@@ -195,7 +202,7 @@ foreach my $node (@res) {
         if ( $node->getElementsByTagName('https') ) {
             my @tsettings =
               get_transport( $conf,
-                "/sdr/reporting/host[\@name=\"$dest\"]/https/*" );
+                "/systemdatarecorder/analytics/host[\@name=\"$dest\"]/https/*" );
 
             if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
          elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
@@ -207,7 +214,7 @@ foreach my $node (@res) {
         } elsif ( $node->getElementsByTagName('http') ) {
             my @tsettings =
               get_transport( $conf,
-                "/sdr/reporting/host[\@name=\"$dest\"]/http/*" );
+                "/systemdatarecorder/analytics/host[\@name=\"$dest\"]/http/*" );
 
             if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
          elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
@@ -223,10 +230,12 @@ foreach my $node (@res) {
 }
 
 die "error: main - no subscription defined, check sdr.conf\n"
-    if (! $sdrid);
+    if (! $sid);
 
 die "error: main - no such \'$dr\' destination, check sdr.conf\n"
   if ($dr ne $dest);
+
+
 
 # Daemonize
 eval {
@@ -254,11 +263,11 @@ if ( Proc::PID::File->running( { dir => "$sdr_baselog" } ) ) {
 
 ### HTTPS or HTTP
 if ( $transport_proxy and $transport_proxyport ) {
-    addlog("info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka,
+    addlog("info: main - destination=$dest, id=$sid, tcp_keepalive=$tcpka,
             HTTP port=$transport_port proxy=$transport_proxy
             proxy_port=$transport_proxyport");
 } else {
-    addlog("info: main - destination=$dest, id=$sdrid, tcp_keepalive=$tcpka,
+    addlog("info: main - destination=$dest, id=$sid, tcp_keepalive=$tcpka,
             HTTP port=$transport_port");
 }
 
@@ -321,13 +330,13 @@ while (1) {
             # parse id
             my $dbid;
             
-            if ( $_->{"input"} =~ /sysrec/ )  { $dbid = 'sys';  }
-         elsif ( $_->{"input"} =~ /cpurec/ )  { $dbid = 'cpu';  }
-         elsif ( $_->{"input"} =~ /diskrec/ ) { $dbid = 'disk'; }
-         elsif ( $_->{"input"} =~ /nicrec/ )  { $dbid = 'nic';  }
-         elsif ( $_->{"input"} =~ /netrec/ )  { $dbid = 'net';  }
-         elsif ( $_->{"input"} =~ /jvmrec/ )  { $dbid = 'jvm';  }
-         elsif ( $_->{"input"} =~ /procrec/ ) { $dbid = 'proc'; }
+            if ( $_->{"input"} =~ /sysrec/ )  { $dbid = 'cpd-linux-sysrec';  }
+         elsif ( $_->{"input"} =~ /cpurec/ )  { $dbid = 'cpd-linux-cpurec';  }
+         elsif ( $_->{"input"} =~ /diskrec/ ) { $dbid = 'cpd-linux-diskrec'; }
+         elsif ( $_->{"input"} =~ /nicrec/ )  { $dbid = 'cpd-linux-nic';  }
+         elsif ( $_->{"input"} =~ /netrec/ )  { $dbid = 'cpd-linux-net';  }
+         elsif ( $_->{"input"} =~ /jvmrec/ )  { $dbid = 'cpd-linux-jvm';  }
+         elsif ( $_->{"input"} =~ /procrec/ ) { $dbid = 'cpd-linux-proc'; }
          elsif ( $_->{"input"} =~ /zonerec/ ) { $dbid = 'zone'; }
          elsif ( $_->{"input"} =~ /webrec/ )  { $dbid = 'web';  }
          elsif ( $_->{"input"} =~ /hdwrec/ )  { $dbid = 'hdw';  }
@@ -338,9 +347,9 @@ while (1) {
              if ( $verbose_flag == 1 );
 
          ## http transport mode
-             my $hstat =
-                 trans2http( $http, $dest, $sdrid, $dbid, $delta, 
-                             $transport_port, $transport_proxy, $transport_proxyport );
+         # my $hstat = trans2http( $http, $dest, $sid, $dbid, $delta, 
+         #                         $transport_port, $transport_proxy, 
+         #                          $transport_proxyport );
            
         }
     }
@@ -405,7 +414,7 @@ sub get_transport {
 ## send payload over HTTP
 sub trans2http {
 
-    my ( $curl, $dest, $sdrid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
+    my ( $curl, $dest, $sid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
     my $response;
 
     ## uri
@@ -413,7 +422,7 @@ sub trans2http {
 
     ## payload
     my $payload = sha256sdrd($delta);
-    addlog("info: trans2http - id=$sdrid&h=$host&db=$dbid&$payload")
+    addlog("info: trans2http - id=$sid&h=$hostid&db=$dbid&$payload")
       if ( $verbose_flag == 1 );
 
     ## test for HTTP proxy
@@ -432,7 +441,7 @@ sub trans2http {
         ['Content-Type: text/plain'] );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
-        "id=$sdrid&h=$host&db=$dbid&$payload" );
+        "id=$sid&h=$hostid&db=$dbid&$payload" );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
 
     my $retcode = $curl->perform;
@@ -490,7 +499,7 @@ sub open_conf {
     my $parser = XML::LibXML->new();
     $parser->keep_blanks(0);
 
-    # we will validate sdr.conf later releases
+    # we will validate sdr.xml later releases
     # $parser->validation(1);
 
     # we will parse now the file
@@ -515,6 +524,18 @@ sub open_conf {
 
     # return the tree configuration
     return $tree;
+}
+
+
+## host UUID creation
+sub new_uuid {
+
+    my $os = @_;
+
+    my $hid = create_uuid_as_string(UUID_V5, $os);
+
+    # return hostid
+    return $hid;
 }
 
 
