@@ -55,6 +55,7 @@
       <sdrd name="nic"  description="per-NIC data, nicrec.sdrd"  />
       <sdrd name="hdw"  description="inventory data, hdwrec.sdrd"  />
     </data>
+
   </transport>
 
 </systemdatarecorder>
