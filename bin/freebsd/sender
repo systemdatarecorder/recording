@@ -126,7 +126,77 @@ if ( $rchilds == 0 ) {
 my $slog = $sdr_baselog . "/sender.log";
 
 
-## transport appliance
+## transport 
+
+# data trasnport
+my @sdcfg = $conf->findnodes("/systemdatarecorder/transport/data/*");
+my $schilds = 0;
+
+foreach my $node (@sdcfg) {
+    # sdrd data
+    next if $node->nodeName() !~ /sdrd/;
+    push @dbs, $node->getAttribute('name');
+    $schilds++;
+}
+
+# check errors
+@dbs = @recs if ( $schilds == 0 );
+
+
+# appliance destination
+my @appls = $conf->findnodes('//appliance');
+
+foreach my $node (@appls) {
+
+    # name
+    $dest = $node->getAttribute('name');
+
+    # sid
+
+    # proto
+
+    # port
+
+
+    if ( $dr eq $dest ) {
+
+        if ( $node->getElementsByTagName('https') ) {
+            my @tsettings =
+              get_transport( $conf,
+                "/systemdatarecorder/analytics/host[\@name=\"$dest\"]/https/*" );
+
+            if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
+         elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
+                                      $transport_proxy     = $tsettings[1]; }
+         elsif ( $#tsettings == 2 ) { $transport_port      = $tsettings[0];
+                                      $transport_proxy     = $tsettings[1];
+                                      $transport_proxyport = $tsettings[2]; }
+
+        } elsif ( $node->getElementsByTagName('http') ) {
+            my @tsettings =
+              get_transport( $conf,
+                "/systemdatarecorder/analytics/host[\@name=\"$dest\"]/http/*" );
+
+            if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
+         elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
+                                      $transport_proxy     = $tsettings[1]; }
+         elsif ( $#tsettings == 2 ) { $transport_port      = $tsettings[0];
+                                      $transport_proxy     = $tsettings[1];
+                                      $transport_proxyport = $tsettings[2]; }
+        }
+
+        ## we found a match
+        last;
+    }
+}
+
+die "error: main - no subscription defined, check sdr.conf\n"
+    if (! $sid);
+
+die "error: main - no such \'$dr\' destination, check sdr.conf\n"
+  if ($dr ne $dest);
+
+
 
 my @scfg = $conf->findnodes("/systemdatarecorder/transport/*");
 
@@ -151,17 +221,6 @@ foreach my $node (@scfg) {
     if ( $node->nodeName() =~ /tcp_keepalive/ ) {
         $tcpka = $node->textContent();
     }
-}
-
-my @sdcfg = $conf->findnodes("/systemdatarecorder/transport/data/*");
-my $schilds   = 0;
-
-foreach my $node (@sdcfg) {
-
-    # sdrd data
-    next if $node->nodeName() !~ /sdrd/;
-    push @dbs, $node->getAttribute('name');
-    $schilds++;
 }
 
 die "error: main - no destination found, check sdr.conf\n"

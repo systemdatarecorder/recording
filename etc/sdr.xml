@@ -28,12 +28,13 @@
 
       <sid>2ff9851ecfa8f07d39b367a70c1c4f34</sid>
 
-      <port>9001</port>
-      <protocol>http</protocol>
-      <!-- tcp keepalive -->
+      <datafeed>http|https</datafeed>
+
+      <dataport>9001|443</dataport>
+
       <keepalive>0</keepalive>
 
-      <!-- via http proxy -->
+      <!-- via proxy -->
       <proxy>
         <proxyserver></proxyserver>
         <proxport></proxyport>
@@ -44,14 +45,15 @@
     <!-- appliance 2 -->
     <appliance name="88.27.09.1" ver="1.0.0" description="">
 
-      <sid>2ff9851ecfa8f07d39b367a70c1c4f34</sid>
+      <sid>00f9851ecfa8f07d39b367a70c1c4f34</sid>
 
-      <port>9001</port>
-      <protocol>http</protocol>
-      <!-- tcp keepalive -->
+      <datafeed>http|https</datafeed>
+
+      <dataport>9001|443</dataport>
+
       <keepalive>0</keepalive>
 
-      <!-- via http proxy -->
+      <!-- via proxy -->
       <proxy>
         <proxyserver></proxyserver>
         <proxport></proxyport>
