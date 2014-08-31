@@ -61,21 +61,22 @@ else {
 
 
 ###  Variables
-$main::opt_h        = 0;               # help option
-$main::opt_V        = 0;               # revision option
-my $xmlcnf          = 'sdr.xml';       # sdr configuration file
-my $tcpka           = 0;               # transport TCP keepalive settings
-my $sid             = "";              # subscription id
-my $conf;                              # object configuration 
+$main::opt_h        = 0;          # help option
+$main::opt_V        = 0;          # revision option
+my $xmlcnf          = 'sdr.xml';  # sdr configuration file
+my $tcpka           = 0;          # transport TCP keepalive settings
+my $sid             = "";         # subscription id
+my $conf;                         # object configuration 
+my ($datafeed, $dataport);        # datafeed settings
 my ($dr, $dest);
 my ( @files, @dbs );
-my ( $baselog, $curlog );      # log settings
+my ( $baselog, $curlog );         # log settings
 
-my $transport_port  = 443;             # default transport port
-my $transport_proto = "https";         # default transport protocol
+my $transport_port  = 443;        # default transport port
+my $transport_proto = "https";    # default transport protocol
 
 my ( $transport_proxy, 
-     $transport_proxyport );          # transport proxy settings
+     $transport_proxyport );      # transport proxy settings
 
 local $| = 1;
 
@@ -128,8 +129,8 @@ my $slog = $baselog . "/sender.log";
 
 ## transport 
 
-# data trasnport
-my @sdcfg = $conf->findnodes("/systemdatarecorder/transport/data/*");
+# data transport
+my @sdcfg = $conf->findnodes("/systemdatarecorder/transport/datafile/*");
 my $schilds = 0;
 
 foreach my $node (@sdcfg) {
@@ -144,51 +145,15 @@ foreach my $node (@sdcfg) {
 
 
 # appliance destination
-my @appls = $conf->findnodes('//appliance');
+my %appliance = get_appliance($conf);
 
-foreach my $node (@appls) {
-
-    # name
-    $dest = $node->getAttribute('name');
-
-    # sid
-
-    # proto
-
-    # port
-
-
-    if ( $dr eq $dest ) {
-
-        if ( $node->getElementsByTagName('https') ) {
-            my @tsettings =
-              get_transport( $conf,
-                "/systemdatarecorder/analytics/host[\@name=\"$dest\"]/https/*" );
-
-            if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
-         elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
-                                      $transport_proxy     = $tsettings[1]; }
-         elsif ( $#tsettings == 2 ) { $transport_port      = $tsettings[0];
-                                      $transport_proxy     = $tsettings[1];
-                                      $transport_proxyport = $tsettings[2]; }
-
-        } elsif ( $node->getElementsByTagName('http') ) {
-            my @tsettings =
-              get_transport( $conf,
-                "/systemdatarecorder/analytics/host[\@name=\"$dest\"]/http/*" );
-
-            if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
-         elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
-                                      $transport_proxy     = $tsettings[1]; }
-         elsif ( $#tsettings == 2 ) { $transport_port      = $tsettings[0];
-                                      $transport_proxy     = $tsettings[1];
-                                      $transport_proxyport = $tsettings[2]; }
-        }
-
-        ## we found a match
-        last;
-    }
+print "appliance hash: " . keys( %appliance ) . ".\n";
+for my $key ( keys %appliance ) {
+    my $value = $appliance{$key};
+    print "$key => $value\n";
 }
+
+exit 0;
 
 die "error: main - no subscription defined, check sdr.conf\n"
     if (! $sid);
@@ -426,6 +391,56 @@ sub addlog {
 }
 
 
+##
+sub get_appliance {
+
+    my ($dom) = @_;
+
+    my %appl;
+
+    my @xappl = $dom->findnodes('//appliance/*');
+
+    foreach my $node (@xappl) {
+
+        # name
+        if ( $node->nodeName() =~ /name/ ) {
+            $dest = $node->textContent();
+        }
+
+        # sid
+        if ( $node->nodeName() =~ /sid/ ) {
+            $sid = $node->textContent();
+        }
+
+        # datafeed
+        if ( $node->nodeName() =~ /datafeed/ ) {
+            $datafeed = $node->textContent();
+        }
+
+        # dataport
+        if ( $node->nodeName() =~ /dataport/ ) {
+            $dataport = $node->textContent();
+        }
+
+        # keepalive
+        if ( $node->nodeName() =~ /keepalive/ ) {
+            $tcpka = $node->textContent();
+        }
+
+        if ( defined($dest)     and defined($sid)      and
+             defined($datafeed) and defined($dataport) and
+             defined($tcpka)) {
+    
+            # load operations
+            $appl{$dest} = "$sid:$datafeed:$dataport:$tcpka";
+
+        }
+    }
+
+    return %appl;
+}
+
+
 ## return transport settings
 sub get_transport {
 
@@ -596,7 +611,7 @@ sub check_hostid {
     my $h = get_hostuuid;
 
     # solution 1
-    # for my $node ($doc->findnodes('//hostid/text()')) {
+    # for my $node ($dom->findnodes('//hostid/text()')) {
     #     if ( $node->textContent() ne $h ) {print "need to change\n";}
     # }
 

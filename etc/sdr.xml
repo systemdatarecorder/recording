@@ -24,39 +24,43 @@
     </datafile>
 
     <!-- appliance 1 -->
-    <appliance name="188.127.209.196" ver="1.0.0" description="">
+    <appliance ver="1.0.0" description="Appliance Analytics 1">
+
+      <name>188.127.209.196</name>
 
       <sid>2ff9851ecfa8f07d39b367a70c1c4f34</sid>
 
-      <datafeed>http|https</datafeed>
+      <datafeed>http</datafeed>
 
-      <dataport>9001|443</dataport>
+      <dataport>9001</dataport>
 
       <keepalive>0</keepalive>
 
       <!-- via proxy -->
       <proxy>
-        <proxyserver></proxyserver>
-        <proxport></proxyport>
+        <proxy_server></proxy_server>
+        <proxy_port></proxy_port>
       </proxy>
 
     </appliance>
 
     <!-- appliance 2 -->
-    <appliance name="88.27.09.1" ver="1.0.0" description="">
+    <appliance ver="1.0.0" description="Appliance Analytics 2">
+
+      <name>88.27.09.1</name>
 
       <sid>00f9851ecfa8f07d39b367a70c1c4f34</sid>
 
-      <datafeed>http|https</datafeed>
+      <datafeed>https</datafeed>
 
-      <dataport>9001|443</dataport>
+      <dataport>443</dataport>
 
       <keepalive>0</keepalive>
 
       <!-- via proxy -->
       <proxy>
-        <proxyserver></proxyserver>
-        <proxport></proxyport>
+        <proxy_server></proxy_server>
+        <proxy_port></proxy_port>
       </proxy>
 
     </appliance>
