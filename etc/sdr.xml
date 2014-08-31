@@ -15,13 +15,13 @@
   <!-- Transport Analytic Settings -->
   <transport description="Transport settings">
 
-    <data>
+    <datafile>
       <sdrd name="sys"  description="system data, sysrec.sdrd" />
       <sdrd name="cpu"  description="per-cpu data, cpurec.sdrd"  />
       <sdrd name="disk" description="per-disk data, diskrec.sdrd" />
       <sdrd name="nic"  description="per-NIC data, nicrec.sdrd"  />
       <sdrd name="hdw"  description="inventory data, hdwrec.sdrd"  />
-    </data>
+    </datafile>
 
     <!-- appliance 1 -->
     <appliance name="188.127.209.196" ver="1.0.0" description="">
