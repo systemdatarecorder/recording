@@ -553,7 +553,6 @@ sub check_hostid {
     my @hostid = $root->getElementsByTagName("hostid");
     foreach my $node (@hostid) {
         if ($node->textContent) {
-            print "data found, checking ... \n";
             if ($node->firstChild->data ne $h) { 
                 $node->firstChild->setData("$h");
                 $armed=1;

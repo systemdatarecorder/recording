@@ -15,37 +15,41 @@
   <!-- Transport Analytic Settings -->
   <transport description="Transport settings">
 
-    <host name="188.127.209.196" ver="1.0.0" description="Analytics">
+    <!-- appliance 1 -->
+    <appliance name="188.127.209.196" ver="1.0.0" description="">
 
-      <subscription>2ff9851ecfa8f07d39b367a70c1c4f34</subscription>
+      <sid>2ff9851ecfa8f07d39b367a70c1c4f34</sid>
 
-      <protocol>http</protocol>
       <port>9001</port>
-      <tcp_keepalive>0</tcp_keepalive>
+      <protocol>http</protocol>
+      <!-- tcp keepalive -->
+      <keepalive>0</keepalive>
 
-      <!-- Via HTTP Proxy -->
+      <!-- via http proxy -->
       <proxy>
-        <server></server>
-        <port></port>
+        <proxyserver></proxyserver>
+        <proxport></proxyport>
       </proxy>
 
-    </host>
+    </appliance>
 
-    <host name="88.27.09.1" ver="1.0.0" description="Analytics">
+    <!-- appliance 2 -->
+    <appliance name="88.27.09.1" ver="1.0.0" description="">
 
-      <subscription>1000851ecfa8f07d39b367a70c1c4f34</subscription>
+      <sid>2ff9851ecfa8f07d39b367a70c1c4f34</sid>
 
-      <protocol>https</protocol>
-      <port>443</port>
-      <tcp_keepalive>0</tcp_keepalive>
+      <port>9001</port>
+      <protocol>http</protocol>
+      <!-- tcp keepalive -->
+      <keepalive>0</keepalive>
 
-      <!-- Via HTTP Proxy -->
+      <!-- via http proxy -->
       <proxy>
-        <server></server>
-        <port></port>
+        <proxyserver></proxyserver>
+        <proxport></proxyport>
       </proxy>
 
-    </host>
+    </appliance>
 
     <!-- Raw Data sdrd Files -->
     <data>
