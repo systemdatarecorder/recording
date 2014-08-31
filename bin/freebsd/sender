@@ -98,7 +98,7 @@ $conf = open_conf($xmlcnf);
 
 # check hostid
 my $hostid;
-check_hostid($conf);
+$hostid = check_hostid($conf);
 
 # Recording XML Configuration
 # check for: base_log current_log private_key
@@ -592,9 +592,7 @@ sub check_hostid {
 
     } #armed
 
-    exit 0;
-
-    return;
+    return $h;
 }
 
 ## usage - print usage and exit.
