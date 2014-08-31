@@ -96,16 +96,15 @@ my $osname= "$^O";
 # validate and open configuration xml
 $conf = open_conf($xmlcnf);
 
-# check hostid
+## hostid
 my $hostid;
 $hostid = check_hostid($conf);
 
-# Recording XML Configuration
-# check for: base_log current_log private_key
+
+## logs
 my @log_childs = $conf->findnodes("/systemdatarecorder/logs/*");
 
 my $rchilds = 0;
-
 foreach my $node (@log_childs) {
 
     next if $node->nodeName() !~ /base|current/;
@@ -119,20 +118,15 @@ foreach my $node (@log_childs) {
     $rchilds++;
 }
 
-# check errors
 if ( $rchilds == 0 ) {
     die "error: main - wrong configuration file: $xmlcnf, ",
       "$rchilds recording elements found \n";
 }
 
-sleep 20;
-exit 0;
-
-
-# check subscription destination protocol keepalive
-
-# sender logfile
 my $slog = $sdr_baselog . "/sender.log";
+
+
+## transport appliance
 
 my @scfg = $conf->findnodes("/systemdatarecorder/transport/*");
 
