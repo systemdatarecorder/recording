@@ -69,7 +69,7 @@ my $sid             = "";              # subscription id
 my $conf;                              # object configuration 
 my ($dr, $dest);
 my ( @files, @dbs );
-my ( $sdr_baselog, $sdr_curlog );      # log settings
+my ( $baselog, $curlog );      # log settings
 
 my $transport_port  = 443;             # default transport port
 my $transport_proto = "https";         # default transport protocol
@@ -110,9 +110,9 @@ foreach my $node (@log_childs) {
     next if $node->nodeName() !~ /base|current/;
 
     if ( $node->nodeName() =~ /base/ ) {
-        $sdr_baselog = $node->getAttribute('path');
+        $baselog = $node->getAttribute('path');
     } elsif ( $node->nodeName() =~ /current/ ) {
-        $sdr_curlog = $node->getAttribute('path');
+        $curlog = $node->getAttribute('path');
     }
 
     $rchilds++;
@@ -123,7 +123,7 @@ if ( $rchilds == 0 ) {
       "$rchilds recording elements found \n";
 }
 
-my $slog = $sdr_baselog . "/sender.log";
+my $slog = $baselog . "/sender.log";
 
 
 ## transport 
@@ -305,7 +305,7 @@ else {
 }
 
 # If already running, then exit
-if ( Proc::PID::File->running( { dir => "$sdr_baselog" } ) ) {
+if ( Proc::PID::File->running( { dir => "$baselog" } ) ) {
     exit(0);
 }
 
@@ -322,7 +322,7 @@ if ( $transport_proxy and $transport_proxyport ) {
 }
 
 # cd sdrd raw data directory
-chdir("$sdr_curlog")
+chdir("$curlog")
   or die "error: main - cannot open SDR sdrd raw data directory, $!\n";
 
 foreach (@dbs) {
