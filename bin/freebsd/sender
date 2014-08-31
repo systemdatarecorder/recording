@@ -33,6 +33,8 @@ use Proc::PID::File;
 use Sys::Hostname;
 use Socket;
 use Time::HiRes;
+use File::Copy;
+
 
 ###  Process command line args
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
@@ -501,17 +503,14 @@ sub open_conf {
     if ( defined $ENV{'SDR_PREFIX'} ) {
         if ( -e "$ENV{'SDR_PREFIX'}/etc/$conf" ) {
             $tree = $parser->parse_file("$ENV{'SDR_PREFIX'}/etc/$conf");
-        }
-        else {
+        } else {
             print "error: open_conf - $! $ENV{'SDR_PREFIX'}/etc/$conf \n";
             usage();
         }
-    }
-    else {
+    } else {
         if ( -e "/opt/sdr/etc/$conf" ) {
             $tree = $parser->parse_file("/opt/sdr/etc/$conf");
-        }
-        else {
+        } else {
             print "error: open_conf - $! /opt/sdr/etc/$conf \n";
             usage();
         }
@@ -542,7 +541,6 @@ sub check_hostid {
 
     # get hostuuid
     my $h = get_hostuuid;
-    print "hostuuid: $h\n";
 
     # solution 1
     # for my $node ($doc->findnodes('//hostid/text()')) {
@@ -554,46 +552,47 @@ sub check_hostid {
     my $root = $dom->documentElement;
     my @hostid = $root->getElementsByTagName("hostid");
     foreach my $node (@hostid) {
-        if ($node->firstChild) {
+        if ($node->textContent) {
             print "data found, checking ... \n";
             if ($node->firstChild->data ne $h) { 
-                print "need to change\n";
                 $node->firstChild->setData("$h");
                 $armed=1;
-            } else { print "no need to change\n"; }
+            }
         } else {
-            #
-            print "no data found ... \n";
-            $node->firstChild->setData("$h");
+            $node->appendText("$h");
             $armed=1;
         }
     }
 
     if($armed) {
+
         $dom->toString;
-        $dom->toFile('/tmp/sdr.1.xml');
-    }
+        # $dom->toFile('/tmp/sdr.1.xml');
 
-    # if ($res ne 0) {
-    #     $fh->setData("$h");
-    #     $doc->toString;
-    #     $doc->toFile('/tmp/sdr.1.xml');
-    #}
-        
-    #my $armed=0;
+        # we will parse now the file
+        if ( defined $ENV{'SDR_PREFIX'} ) {
+            if ( -e "$ENV{'SDR_PREFIX'}/etc/$xmlcnf" ) {
+                $dom->toFile("$ENV{'SDR_PREFIX'}/etc/$xmlcnf.tmp");
+                move("$ENV{'SDR_PREFIX'}/etc/$xmlcnf.tmp","$ENV{'SDR_PREFIX'}/etc/$xmlcnf") or
+                    die "Error: cannot update $xmlcnf: $!";
+            } else {
+                print "error: open_conf - $! $ENV{'SDR_PREFIX'}/etc/$xmlcnf\n";
+                usage();
+            }
+        } else {
+            if ( -e "/opt/sdr/etc/$xmlcnf" ) {
+                $dom->toFile("/opt/sdr/etc/$xmlcnf.tmp");
+                move("/opt/sdr/etc/$xmlcnf.tmp","/opt/sdr/etc/$xmlcnf") or
+                    die "Error: cannot update $xmlcnf: $!";
+                
+            } else {
+                print "error: open_conf - $! /opt/sdr/etc/$xmlcnf\n";
+                usage();
+            }
+        }
 
-    #foreach my $node (@childs) {
-    #    print "node" . $node->nodeName();
-    #    next if $node->nodeName() !~ /hostid/;
-    #    if ($node->firstChild->textContent() ne $h) {
-    #        $node->firstChild->setData("$h");
-    #        $armed=1;
-    #    } else { print "already set\n"; }
-    #}
-    #if($armed) {
-    #    $doc->toString;
-    #    $doc->toFile('/tmp/sdr.1.xml');
-    #}
+    } #armed
+
     exit 0;
 
     return;
