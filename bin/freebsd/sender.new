@@ -115,8 +115,6 @@ for my $key ( keys %appliance ) {
     print "$key => $value\n";
 }
 
-exit 0;
-
 ## SIGHUP handler
 $SIG{HUP} = \&reload_config;
 
@@ -305,9 +303,6 @@ sub get_appliance {
                 }
             }
         }
-
-        print "proxy_server=$proxy_server\n";
-        print "proxy_port=$proxy_port\n";
 
         if ( defined($dest)         and defined($sid)      and defined($token) and
              defined($datafeed)     and defined($dataport) and defined($tcpka) and
