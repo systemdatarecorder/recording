@@ -20,25 +20,22 @@
 
 use strict;
 use warnings;
+use JSON;
 use File::Tail;
+use File::Copy;
 use File::Basename;
 use Digest::SHA;
 use WWW::Curl::Easy;
 use Getopt::Std;
-use XML::LibXML 2;
-use XML::LibXML::XPathContext;
 use BSD::Sysctl qw(sysctl);
 use Proc::Daemon;
 use Proc::PID::File;
-use Sys::Hostname;
-use Socket;
 use Time::HiRes;
-use File::Copy;
-
+use HTTP::Response;
 
 ###  Process command line args
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
-getopts('T:hvV') or usage();
+getopts('t:hvV') or usage();
 usage()    if defined $main::opt_h;
 revision() if defined $main::opt_V;
 
@@ -46,7 +43,7 @@ revision() if defined $main::opt_V;
 my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
 
 # timeout
-my $timeout = defined $main::opt_T ? $main::opt_T : 25;
+my $timeout = defined $main::opt_t ? $main::opt_t : 25;
 
 # process [interval]
 my $interval;
@@ -59,24 +56,23 @@ else {
     $interval = 60;
 }
 
-
 ###  Variables
 $main::opt_h        = 0;          # help option
 $main::opt_V        = 0;          # revision option
-my $xmlcnf          = 'sdr.xml';  # sdr configuration file
+my $cfile           = 'sdr.json'; # configuration file
+my $cdata;                        # configuration data
 my $tcpka           = 0;          # transport TCP keepalive settings
 my $sid             = "";         # subscription id
-my $conf;                         # object configuration 
+my $token           = "NA";       # token id
 my ($datafeed, $dataport);        # datafeed settings
 my ($dr, $dest);
-my ( @files, @dbs );
-my ( $baselog, $curlog );         # log settings
+my @files;
 
-my $transport_port  = 443;        # default transport port
-my $transport_proto = "https";    # default transport protocol
-
-my ( $transport_proxy, 
-     $transport_proxyport );      # transport proxy settings
+## configuration
+my $hostid;
+my ($baselog, $curlog, $slog);
+my @dbs;
+my %appliance;
 
 local $| = 1;
 
@@ -93,163 +89,30 @@ my $dname = basename($0);
 # osname
 my $osname= "$^O";
 
-# read XML configurations
-# validate and open configuration xml
-$conf = open_conf($xmlcnf);
+# read configuration
+$cdata = open_config($cfile);
 
 ## hostid
-my $hostid;
-$hostid = check_hostid($conf);
-
+$hostid = get_hostid($cdata);
 
 ## logs
-my @log_childs = $conf->findnodes("/systemdatarecorder/logs/*");
+($baselog, $curlog) = get_logs($cdata);
+$slog = $baselog . "/sender.log";
 
-my $rchilds = 0;
-foreach my $node (@log_childs) {
+## datafile
+@dbs = get_datafile($cdata);
 
-    next if $node->nodeName() !~ /base|current/;
+## appliance destination
+# %appliance = get_appliance($cfile);
 
-    if ( $node->nodeName() =~ /base/ ) {
-        $baselog = $node->getAttribute('path');
-    } elsif ( $node->nodeName() =~ /current/ ) {
-        $curlog = $node->getAttribute('path');
-    }
+# print "appliance hash: " . keys( %appliance ) . ".\n";
+# for my $key ( keys %appliance ) {
+#     my $value = $appliance{$key};
+#     print "$key => $value\n";
+# }
 
-    $rchilds++;
-}
-
-if ( $rchilds == 0 ) {
-    die "error: main - wrong configuration file: $xmlcnf, ",
-      "$rchilds recording elements found \n";
-}
-
-my $slog = $baselog . "/sender.log";
-
-
-## transport 
-
-# data transport
-my @sdcfg = $conf->findnodes("/systemdatarecorder/transport/datafile/*");
-my $schilds = 0;
-
-foreach my $node (@sdcfg) {
-    # sdrd data
-    next if $node->nodeName() !~ /sdrd/;
-    push @dbs, $node->getAttribute('name');
-    $schilds++;
-}
-
-# check errors
-@dbs = @recs if ( $schilds == 0 );
-
-
-# appliance destination
-my %appliance = get_appliance($conf);
-
-print "appliance hash: " . keys( %appliance ) . ".\n";
-for my $key ( keys %appliance ) {
-    my $value = $appliance{$key};
-    print "$key => $value\n";
-}
-
-exit 0;
-
-die "error: main - no subscription defined, check sdr.conf\n"
-    if (! $sid);
-
-die "error: main - no such \'$dr\' destination, check sdr.conf\n"
-  if ($dr ne $dest);
-
-
-
-my @scfg = $conf->findnodes("/systemdatarecorder/transport/*");
-
-foreach my $node (@scfg) {
-
-    # subscription
-    if ( $node->nodeName() =~ /subscription/ ) {
-        $sid = $node->textContent();
-    }
-
-    # destination
-    if ( $node->nodeName() =~ /destination/ ) {
-        $dr = $node->textContent();
-    }
-
-    # protocol type
-    if ( $node->nodeName() =~ /protocol/ ) {
-        $transport_proto = $node->textContent();
-    }
-
-    # keepalive
-    if ( $node->nodeName() =~ /tcp_keepalive/ ) {
-        $tcpka = $node->textContent();
-    }
-}
-
-die "error: main - no destination found, check sdr.conf\n"
-  if ( !$dr );
-
-# check errors
-@dbs = @recs if ( $schilds == 0 );
-
-# transport modes
-my ( $https_flag, $http_flag ) = 0;
-
-### transport
-
-   if ( $transport_proto =~ /https/  ) { $https_flag  = 1; }
-elsif ( $transport_proto =~ /http/   ) { $http_flag   = 1; }
- else                                  { $https_flag  = 1; }
-   
-
-# Analytics Destination
-my @res = $conf->findnodes('//host');
-
-foreach my $node (@res) {
-
-    # destination
-    $dest = $node->getAttribute('name');
-
-    if ( $dr eq $dest ) {
-
-        if ( $node->getElementsByTagName('https') ) {
-            my @tsettings =
-              get_transport( $conf,
-                "/systemdatarecorder/analytics/host[\@name=\"$dest\"]/https/*" );
-
-            if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
-         elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
-                                      $transport_proxy     = $tsettings[1]; }
-         elsif ( $#tsettings == 2 ) { $transport_port      = $tsettings[0];
-                                      $transport_proxy     = $tsettings[1];
-                                      $transport_proxyport = $tsettings[2]; }
-
-        } elsif ( $node->getElementsByTagName('http') ) {
-            my @tsettings =
-              get_transport( $conf,
-                "/systemdatarecorder/analytics/host[\@name=\"$dest\"]/http/*" );
-
-            if ( $#tsettings == 0 ) { $transport_port      = $tsettings[0]; }
-         elsif ( $#tsettings == 1 ) { $transport_port      = $tsettings[0];
-                                      $transport_proxy     = $tsettings[1]; }
-         elsif ( $#tsettings == 2 ) { $transport_port      = $tsettings[0];
-                                      $transport_proxy     = $tsettings[1];
-                                      $transport_proxyport = $tsettings[2]; }
-        }
-
-        ## we found a match
-        last;
-    }
-}
-
-die "error: main - no subscription defined, check sdr.conf\n"
-    if (! $sid);
-
-die "error: main - no such \'$dr\' destination, check sdr.conf\n"
-  if ($dr ne $dest);
-
+## SIGHUP handler
+$SIG{HUP} = \&reload_config;
 
 
 # Daemonize
@@ -266,24 +129,12 @@ if ($@) {
     die "error: boot - cannot start daemon: $@";
 }
 else {
-    addlog("info: boot - daemon $dname initialized");
+    writelog("info: boot - daemon $dname initialized");
 }
 
 # If already running, then exit
 if ( Proc::PID::File->running( { dir => "$baselog" } ) ) {
     exit(0);
-}
-
-### Log basic information
-
-### HTTPS or HTTP
-if ( $transport_proxy and $transport_proxyport ) {
-    addlog("info: main - destination=$dest, id=$sid, tcp_keepalive=$tcpka,
-            HTTP port=$transport_port proxy=$transport_proxy
-            proxy_port=$transport_proxyport");
-} else {
-    addlog("info: main - destination=$dest, id=$sid, tcp_keepalive=$tcpka,
-            HTTP port=$transport_port");
 }
 
 # cd sdrd raw data directory
@@ -303,17 +154,8 @@ foreach (@dbs) {
     );
 }
 
-# check transport
-my ( $s2, $http );
-
-
 # init HTTP transport
-$http = WWW::Curl::Easy->new;
-
-if ($tcpka) {
-    $http->setopt( WWW::Curl::Easy::CURLOPT_TCP_KEEPALIVE(), 1 );
-}
-
+my $http = WWW::Curl::Easy->new;
 
 # main loop
 while (1) {
@@ -321,20 +163,21 @@ while (1) {
     my ( $nfound, $timeleft, @pending ) =
       File::Tail::select( undef, undef, undef, $timeout, @files );
 
+    # debug print all appliances
+    for my $key ( keys %appliance ) {
+        my $value = $appliance{$key};
+        writelog("info: main - appliance:$key => $value")
+          if ( $verbose_flag == 1 );
+    }
+
     # timeout - do something else here, if you need to
     unless ($nfound) {
-        addlog("info: main - no sdrd raw data found, checking...")
+        writelog("info: main - no sdrd raw data found, checking...")
           if ( $verbose_flag == 1 );
+    } else {
 
-        #my @ints;
-        #foreach(@files) {
-        #    push(@ints,$_->interval);
-        #}
-        #print "Nothing new! - ".localtime(time)."(".join(",",@ints).")\n";
-
-    }
-    else {
-        addlog("info: main - sdrd raw data found")
+        ## raw data arrival
+        writelog("info: main - sdrd raw data found")
           if ( $verbose_flag == 1 );
 
         my $rcode = 0;
@@ -345,62 +188,227 @@ while (1) {
             # parse id
             my $dbid;
             
-            if ( $_->{"input"} =~ /sysrec/ )  { $dbid = 'cpd-linux-sysrec';  }
-         elsif ( $_->{"input"} =~ /cpurec/ )  { $dbid = 'cpd-linux-cpurec';  }
-         elsif ( $_->{"input"} =~ /diskrec/ ) { $dbid = 'cpd-linux-diskrec'; }
-         elsif ( $_->{"input"} =~ /nicrec/ )  { $dbid = 'cpd-linux-nic';  }
-         elsif ( $_->{"input"} =~ /netrec/ )  { $dbid = 'cpd-linux-net';  }
-         elsif ( $_->{"input"} =~ /jvmrec/ )  { $dbid = 'cpd-linux-jvm';  }
-         elsif ( $_->{"input"} =~ /procrec/ ) { $dbid = 'cpd-linux-proc'; }
-         elsif ( $_->{"input"} =~ /zonerec/ ) { $dbid = 'zone'; }
-         elsif ( $_->{"input"} =~ /webrec/ )  { $dbid = 'web';  }
-         elsif ( $_->{"input"} =~ /hdwrec/ )  { $dbid = 'hdw';  }
-         elsif ( $_->{"input"} =~ /xenrec/ )  { $dbid = 'xen';  }
-                
+            if ( $_->{"input"} =~ /sysrec/ )  { $dbid = "cpd-$osname-sysrec";  }
+         elsif ( $_->{"input"} =~ /cpurec/ )  { $dbid = "cpd-$osname-cpurec";  }
+         elsif ( $_->{"input"} =~ /diskrec/ ) { $dbid = "cpd-$osname-diskrec"; }
+         elsif ( $_->{"input"} =~ /nicrec/ )  { $dbid = "cpd-$osname-nic";  }
+         elsif ( $_->{"input"} =~ /netrec/ )  { $dbid = "cpd-$osname-net";  }
+         elsif ( $_->{"input"} =~ /jvmrec/ )  { $dbid = "cpd-$osname-jvm";  }
+         elsif ( $_->{"input"} =~ /procrec/ ) { $dbid = "cpd-$osname-proc"; }
+         elsif ( $_->{"input"} =~ /zonerec/ ) { $dbid = "cpd-$osname-zone"; }
+         elsif ( $_->{"input"} =~ /webrec/ )  { $dbid = "cpd-$osname-web";  }
+         elsif ( $_->{"input"} =~ /hdwrec/ )  { $dbid = "cpd-$osname-hdw";  }
+         elsif ( $_->{"input"} =~ /xenrec/ )  { $dbid = "cpd-$osname-xen";  }
+            
+            # each appliance
+            for my $key ( keys %appliance ) {
+                my $nt;
+                my $value = $appliance{$key};
 
-         print "\n" . $_->{"input"} . " payload[" . $delta . "]"
-             if ( $verbose_flag == 1 );
+                ## value format
+                ## $sid:$token:$datafeed:$dataport:$proxy_server:$proxy_port:$tcpka
+                my ($s,$t,$df,$dp,$ps,$pp,$ka) = split (/:/, $value);
 
-         ## http transport mode
-         # my $hstat = trans2http( $http, $dest, $sid, $dbid, $delta, 
-         #                         $transport_port, $transport_proxy, 
-         #                          $transport_proxyport );
+                writelog("info: main - appliance:$key sid=$sid token=$token feed=$df port=$dp")
+                    if ( $verbose_flag == 1 );
            
-        }
-    }
-}
+                if ($t eq "NA") {
+                    # get new token
+                    $nt = get_token($http,$key,$s,$dbid,$df,$dp,$delta);
+                    writelog("info: main - new token: $nt");
+                } else {
+                    # feed data, already have token
+                    send_data($http,$key,$s,$t,$dbid,$df,$dp,$delta);
+                }
 
+                # $appliance{$key} = "$s:$nt:$df:$dp:$ps:$pp:$ka";
+            }
+            print "\n" . $_->{"input"} . " payload[" . $delta . "]" 
+                if ( $verbose_flag == 1 );
+
+        } # for
+
+    } # else raw data
+
+} # while loop
 
 
 ### Subroutines
 
 
-## add log message
-sub addlog {
+## configuration file  
 
-    my ($logbuf) = @_;
-    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
-      localtime(time);
+# open JSON configuration file
+sub open_config {
 
-    my $dt = sprintf "%4d-%02d-%02d %02d:%02d:%02d",
-      $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
+    my ($conf) = @_;
 
-    print "\n$dt $logbuf";
+    my $json_data;
 
-    return;
+    {
+        local $/;
+        
+        # we will parse now the file
+        if ( defined $ENV{'SDR_PREFIX'} ) {
+            if ( -e "$ENV{'SDR_PREFIX'}/etc/$conf" ) {
+                open my $fh, "<", "$ENV{'SDR_PREFIX'}/etc/$conf";
+                $json_data = <$fh>;
+                close $fh;
+            } else {
+                print "error: open_conf - $! $ENV{'SDR_PREFIX'}/etc/$conf \n";
+                usage();
+            }
+        } else {
+            if ( -e "/opt/sdr/etc/$conf" ) {
+                open my $fh, "<", "/opt/sdr/etc/$conf";
+                $json_data = <$fh>;
+                close $fh;
+            } else {
+                print "error: open_conf - $! /opt/sdr/etc/$conf \n";
+                usage();
+            }
+        }
+    }
+
+    my $perl_data = JSON->new->utf8->decode($json_data);
+
+    return $perl_data;
 }
 
 
-##
+# write config file
+sub write_config {
+
+    my ($conf, $perl_data)  = @_;
+
+    # JSON Object
+    my $json_data = JSON->new->utf8->pretty->encode($perl_data);
+
+    # we will parse now the file
+    if ( defined $ENV{'SDR_PREFIX'} ) {
+        if ( -e "$ENV{'SDR_PREFIX'}/etc/$conf" ) {
+            open my $fh, ">", "$ENV{'SDR_PREFIX'}/etc/$conf.tmp";
+            # print $fh encode_json($data);
+            print $fh $json_data;
+            close $fh;
+            move("$ENV{'SDR_PREFIX'}/etc/$conf.tmp","$ENV{'SDR_PREFIX'}/etc/$conf") or
+                    die "Error: cannot update $conf: $!";
+
+        } else {
+            print "error: write_config - $! $ENV{'SDR_PREFIX'}/etc/$conf \n";
+            usage();
+        }
+    } else {
+        if ( -e "/opt/sdr/etc/$conf" ) {
+            open my $fh, ">", "/opt/sdr/etc/$conf.tmp";
+            print $fh $json_data;
+            close $fh;
+            move("/opt/sdr/etc/$conf.tmp","/opt/sdr/etc/$conf") or
+                die "Error: cannot update $conf: $!";
+        } else {
+            print "error: write_config - $! /opt/sdr/etc/$conf \n";
+            usage();
+        }
+    }
+}
+
+
+# reload configuration
+sub reload_config {
+
+    writelog("info: main - signal HUP received, reload armed...");
+   
+    # read XML configurations
+    # validate and open configuration xml
+    $cdata = open_config($cfile);
+
+    ## hostid
+    $hostid = get_hostid($cfile);
+
+    ## datafile
+    @dbs = get_datafile($cfile);
+
+    ## appliance destination
+    %appliance = get_appliance($cfile);
+
+    return; 
+}
+
+
+# get hostuuid
+sub new_hostid {
+
+    # host UUID
+    my $hb  = BSD::Sysctl->new( 'kern.hostuuid' );
+    my $hid = $hb->get();
+    chop($hid);
+
+    # return new host UUID
+    return $hid;
+}
+
+
+# get hostid
+sub get_hostid {
+
+    my ($data) = @_;
+
+    # get hostuuid
+    my $h = new_hostid;
+
+    my $fh = $data->{'host_id'};
+
+    if ( $fh ne $h ) {
+        $data->{'host_id'}="$h";
+        write_config($cfile,$data);
+    }
+
+    # return hostid
+    return $h;
+}
+
+
+# get logs
+sub get_logs {
+    my ($data) = @_;
+
+    my $bpath = $data->{'logs'}->{'base_path'};
+    my $cpath = $data->{'logs'}->{'current_path'};
+
+    return ($bpath,$cpath);
+}
+
+
+# get datafile
+sub get_datafile {
+
+    my ($data) = @_;
+    my $schilds = 0;
+    my @d; 
+    my @temp = @{ $data->{'transport'}->{'data_files'} };
+
+    # load d array
+    foreach my $f ( @temp ) {
+        push @d, $f->{"name"};
+        $schilds++;
+    }
+
+    @d = @recs if ( $schilds == 0 );
+
+    return @d;
+}
+
+
+# get appliance information
 sub get_appliance {
 
     my ($dom) = @_;
-
     my %appl;
 
     my @xappl = $dom->findnodes('//appliance/*');
 
     foreach my $node (@xappl) {
+        my ($proxy_server,$proxy_port) = ("NA", "NA");
 
         # name
         if ( $node->nodeName() =~ /name/ ) {
@@ -427,12 +435,30 @@ sub get_appliance {
             $tcpka = $node->textContent();
         }
 
-        if ( defined($dest)     and defined($sid)      and
-             defined($datafeed) and defined($dataport) and
-             defined($tcpka)) {
+        # proxy
+        if ( $node->nodeName() =~ /proxy/ ) {
+            my @p = $node->childNodes();
+
+            foreach my $subnode (@p) {
+
+                # proxy_server
+                if ( $subnode->nodeName() =~ /proxy_server/ ) {
+                    $proxy_server = $subnode->textContent();
+                }
+
+                # proxy_port
+                if ( $subnode->nodeName() =~ /proxy_port/ ) {
+                     $proxy_port = $subnode->textContent();
+                }
+            }
+        }
+
+        if ( defined($dest)         and defined($sid)      and defined($token) and
+             defined($datafeed)     and defined($dataport) and defined($tcpka) and
+             defined($proxy_server) and defined($proxy_port) ) {
     
             # load operations
-            $appl{$dest} = "$sid:$datafeed:$dataport:$tcpka";
+            $appl{$dest} = "$sid:$token:$datafeed:$dataport:$proxy_server:$proxy_port:$tcpka";
 
         }
     }
@@ -440,41 +466,77 @@ sub get_appliance {
     return %appl;
 }
 
+## auxiliares
 
-## return transport settings
-sub get_transport {
 
-    my ( $conf, $path ) = @_;
-    my ( $port, $proxy, $proxyport );
-    my @result;
+## write log message
+sub writelog {
 
-    #XPath Walking
-    my @childs = $conf->findnodes($path);
+    my ($logbuf) = @_;
+    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
+      localtime(time);
 
-    foreach my $node (@childs) {
+    my $dt = sprintf "%4d-%02d-%02d %02d:%02d:%02d",
+      $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
 
-        if ( $node->nodeName() =~ /^port$/ ) { 
-            $port = $node->textContent();
-        } elsif ( $node->nodeName() =~ /^proxy$/ ) {
-            $proxy = $node->textContent(); 
-        } elsif ( $node->nodeName() =~ /^proxyport$/ ) {
-            $proxyport = $node->textContent();
-        }
-    }
+    print "\n$dt $logbuf";
 
-    if ( defined($proxy) and defined($proxyport) ) {
-        push @result, ( $port, $proxy, $proxyport );
-    }
-    else {
-        push @result, $port;
-    }
-
-    ## debug
-    # print "port=$port proxy=$proxy proxyport=$proxyport \n";
-
-    # return array of coordinates for http or ssh2
-    return @result;
+    return;
 }
+
+
+sub send_data {
+
+    my ($curl,$dest,$sid,$token,$dbid,$feed,$port,$delta) = @_;
+    return;
+}
+
+
+## get token
+sub get_token {
+
+    my ($curl,$dest,$sid,$dbid,$feed,$port,$delta) = @_;
+    my ($response,$token);
+
+    ## uri
+    ## http://server:port/api/private/get_token
+    my $uri = "http://" . $dest . ":" . $port . "/api/private/get_token";
+
+    ## payload
+    # my $payload = sha256sdrd($delta);
+    # writelog("info: trans2http - id=$sid&h=$hostid&db=$dbid&$payload")
+    #   if ( $verbose_flag == 1 );
+
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(), '' );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_HEADER(), 1 );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_URL(),    $uri );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_HTTPHEADER(),
+        ['Content-Type: text/plain'] );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
+        "username=test101&password=test101" );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
+
+    my $retcode = $curl->perform;
+
+    if ( $retcode == 0 ) {
+        if ( $verbose_flag == 1 ) {
+            writelog("info: get_token - $dbid sdrd data delivered");
+            #$response = HTTP::Response->parse($response);
+            #$token = $response->decoded_content;
+            writelog("info: get_token - token=$response");
+        }
+    } else {
+        writelog("error: get_token - cant send $dbid sdrd data, transport error");
+    }
+
+    writelog("info: get_token - token=$response");
+    exit 0;
+    
+    return $token;
+}
+
+
 
 ## send payload over HTTP
 sub trans2http {
@@ -487,7 +549,7 @@ sub trans2http {
 
     ## payload
     my $payload = sha256sdrd($delta);
-    addlog("info: trans2http - id=$sid&h=$hostid&db=$dbid&$payload")
+    writelog("info: trans2http - id=$sid&h=$hostid&db=$dbid&$payload")
       if ( $verbose_flag == 1 );
 
     ## test for HTTP proxy
@@ -513,13 +575,13 @@ sub trans2http {
 
     if ( $retcode == 0 ) {
         if ( $verbose_flag == 1 ) {
-            addlog("info: trans2http - $dbid sdrd data delivered");
+            writelog("info: trans2http - $dbid sdrd data delivered");
             #$response = HTTP::Response->parse($response);
             #my $xml = $response->decoded_content;
         }
     }
     else {
-        addlog("error: trans2http - cant send $dbid sdrd data, transport error");
+        writelog("error: trans2http - cant send $dbid sdrd data, transport error");
     }
 
     return $retcode;
@@ -535,7 +597,7 @@ sub sha256sdrd {
 
     my $tsdrd = $sdrd . $tid;
 
-    addlog("info: sha256sdrd - payload=$tsdrd")
+    writelog("info: sha256sdrd - payload=$tsdrd")
       if ( $verbose_flag == 1 );
 
     # split up the sdrd data
@@ -555,122 +617,14 @@ sub sha256sdrd {
 }
 
 
-## open XML configuration file
-sub open_conf {
-
-    my ($conf) = @_;
-    my $tree;
-
-    my $parser = XML::LibXML->new();
-    $parser->keep_blanks(0);
-
-    # we will validate sdr.xml later releases
-    # $parser->validation(1);
-
-    # we will parse now the file
-    if ( defined $ENV{'SDR_PREFIX'} ) {
-        if ( -e "$ENV{'SDR_PREFIX'}/etc/$conf" ) {
-            $tree = $parser->parse_file("$ENV{'SDR_PREFIX'}/etc/$conf");
-        } else {
-            print "error: open_conf - $! $ENV{'SDR_PREFIX'}/etc/$conf \n";
-            usage();
-        }
-    } else {
-        if ( -e "/opt/sdr/etc/$conf" ) {
-            $tree = $parser->parse_file("/opt/sdr/etc/$conf");
-        } else {
-            print "error: open_conf - $! /opt/sdr/etc/$conf \n";
-            usage();
-        }
-    }
-
-    # return the tree configuration
-    return $tree;
-}
-
-
-## get hostuuid
-sub get_hostuuid {
-
-    # host UUID
-    my $hb  = BSD::Sysctl->new( 'kern.hostuuid' );
-    my $hid = $hb->get();
-    chop($hid);
-
-    # return host UUID
-    return $hid;
-}
-
-
-## chech hostid
-sub check_hostid {
-
-    my ($dom) = @_;
-
-    # get hostuuid
-    my $h = get_hostuuid;
-
-    # solution 1
-    # for my $node ($dom->findnodes('//hostid/text()')) {
-    #     if ( $node->textContent() ne $h ) {print "need to change\n";}
-    # }
-
-    # solution 2
-    my $armed=0;
-    my $root = $dom->documentElement;
-    my @hostid = $root->getElementsByTagName("hostid");
-    foreach my $node (@hostid) {
-        if ($node->textContent) {
-            if ($node->firstChild->data ne $h) { 
-                $node->firstChild->setData("$h");
-                $armed=1;
-            }
-        } else {
-            $node->appendText("$h");
-            $armed=1;
-        }
-    }
-
-    if($armed) {
-
-        $dom->toString;
-        # $dom->toFile('/tmp/sdr.1.xml');
-
-        # we will parse now the file
-        if ( defined $ENV{'SDR_PREFIX'} ) {
-            if ( -e "$ENV{'SDR_PREFIX'}/etc/$xmlcnf" ) {
-                $dom->toFile("$ENV{'SDR_PREFIX'}/etc/$xmlcnf.tmp");
-                move("$ENV{'SDR_PREFIX'}/etc/$xmlcnf.tmp","$ENV{'SDR_PREFIX'}/etc/$xmlcnf") or
-                    die "Error: cannot update $xmlcnf: $!";
-            } else {
-                print "error: open_conf - $! $ENV{'SDR_PREFIX'}/etc/$xmlcnf\n";
-                usage();
-            }
-        } else {
-            if ( -e "/opt/sdr/etc/$xmlcnf" ) {
-                $dom->toFile("/opt/sdr/etc/$xmlcnf.tmp");
-                move("/opt/sdr/etc/$xmlcnf.tmp","/opt/sdr/etc/$xmlcnf") or
-                    die "Error: cannot update $xmlcnf: $!";
-                
-            } else {
-                print "error: open_conf - $! /opt/sdr/etc/$xmlcnf\n";
-                usage();
-            }
-        }
-
-    } #armed
-
-    return $h;
-}
-
 ## usage - print usage and exit.
 sub usage {
     print STDERR <<END;
-USAGE: sender [-T secs] [-FhV] | [interval]
+USAGE: sender [-t secs] [-hvV] | [interval]
 OPTIONS:
-  -F        : force new host identification
-  -T        : timeout in seconds
+  -t        : timeout in seconds
   -h        : help information
+  -h        : verbose information
   -V        : release version
   interval  : maximum number of seconds between samples, default 60, will 
               never spend more than that without checking data
@@ -690,4 +644,3 @@ sender: 1.00, 2014-05-04
 END
     exit 0;
 }
-
