@@ -103,7 +103,7 @@ $slog = $baselog . "/sender.log";
 @dbs = get_datafile($cdata);
 
 ## appliance destination
-# %appliance = get_appliance($cfile);
+get_appliance($cdata);
 
 # print "appliance hash: " . keys( %appliance ) . ".\n";
 # for my $key ( keys %appliance ) {
@@ -402,68 +402,72 @@ sub get_datafile {
 # get appliance information
 sub get_appliance {
 
-    my ($dom) = @_;
-    my %appl;
+    my ($data) = @_;
+    my %applx;
 
-    my @xappl = $dom->findnodes('//appliance/*');
+    my @temp = @{ $data->{'transport'}->{'appliance'} };
 
-    foreach my $node (@xappl) {
-        my ($proxy_server,$proxy_port) = ("NA", "NA");
 
-        # name
-        if ( $node->nodeName() =~ /name/ ) {
-            $dest = $node->textContent();
-        }
 
-        # sid
-        if ( $node->nodeName() =~ /sid/ ) {
-            $sid = $node->textContent();
-        }
+    #my @xappl = $dom->findnodes('//appliance/*');
 
-        # datafeed
-        if ( $node->nodeName() =~ /datafeed/ ) {
-            $datafeed = $node->textContent();
-        }
+    #foreach my $node (@xappl) {
+    #    my ($proxy_server,$proxy_port) = ("NA", "NA");
+#
+#        # name
+#        if ( $node->nodeName() =~ /name/ ) {
+#            $dest = $node->textContent();
+#        }
+#
+#        # sid
+#        if ( $node->nodeName() =~ /sid/ ) {
+#            $sid = $node->textContent();
+#        }
+#
+#        # datafeed
+#        if ( $node->nodeName() =~ /datafeed/ ) {
+#            $datafeed = $node->textContent();
+#        }
+#
+#        # dataport
+#        if ( $node->nodeName() =~ /dataport/ ) {
+#            $dataport = $node->textContent();
+#        }
+#
+#        # keepalive
+#        if ( $node->nodeName() =~ /keepalive/ ) {
+#            $tcpka = $node->textContent();
+#        }
+#
+#        # proxy
+#        if ( $node->nodeName() =~ /proxy/ ) {
+#            my @p = $node->childNodes();
+#
+#            foreach my $subnode (@p) {
+#
+#                # proxy_server
+#                if ( $subnode->nodeName() =~ /proxy_server/ ) {
+#                    $proxy_server = $subnode->textContent();
+#                }
+#
+##                # proxy_port
+#                if ( $subnode->nodeName() =~ /proxy_port/ ) {
+#                     $proxy_port = $subnode->textContent();
+#                }
+#            }
+#        }
+#
+#        if ( defined($dest)         and defined($sid)      and defined($token) and
+#             defined($datafeed)     and defined($dataport) and defined($tcpka) and
+#             defined($proxy_server) and defined($proxy_port) ) {
+#    
+#            # load operations
+#            $appl{$dest} = "$sid:$token:$datafeed:$dataport:$proxy_server:$proxy_port:$tcpka";
+#
+#        }
+#    }
 
-        # dataport
-        if ( $node->nodeName() =~ /dataport/ ) {
-            $dataport = $node->textContent();
-        }
-
-        # keepalive
-        if ( $node->nodeName() =~ /keepalive/ ) {
-            $tcpka = $node->textContent();
-        }
-
-        # proxy
-        if ( $node->nodeName() =~ /proxy/ ) {
-            my @p = $node->childNodes();
-
-            foreach my $subnode (@p) {
-
-                # proxy_server
-                if ( $subnode->nodeName() =~ /proxy_server/ ) {
-                    $proxy_server = $subnode->textContent();
-                }
-
-                # proxy_port
-                if ( $subnode->nodeName() =~ /proxy_port/ ) {
-                     $proxy_port = $subnode->textContent();
-                }
-            }
-        }
-
-        if ( defined($dest)         and defined($sid)      and defined($token) and
-             defined($datafeed)     and defined($dataport) and defined($tcpka) and
-             defined($proxy_server) and defined($proxy_port) ) {
-    
-            # load operations
-            $appl{$dest} = "$sid:$token:$datafeed:$dataport:$proxy_server:$proxy_port:$tcpka";
-
-        }
-    }
-
-    return %appl;
+#    return %appl;
 }
 
 ## auxiliares

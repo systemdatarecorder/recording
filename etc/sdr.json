@@ -1,12 +1,12 @@
 {
     "host_id": "",
-    "logs": {
+    "log": {
         "base_path": "/opt/sdr/log",
         "current_path": "/opt/sdr/log/current",
         "daily_path": "/opt/sdr/log/daily"
     },
     "transport": {
-        "data_files": [
+        "data_file": [
             {
 		"name": "sys",
 		"file": "sysrec.sdrd"
@@ -28,7 +28,7 @@
                 "file": "hdwrec.sdrd"
             }
 	],
-	"appliances": [
+	"appliance": [
 	    {
 		"name": "Appliance 1",
 		"description": "Appliance Analytics 1 details",
