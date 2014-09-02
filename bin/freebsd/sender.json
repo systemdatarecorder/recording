@@ -21,7 +21,6 @@
 use strict;
 use warnings;
 use JSON;
-#use Socket;
 use File::Tail;
 use File::Copy;
 use File::Basename;
@@ -33,7 +32,6 @@ use Proc::Daemon;
 use Proc::PID::File;
 use Time::HiRes;
 use HTTP::Response;
-use utf8;
 
 ###  Process command line args
 usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
