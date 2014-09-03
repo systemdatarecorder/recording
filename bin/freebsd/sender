@@ -450,7 +450,7 @@ sub send_data {
     my $response;
 
     ## uri
-    ## http://server:port/api/private/get_token
+    ## http://server:port/api/private/send_data
     my $uri = "$proto://" . $dest . ":" . $port . "/api/private/send_data";
 
     ## payload
@@ -463,10 +463,10 @@ sub send_data {
     $curl->setopt( WWW::Curl::Easy::CURLOPT_URL(),    $uri );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_HTTPHEADER(),
         ['Content-Type: text/plain'] );
+    $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEHEADER(), "Token: $token" );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
         "$dbid:$sid:$hid:$delta" );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEHEADER(), "Token: $token" );
     $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
 
     my $retcode = $curl->perform;
@@ -482,57 +482,6 @@ sub send_data {
         writelog("error: get_token - cant send $dbid sdrd data, transport error");
     }
 
-
-    return $retcode;
-}
-
-
-
-## send payload over HTTP
-sub trans2http {
-
-    my ( $curl, $dest, $sid, $dbid, $delta, $hport, $hproxy, $hproxyport ) = @_;
-    my $response;
-
-    ## uri
-    my $uri = "http://" . $dest . ":" . $hport . "/cgi-bin/trans.cgi";
-
-    ## payload
-    my $payload = sha256sdrd($delta);
-    writelog("info: trans2http - id=$sid&h=$hostid&db=$dbid&$payload")
-      if ( $verbose_flag == 1 );
-
-    ## test for HTTP proxy
-    ## CURLOPT_PROXY CURLOPT_PROXYPORT
-    if ($hproxy) {
-        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(),     $hproxy );
-        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXYPORT(), $hproxyport );
-    }
-    else {
-        $curl->setopt( WWW::Curl::Easy::CURLOPT_PROXY(), '' );
-    }
-
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_HEADER(), 1 );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_URL(),    $uri );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_HTTPHEADER(),
-        ['Content-Type: text/plain'] );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_POST(), 1 );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_POSTFIELDS(),
-        "id=$sid&h=$hostid&db=$dbid&$payload" );
-    $curl->setopt( WWW::Curl::Easy::CURLOPT_WRITEDATA(), $response );
-
-    my $retcode = $curl->perform;
-
-    if ( $retcode == 0 ) {
-        if ( $verbose_flag == 1 ) {
-            writelog("info: trans2http - $dbid sdrd data delivered");
-            #$response = HTTP::Response->parse($response);
-            #my $xml = $response->decoded_content;
-        }
-    }
-    else {
-        writelog("error: trans2http - cant send $dbid sdrd data, transport error");
-    }
 
     return $retcode;
 }
