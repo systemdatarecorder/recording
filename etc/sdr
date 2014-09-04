@@ -36,11 +36,11 @@ test -f ${SDR_ETC}/cpurec.start  || exit 0
 test -f ${SDR_ETC}/diskrec.start || exit 0
 test -f ${SDR_ETC}/nicrec.start  || exit 0
 test -f ${SDR_ETC}/hdwrec.start  || exit 0
-test -f ${SDR_ETC}/xenrec.start  || exit 0
 test -f ${SDR_ETC}/jvmrec.start  || exit 0
 test -f ${SDR_ETC}/netrec.start  || exit 0
 test -f ${SDR_ETC}/procrec.start || exit 0
 test -f ${SDR_ETC}/webrec.start  || exit 0
+test -f ${SDR_ETC}/xenrec.start  || exit 0
 
 
 start() {
@@ -145,4 +145,3 @@ case "$1" in
       exit 1
 esac
 exit $RETVAL
-

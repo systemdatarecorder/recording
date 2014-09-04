@@ -21,8 +21,6 @@
 #
 #  (http://www.gnu.org/copyleft/gpl.html)
 
-# SDR VERSION: 1.00
-
 RETVAL=0
 OS_NAME=`uname -s`
 SDR_ROOT="/opt/sdr"
@@ -118,4 +116,3 @@ case "$1" in
       exit 1
 esac
 exit $RETVAL
-
