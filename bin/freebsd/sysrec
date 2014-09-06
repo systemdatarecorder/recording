@@ -511,7 +511,7 @@ USAGE: sysrec [-hV] | [interval [count]]
    #04 headpct    : headroom cpu available, all cpus, number
    #05 userpct    : cpu utilization, user space in percent, number
    #06 nicepct    : cpu utilization, user space with nice priority, number
-   #07 sysct      : cpu utilization, system space, number
+   #07 syspct      : cpu utilization, system space, number
    #08 irqpct     : cpu percentage servicing interrupts, number
    #09 idlepct    : cpu utilization, idle state, number
    #10 runqsz     : run queue length, tasks waiting for run time, number
@@ -544,17 +544,17 @@ USAGE: sysrec [-hV] | [interval [count]]
                      transactions outstanding, number
 
   NET
-   #32 rxByt      : received bytes per seccond, in KB, rate
-   #33 txByt      : transmitted bytes per second, in KB, rate 
-   #34 ntByt      : received + transmitted bytes per second, in KB, rate
+   #32 rxkbytes   : received bytes per seccond, in KB, rate
+   #33 txkbytes   : transmitted bytes per second, in KB, rate 
+   #34 sumkbytes  : received + transmitted bytes per second, in KB, rate
    #35 rxerr      : number of errors while received pkt per second, rate
    #36 txerr      : number of errors while transmitting pkt per second, rate
-   #37 rxdrp      : number of rx packets that were dropped per second, rate
-   #38 txdrp      : number of tx packets that were dropped per second, rate
+   #37 rxdrop     : number of rx packets that were dropped per second, rate
+   #38 txdrop     : number of tx packets that were dropped per second, rate
 
-   #39 avg_1      : LA of the last minute, number
-   #40 avg_5      : LA of the last 5 minutes, number
-   #41 avg_15     : LA of the last 15 minutes, number
+   #39 avg1       : LA of the last minute, number
+   #40 avg5       : LA of the last 5 minutes, number
+   #41 avg15      : LA of the last 15 minutes, number
 END
     exit 0;
 }

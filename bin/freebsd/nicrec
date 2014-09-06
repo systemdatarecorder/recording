@@ -178,15 +178,18 @@ USAGE: diskrec [-hV] | [interval [count]]
 
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
-  #02 name       : disk name, string
-  #03 reads      : read requests per second, rate
-  #04 rkbytes    : read KBytes per seconds, rate 
-  #05 writes     : write requests per second, rate
-  #06 wkbytes    : write KBytes per seconds, rate 
-  #08 queue      : the number of not yet completed transactions, rate
-  #07 service    : service time per transaction in miliseconds, number
-  #09 busy       : the percentage of time the device had one or more 
-                   transactions outstanding, number
+  #02 name       : NIC name, string
+  #03 mtu        : NIC MTU, string
+  #04 mac        : MAC address, string
+  #05 rxpkt      : rx packets, rate
+  #06 rxbytes    : rx bytes, rate
+  #07 rxerr      : rx errors, rate 
+  #08 rxdrop     : the number of rx drop packets, rate
+  #09 txpkt      : tx packets, rate
+  #10 txbytes    : tx bytes, rate
+  #11 txerr      : tx errors, rate 
+  #12 cols       : packets collision, rate 
+  #13 drops      : packets drop, rate
 END
     exit 0;
 }
