@@ -27,11 +27,11 @@ HOSTNAME=`uname -n | sed 's/\..*//'`
 ### USER ID
 case "$OS_NAME" in
  sunos)
- USER_ID=$(/usr/xpg4/bin/id -u)
+ USER_ID=`/usr/xpg4/bin/id -u`
  ;;
 
  linux)
- USER_ID=$(/usr/bin/id -u)
+ USER_ID=`/usr/bin/id -u`
  ;;
 
  freebsd)
