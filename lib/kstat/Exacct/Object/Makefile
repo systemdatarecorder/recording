@@ -1,7 +1,7 @@
 # This Makefile is for the Sun::Solaris::Exacct::Object extension to perl.
 #
 # It was generated automatically by MakeMaker version
-# 6.6302 (Revision: 66302) from the contents of
+# 6.98 (Revision: 69800) from the contents of
 # Makefile.PL. Don't edit this file, edit Makefile.PL instead.
 #
 #       ANY CHANGES MADE HERE WILL BE LOST!
@@ -14,9 +14,10 @@
 #     BUILD_REQUIRES => {  }
 #     CONFIGURE_REQUIRES => {  }
 #     H => [q[../exacct_common.xh]]
-#     MAN3PODS => { ../pod/Item.pod=>q[$(INST_MAN3DIR)/Sun::Solaris::Exacct::Object::Item.$(MAN3EXT)], ../pod/Group.pod=>q[$(INST_MAN3DIR)/Sun::Solaris::Exacct::Object::Group.$(MAN3EXT)], ../pod/Object.pod=>q[$(INST_MAN3DIR)/Sun::Solaris::Exacct::Object.$(MAN3EXT)] }
+#     MAN3PODS => { ../pod/Group.pod=>q[$(INST_MAN3DIR)/Sun::Solaris::Exacct::Object::Group.$(MAN3EXT)], ../pod/Item.pod=>q[$(INST_MAN3DIR)/Sun::Solaris::Exacct::Object::Item.$(MAN3EXT)], ../pod/Object.pod=>q[$(INST_MAN3DIR)/Sun::Solaris::Exacct::Object.$(MAN3EXT)] }
 #     NAME => q[Sun::Solaris::Exacct::Object]
 #     PREREQ_PM => {  }
+#     TEST_REQUIRES => {  }
 #     TYPEMAPS => [q[../typemap]]
 #     VERSION_FROM => q[Object.pm]
 #     dynamic_lib => { OTHERLDFLAGS=>q[-h $(DLBASE).$(DLEXT) -R\$$ORIGIN/.. $(INST_ARCHAUTODIR)/../Exacct.so] }
@@ -27,7 +28,7 @@
 
 # --- MakeMaker const_config section:
 
-# These definitions are from config.sh (via /opt/sdr/perl/lib/5.16.3/i86pc-solaris-64/Config.pm).
+# These definitions are from config.sh (via /opt/sdr/perl/lib/5.20.0/i86pc-solaris-64/Config.pm).
 # They may have been overridden via Makefile.PL or on the command line.
 AR = ar
 CC = cc
@@ -38,16 +39,16 @@ DLSRC = dl_dlopen.xs
 EXE_EXT = 
 FULL_AR = /usr/ccs/bin/ar
 LD = cc
-LDDLFLAGS =  -G -m64 -L/opt/sunstudio12.1/prod/lib/amd64 -L/lib/64 -L/usr/local/lib
-LDFLAGS =  -m64 -L/opt/sunstudio12.1/prod/lib/amd64 -L/lib/64 -L/usr/local/lib 
+LDDLFLAGS = -G -m64 -L/lib/64 -L/usr/lib/amd64
+LDFLAGS = -m64 -L/lib/64
 LIBC = /lib/libc.so
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = solaris
 OSVERS = 2.10
 RANLIB = :
-SITELIBEXP = /opt/sdr/perl/lib/site_perl/5.16.3
-SITEARCHEXP = /opt/sdr/perl/lib/site_perl/5.16.3/i86pc-solaris-64
+SITELIBEXP = /opt/sdr/perl/lib/site_perl/5.20.0
+SITEARCHEXP = /opt/sdr/perl/lib/site_perl/5.20.0/i86pc-solaris-64
 SO = so
 VENDORARCHEXP = 
 VENDORLIBEXP = 
@@ -80,15 +81,15 @@ PREFIX = $(SITEPREFIX)
 PERLPREFIX = /opt/sdr/perl
 SITEPREFIX = /opt/sdr/perl
 VENDORPREFIX = 
-INSTALLPRIVLIB = /opt/sdr/perl/lib/5.16.3
+INSTALLPRIVLIB = /opt/sdr/perl/lib/5.20.0
 DESTINSTALLPRIVLIB = $(DESTDIR)$(INSTALLPRIVLIB)
-INSTALLSITELIB = /opt/sdr/perl/lib/site_perl/5.16.3
+INSTALLSITELIB = /opt/sdr/perl/lib/site_perl/5.20.0
 DESTINSTALLSITELIB = $(DESTDIR)$(INSTALLSITELIB)
 INSTALLVENDORLIB = 
 DESTINSTALLVENDORLIB = $(DESTDIR)$(INSTALLVENDORLIB)
-INSTALLARCHLIB = /opt/sdr/perl/lib/5.16.3/i86pc-solaris-64
+INSTALLARCHLIB = /opt/sdr/perl/lib/5.20.0/i86pc-solaris-64
 DESTINSTALLARCHLIB = $(DESTDIR)$(INSTALLARCHLIB)
-INSTALLSITEARCH = /opt/sdr/perl/lib/site_perl/5.16.3/i86pc-solaris-64
+INSTALLSITEARCH = /opt/sdr/perl/lib/site_perl/5.20.0/i86pc-solaris-64
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
 INSTALLVENDORARCH = 
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
@@ -116,14 +117,14 @@ INSTALLSITEMAN3DIR = /opt/sdr/perl/man/man3
 DESTINSTALLSITEMAN3DIR = $(DESTDIR)$(INSTALLSITEMAN3DIR)
 INSTALLVENDORMAN3DIR = 
 DESTINSTALLVENDORMAN3DIR = $(DESTDIR)$(INSTALLVENDORMAN3DIR)
-PERL_LIB = /opt/sdr/perl/lib/5.16.3
-PERL_ARCHLIB = /opt/sdr/perl/lib/5.16.3/i86pc-solaris-64
+PERL_LIB = /opt/sdr/perl/lib/5.20.0
+PERL_ARCHLIB = /opt/sdr/perl/lib/5.20.0/i86pc-solaris-64
 LIBPERL_A = libperl.a
 FIRST_MAKEFILE = Makefile
 MAKEFILE_OLD = Makefile.old
 MAKE_APERL_FILE = Makefile.aperl
 PERLMAINCC = $(CC)
-PERL_INC = /opt/sdr/perl/lib/5.16.3/i86pc-solaris-64/CORE
+PERL_INC = /opt/sdr/perl/lib/5.20.0/i86pc-solaris-64/CORE
 PERL = /opt/sdr/perl/bin/perl
 FULLPERL = /opt/sdr/perl/bin/perl
 ABSPERL = $(PERL)
@@ -138,9 +139,9 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /opt/sdr/perl/lib/5.16.3/ExtUtils/MakeMaker.pm
-MM_VERSION  = 6.6302
-MM_REVISION = 66302
+MAKEMAKER   = /opt/sdr/perl/lib/5.20.0/ExtUtils/MakeMaker.pm
+MM_VERSION  = 6.98
+MM_REVISION = 69800
 
 # FULLEXT = Pathname for extension directory (eg Foo/Bar/Oracle).
 # BASEEXT = Basename part of FULLEXT. May be just equal FULLEXT. (eg Oracle)
@@ -194,7 +195,7 @@ PM_TO_BLIB = Object.pm \
 
 
 # --- MakeMaker platform_constants section:
-MM_Unix_VERSION = 6.6302
+MM_Unix_VERSION = 6.98
 PERL_MALLOC_DEF = -DPERL_EXTMALLOC_DEF -Dmalloc=Perl_malloc -Dfree=Perl_mfree -Drealloc=Perl_realloc -Dcalloc=Perl_calloc
 
 
@@ -206,13 +207,13 @@ AUTOSPLITFILE = $(ABSPERLRUN)  -e 'use AutoSplit;  autosplit($$$$ARGV[0], $$$$AR
 
 # --- MakeMaker tool_xsubpp section:
 
-XSUBPPDIR = /opt/sdr/perl/lib/5.16.3/ExtUtils
+XSUBPPDIR = /opt/sdr/perl/lib/5.20.0/ExtUtils
 XSUBPP = $(XSUBPPDIR)$(DFSEP)xsubpp
 XSUBPPRUN = $(PERLRUN) $(XSUBPP)
 XSPROTOARG = 
-XSUBPPDEPS = /opt/sdr/perl/lib/5.16.3/ExtUtils/typemap ../typemap $(XSUBPP)
-XSUBPPARGS = -typemap /opt/sdr/perl/lib/5.16.3/ExtUtils/typemap -typemap ../typemap
-XSUBPP_EXTRA_ARGS = 
+XSUBPPDEPS = /opt/sdr/perl/lib/5.20.0/ExtUtils/typemap ../typemap $(XSUBPP)
+XSUBPPARGS = -typemap /opt/sdr/perl/lib/5.20.0/ExtUtils/typemap -typemap ../typemap
+XSUBPP_EXTRA_ARGS =
 
 
 # --- MakeMaker tools_other section:
@@ -244,6 +245,7 @@ MACROSTART =
 MACROEND = 
 USEMAKEFILE = -f
 FIXIN = $(ABSPERLRUN) -MExtUtils::MY -e 'MY->fixin(shift)' --
+CP_NONEMPTY = $(ABSPERLRUN) -MExtUtils::Command::MM -e 'cp_nonempty' --
 
 
 # --- MakeMaker makemakerdflt section:
@@ -261,7 +263,7 @@ makemakerdflt : all
 
 # --- MakeMaker cflags section:
 
-CCFLAGS = -m64 -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DPERL_USE_SAFE_PUTENV
+CCFLAGS = -m64 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 OPTIMIZE = -xO3
 PERLTYPE = 
 MPOLLUTE = 
@@ -301,7 +303,7 @@ PASTHRU = LIBPERL_A="$(LIBPERL_A)"\
 # --- MakeMaker c_o section:
 
 .c.i:
-	cc -E -c $(PASTHRU_INC) $(INC) \
+	cc  -E -c $(PASTHRU_INC) $(INC) \
 	$(CCFLAGS) $(OPTIMIZE) \
 	$(PERLTYPE) $(MPOLLUTE) $(DEFINE_VERSION) \
 	$(XS_DEFINE_VERSION) $(CCCDLFLAGS) "-I$(PERL_INC)" $(PASTHRU_DEFINE) $(DEFINE) $*.c > $*.i
@@ -417,12 +419,6 @@ linkext :: $(LINKTYPE)
 # --- MakeMaker dlsyms section:
 
 
-# --- MakeMaker dynamic section:
-
-dynamic :: $(FIRST_MAKEFILE) $(INST_DYNAMIC) $(INST_BOOT)
-	$(NOECHO) $(NOOP)
-
-
 # --- MakeMaker dynamic_bs section:
 BOOTSTRAP = $(BASEEXT).bs
 
@@ -437,10 +433,11 @@ $(BOOTSTRAP) : $(FIRST_MAKEFILE) $(BOOTDEP) $(INST_ARCHAUTODIR)$(DFSEP).exists
 	$(NOECHO) $(TOUCH) $@
 	$(CHMOD) $(PERM_RW) $@
 
-$(INST_BOOT) : $(BOOTSTRAP) $(INST_ARCHAUTODIR)$(DFSEP).exists
-	$(NOECHO) $(RM_RF) $@
-	- $(CP) $(BOOTSTRAP) $@
-	$(CHMOD) $(PERM_RW) $@
+
+# --- MakeMaker dynamic section:
+
+dynamic :: $(FIRST_MAKEFILE) $(BOOTSTRAP) $(INST_DYNAMIC)
+	$(NOECHO) $(NOOP)
 
 
 # --- MakeMaker dynamic_lib section:
@@ -452,12 +449,14 @@ OTHERLDFLAGS = -h $(DLBASE).$(DLEXT) -R\$$ORIGIN/.. $(INST_ARCHAUTODIR)/../Exacc
 INST_DYNAMIC_DEP = 
 INST_DYNAMIC_FIX = 
 
-$(INST_DYNAMIC): $(OBJECT) $(MYEXTLIB) $(BOOTSTRAP) $(INST_ARCHAUTODIR)$(DFSEP).exists $(EXPORT_LIST) $(PERL_ARCHIVE) $(PERL_ARCHIVE_AFTER) $(INST_DYNAMIC_DEP)
+$(INST_DYNAMIC): $(OBJECT) $(MYEXTLIB) $(INST_ARCHAUTODIR)$(DFSEP).exists $(EXPORT_LIST) $(PERL_ARCHIVE) $(PERL_ARCHIVE_AFTER) $(INST_DYNAMIC_DEP)
 	$(RM_F) $@
 	$(LD)  $(LDDLFLAGS) $(LDFROM) $(OTHERLDFLAGS) -o $@ $(MYEXTLIB)	\
 	  $(PERL_ARCHIVE) $(LDLOADLIBS) $(PERL_ARCHIVE_AFTER) $(EXPORT_LIST)	\
 	  $(INST_DYNAMIC_FIX)
 	$(CHMOD) $(PERM_RWX) $@
+	$(NOECHO) $(RM_RF) $(BOOTSTRAP)
+	- $(CP_NONEMPTY) $(BOOTSTRAP) $(INST_BOOT) $(PERM_RW)
 
 
 # --- MakeMaker static section:
@@ -484,12 +483,12 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
-	../pod/Item.pod \
 	../pod/Group.pod \
+	../pod/Item.pod \
 	../pod/Object.pod
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  ../pod/Item.pod $(INST_MAN3DIR)/Sun::Solaris::Exacct::Object::Item.$(MAN3EXT) \
 	  ../pod/Group.pod $(INST_MAN3DIR)/Sun::Solaris::Exacct::Object::Group.$(MAN3EXT) \
+	  ../pod/Item.pod $(INST_MAN3DIR)/Sun::Solaris::Exacct::Object::Item.$(MAN3EXT) \
 	  ../pod/Object.pod $(INST_MAN3DIR)/Sun::Solaris::Exacct::Object.$(MAN3EXT) 
 
 
@@ -517,24 +516,25 @@ clean_subdirs :
 
 clean :: clean_subdirs
 	- $(RM_F) \
-	  core.[0-9] $(BASEEXT).bso \
-	  pm_to_blib.ts core.[0-9][0-9][0-9][0-9] \
-	  MYMETA.yml perl$(EXE_EXT) \
-	  tmon.out *$(OBJ_EXT) \
-	  pm_to_blib blibdirs.ts \
-	  Object.c *perl.core \
-	  core.*perl.*.? $(BASEEXT).def \
-	  core.[0-9][0-9][0-9] mon.out \
-	  lib$(BASEEXT).def perl.exe \
-	  perlmain.c so_locations \
-	  $(BASEEXT).exp *$(LIB_EXT) \
-	  core $(INST_ARCHAUTODIR)/extralibs.all \
-	  core.[0-9][0-9] MYMETA.json \
-	  $(BASEEXT).x $(BOOTSTRAP) \
-	  $(INST_ARCHAUTODIR)/extralibs.ld core.[0-9][0-9][0-9][0-9][0-9] \
-	  $(MAKE_APERL_FILE) perl 
+	  $(BASEEXT).bso $(BASEEXT).def \
+	  $(BASEEXT).exp $(BASEEXT).x \
+	  $(BOOTSTRAP) $(INST_ARCHAUTODIR)/extralibs.all \
+	  $(INST_ARCHAUTODIR)/extralibs.ld $(MAKE_APERL_FILE) \
+	  *$(LIB_EXT) *$(OBJ_EXT) \
+	  *perl.core MYMETA.json \
+	  MYMETA.yml Object.c \
+	  blibdirs.ts core \
+	  core.*perl.*.? core.[0-9] \
+	  core.[0-9][0-9] core.[0-9][0-9][0-9] \
+	  core.[0-9][0-9][0-9][0-9] core.[0-9][0-9][0-9][0-9][0-9] \
+	  lib$(BASEEXT).def mon.out \
+	  perl perl$(EXE_EXT) \
+	  perl.exe perlmain.c \
+	  pm_to_blib pm_to_blib.ts \
+	  so_locations tmon.out 
 	- $(RM_RF) \
 	  blib 
+	  $(NOECHO) $(RM_F) $(MAKEFILE_OLD)
 	- $(MV) $(FIRST_MAKEFILE) $(MAKEFILE_OLD) $(DEV_NULL)
 
 
@@ -547,10 +547,10 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(OBJECT) $(MAKEFILE_OLD) \
-	  $(FIRST_MAKEFILE) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) \
+	  $(OBJECT) 
 	- $(RM_RF) \
-	  ObjectDefs.xi $(DISTVNAME) 
+	  $(DISTVNAME) ObjectDefs.xi 
 
 
 # --- MakeMaker metafile section:
@@ -561,22 +561,22 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  - unknown' >> META_new.yml
 	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
-	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.140640'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license: unknown' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
-	$(NOECHO) $(ECHO) '  version: 1.4' >> META_new.yml
+	$(NOECHO) $(ECHO) '  version: '\''1.4'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'name: Sun-Solaris-Exacct-Object' >> META_new.yml
 	$(NOECHO) $(ECHO) 'no_index:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  directory:' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - t' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires: {}' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: 1.3' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''1.3'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
@@ -585,7 +585,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "unknown"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
-	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.140640",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "license" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "unknown"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -649,7 +649,7 @@ distmeta : create_distdir metafile
 
 # --- MakeMaker distsignature section:
 distsignature : create_distdir
-	$(NOECHO) cd $(DISTVNAME) && $(ABSPERLRUN) -MExtUtils::Manifest=maniadd -e 'eval { maniadd({q{SIGNATURE} => q{Public-key signature (added by MakeMaker)}}) } ' \
+	$(NOECHO) cd $(DISTVNAME) && $(ABSPERLRUN) -MExtUtils::Manifest=maniadd -e 'eval { maniadd({q{SIGNATURE} => q{Public-key signature (added by MakeMaker)}}) }' \
 	  -e '    or print "Could not add SIGNATURE to MANIFEST: $$$${'\''@'\''}\n"' --
 	$(NOECHO) cd $(DISTVNAME) && $(TOUCH) SIGNATURE
 	cd $(DISTVNAME) && cpansign -s
@@ -665,48 +665,77 @@ FORCE :
 
 
 # --- MakeMaker perldepend section:
-
 PERL_HDRS = \
-	$(PERL_INC)/EXTERN.h		\
-	$(PERL_INC)/INTERN.h		\
-	$(PERL_INC)/XSUB.h		\
-	$(PERL_INC)/av.h		\
-	$(PERL_INC)/config.h		\
-	$(PERL_INC)/cop.h		\
-	$(PERL_INC)/cv.h		\
-	$(PERL_INC)/dosish.h		\
-	$(PERL_INC)/embed.h		\
-	$(PERL_INC)/embedvar.h		\
-	$(PERL_INC)/fakethr.h		\
-	$(PERL_INC)/form.h		\
-	$(PERL_INC)/gv.h		\
-	$(PERL_INC)/handy.h		\
-	$(PERL_INC)/hv.h		\
-	$(PERL_INC)/intrpvar.h		\
-	$(PERL_INC)/iperlsys.h		\
-	$(PERL_INC)/keywords.h		\
-	$(PERL_INC)/mg.h		\
-	$(PERL_INC)/nostdio.h		\
-	$(PERL_INC)/op.h		\
-	$(PERL_INC)/opcode.h		\
-	$(PERL_INC)/patchlevel.h	\
-	$(PERL_INC)/perl.h		\
-	$(PERL_INC)/perlio.h		\
-	$(PERL_INC)/perlsdio.h		\
-	$(PERL_INC)/perlsfio.h		\
-	$(PERL_INC)/perlvars.h		\
-	$(PERL_INC)/perly.h		\
-	$(PERL_INC)/pp.h		\
-	$(PERL_INC)/pp_proto.h		\
-	$(PERL_INC)/proto.h		\
-	$(PERL_INC)/regcomp.h		\
-	$(PERL_INC)/regexp.h		\
-	$(PERL_INC)/regnodes.h		\
-	$(PERL_INC)/scope.h		\
-	$(PERL_INC)/sv.h		\
-	$(PERL_INC)/thread.h		\
-	$(PERL_INC)/unixish.h		\
-	$(PERL_INC)/util.h
+        $(PERL_INC)/EXTERN.h            \
+        $(PERL_INC)/INTERN.h            \
+        $(PERL_INC)/XSUB.h            \
+        $(PERL_INC)/av.h            \
+        $(PERL_INC)/bitcount.h            \
+        $(PERL_INC)/charclass_invlists.h            \
+        $(PERL_INC)/config.h            \
+        $(PERL_INC)/cop.h            \
+        $(PERL_INC)/cv.h            \
+        $(PERL_INC)/dosish.h            \
+        $(PERL_INC)/embed.h            \
+        $(PERL_INC)/embedvar.h            \
+        $(PERL_INC)/fakesdio.h            \
+        $(PERL_INC)/feature.h            \
+        $(PERL_INC)/form.h            \
+        $(PERL_INC)/git_version.h            \
+        $(PERL_INC)/gv.h            \
+        $(PERL_INC)/handy.h            \
+        $(PERL_INC)/hv.h            \
+        $(PERL_INC)/hv_func.h            \
+        $(PERL_INC)/inline.h            \
+        $(PERL_INC)/intrpvar.h            \
+        $(PERL_INC)/iperlsys.h            \
+        $(PERL_INC)/keywords.h            \
+        $(PERL_INC)/l1_char_class_tab.h            \
+        $(PERL_INC)/malloc_ctl.h            \
+        $(PERL_INC)/metaconfig.h            \
+        $(PERL_INC)/mg.h            \
+        $(PERL_INC)/mg_data.h            \
+        $(PERL_INC)/mg_raw.h            \
+        $(PERL_INC)/mg_vtable.h            \
+        $(PERL_INC)/mydtrace.h            \
+        $(PERL_INC)/nostdio.h            \
+        $(PERL_INC)/op.h            \
+        $(PERL_INC)/op_reg_common.h            \
+        $(PERL_INC)/opcode.h            \
+        $(PERL_INC)/opnames.h            \
+        $(PERL_INC)/overload.h            \
+        $(PERL_INC)/pad.h            \
+        $(PERL_INC)/parser.h            \
+        $(PERL_INC)/patchlevel.h            \
+        $(PERL_INC)/perl.h            \
+        $(PERL_INC)/perlapi.h            \
+        $(PERL_INC)/perlio.h            \
+        $(PERL_INC)/perliol.h            \
+        $(PERL_INC)/perlsdio.h            \
+        $(PERL_INC)/perlvars.h            \
+        $(PERL_INC)/perly.h            \
+        $(PERL_INC)/pp.h            \
+        $(PERL_INC)/pp_proto.h            \
+        $(PERL_INC)/proto.h            \
+        $(PERL_INC)/reentr.h            \
+        $(PERL_INC)/regcharclass.h            \
+        $(PERL_INC)/regcomp.h            \
+        $(PERL_INC)/regexp.h            \
+        $(PERL_INC)/regnodes.h            \
+        $(PERL_INC)/scope.h            \
+        $(PERL_INC)/sv.h            \
+        $(PERL_INC)/thread.h            \
+        $(PERL_INC)/time64.h            \
+        $(PERL_INC)/time64_config.h            \
+        $(PERL_INC)/uconfig.h            \
+        $(PERL_INC)/unicode_constants.h            \
+        $(PERL_INC)/unixish.h            \
+        $(PERL_INC)/utf8.h            \
+        $(PERL_INC)/utfebcdic.h            \
+        $(PERL_INC)/util.h            \
+        $(PERL_INC)/uudmap.h            \
+        $(PERL_INC)/vutil.h            \
+        $(PERL_INC)/warnings.h            
 
 $(OBJECT) : $(PERL_HDRS)
 
@@ -777,7 +806,7 @@ ppd :
 	$(NOECHO) $(ECHO) '    <ABSTRACT></ABSTRACT>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR></AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="i86pc-solaris-64-5.16" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="i86pc-solaris-64-5.20" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    </IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '</SOFTPKG>' >> $(DISTNAME).ppd
