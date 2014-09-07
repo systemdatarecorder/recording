@@ -236,13 +236,15 @@ while (1) {
           $mem->{swapfree},    $mem->{swaptotal},
           $mem->{swapcached},
 
-          $readReq, $writeReq, $totReq,
-          $readByt, $writeByt, $totByt,
+          $readReq, $readByt, 
+          $writeReq, $writeByt,
+          $totReq, $totByt,
 
           $rxByt,   $txByt,    $ntByt,
           $rxerr, $txerr, $rxdrp, $txdrp,
 
           $la->{avg_1}, $la->{avg_5}, $la->{avg_15};
+
 
     ### Check for end
     last if ++$loop == $loop_max;
@@ -351,25 +353,25 @@ USAGE: sysrec [-hV] | [interval [count]]
                      but still also is in the swapfile, number
 
   DISK
-   #28 readReq    : disk read requests per second, rate
-   #29 writeReq   : disk write requests per second, rate
-   #30 totReq     : disk read+write requests per second, rate
-   #31 readByt    : read bytes per second, in KB, rate
-   #32 writeByt   : write bytes per second, in KB, rate
-   #33 totByt     : read+write bytes per second, in KB, rate
+   #28 reads      : disk read requests per second, rate
+   #29 rkbytes    : read bytes per second, in KB, rate
+   #30 writes     : disk write requests per second, rate
+   #31 wkbytes    : write bytes per second, in KB, rate
+   #32 sumrws     : disk read+write requests per second, rate
+   #33 sumrwkbs   : read+write Kbytes per second, rate
 
   NET
-   #34 rxByt      : received bytes per seccond, in KB, rate
-   #35 txByt      : transmitted bytes per second, in KB, rate 
-   #36 ntByt      : received + transmitted bytes per second, in KB, rate
+   #34 rxkbytes   : received bytes per seccond, in KB, rate
+   #35 txkbytes   : transmitted bytes per second, in KB, rate 
+   #36 sumrxtxkbs : received + transmitted bytes per second, in KB, rate
    #37 rxerr      : number of errors while received pkt per second, rate
    #38 txerr      : number of errors while transmitting pkt per second, rate
-   #39 rxdrp      : number of rx packets that were dropped per second, rate
-   #40 txdrp      : number of tx packets that were dropped per second, rate
+   #39 rxdrop     : number of rx packets that were dropped per second, rate
+   #40 txdrop     : number of tx packets that were dropped per second, rate
  
-   #41 avg_1      : LA of the last minute, number
-   #42 avg_5      : LA of the last 5 minutes, number
-   #43 avg_15     : LA of the last 15 minutes, number
+   #41 avg1       : LA of the last minute, number
+   #42 avg5       : LA of the last 5 minutes, number
+   #43 avg15      : LA of the last 15 minutes, number
 END
     exit 0;
 }

@@ -546,7 +546,7 @@ USAGE: sysrec [-hV] | [interval [count]]
   NET
    #32 rxkbytes   : received bytes per seccond, in KB, rate
    #33 txkbytes   : transmitted bytes per second, in KB, rate 
-   #34 sumkbytes  : received + transmitted bytes per second, in KB, rate
+   #34 sumrxtxkbs : received + transmitted bytes per second, in KB, rate
    #35 rxerr      : number of errors while received pkt per second, rate
    #36 txerr      : number of errors while transmitting pkt per second, rate
    #37 rxdrop     : number of rx packets that were dropped per second, rate
