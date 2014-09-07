@@ -243,7 +243,6 @@ while (1) {
         $tcount = 0;
     }
 
-
     # Fetch LA
     my $load1  = $Kstat->{unix}->{0}->{system_misc}->{avenrun_1min};
     my $load5  = $Kstat->{unix}->{0}->{system_misc}->{avenrun_5min};
@@ -612,16 +611,16 @@ USAGE: sysrec [-hv] | [interval [count]]
    #12 pscanner   : scan rate of the page scanner, number
  
   DISK
-   #13 diskpct    : sum read+write across disks, number
+   #13 sumrw diskpct    : sum read+write across disks, number
    #14 diskerrs   : operations on the wait queue, number
 
   NET
-   #15 netpct     : throughput, read+write bytes across NICs, number
-   #16 neterrs    : errors due to buffer saturation, number
+   #15 sumrxtxbs  : throughput, read+write bytes across NICs, number
+   #16 neterr     : errors due to buffer saturation, number
 
-   #17 avg_1      : LA of the last minute, number
-   #18 avg_5      : LA of the last 5 minutes, number
-   #19 avg_15     : LA of the last 15 minutes, number
+   #17 avg1       : LA of the last minute, number
+   #18 avg5       : LA of the last 5 minutes, number
+   #19 avg15      : LA of the last 15 minutes, number
 END
         exit 0;
 }
