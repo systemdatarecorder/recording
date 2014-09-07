@@ -76,7 +76,7 @@ local $SIG{ALRM} = sub { };
 # first value is the initial wait, second is the wait thereafter
 setitimer( ITIMER_REAL, $first_interval, $interval );
 
-my @order = qw(user nice system idle total irq softirq iowait steal);
+my @order = qw(user nice system irq softirq iowait steal idle total);
 
 # check interval input
 if ( $interval =~ /\./ ) {
@@ -129,14 +129,14 @@ USAGE: cpurec [-hV] | [interval [count]]
   #03 userpct    : cpu utilization, user space, number
   #04 nicepct    : cpu utilization, user space nice priority, number
   #05 syspct     : cpu utilization, system space, number
-  #06 idlepct    : cpu utilization, idle state, number
-  #07 totalpct   : total cpu utilization, number
-  #08 irqpct     : cpu percentage servicing interrupts, number
-  #09 softirqpct : cpu percentage servicing softirqs, number
-  #10 iowaitpct  : cpu percentage in idle state because an I/O operation 
+  #06 irqpct     : cpu percentage servicing interrupts, number
+  #07 softirqpct : cpu percentage servicing softirqs, number
+  #08 iowaitpct  : cpu percentage in idle state because an I/O operation 
                    is waiting to complete, number
-  #11 stealpct   : cpu percentage of time spent in other operating systems 
+  #09 stealpct   : cpu percentage of time spent in other operating systems 
                    when running in a virtualized environment, number
+  #10 idlepct    : cpu utilization, idle state, number
+  #11 totalpct   : total cpu utilization, number
 END
     exit 0;
 }
