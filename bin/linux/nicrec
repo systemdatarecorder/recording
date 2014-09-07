@@ -177,8 +177,8 @@ while (1) {
 sub print_nicstats {
 
     my (
-        $nic,     $rKB,     $rxpks,   $rxerr, $rxdrop, $rxfifo, $rxframe,
-        $rxcompr, $rxmulti, $tKB,     $txpks, $txerr,  $txdrop, $txfifo,
+        $nic,     $rxpks,   $rKB,     $rxerr, $rxdrop, $rxfifo, $rxframe,
+        $rxcompr, $rxmulti, $txpks,   $tKB,   $txerr,  $txdrop, $txfifo,
         $txcolls, $txcarr,  $txcompr, $ttpks, $ttKB
     ) = @_;
 
@@ -211,27 +211,28 @@ OPTIONS:
  FIELDS:
   #01 timestamp  : seconds since Epoch, time
   #02 interface  : interface name, NIC name
-  #03 rxKB       : KBytes received per second, rate
-  #04 rxpcks     : packets received per second, rate
-  #05 rxerrs     : errors while received packets per second, rate
+  #03 rxpkt      : packets received per second, rate
+  #04 rxkbytes   : KBytes received per second, rate
+  #05 rxerr      : errors while received packets per second, rate
   #06 rxdrop     : packets that were dropped per second, rate
   #07 rxfifo     : FIFO overruns on received packets per second, rate
   #08 rxframe    : carrier errors on received packets per second, rate
   #09 rxcompr    : compressed packets received per second, rate
   #10 rxmulti    : multicast packets received per second, rate
-  #11 txKB       : KBytes transmitted per second, rate
-  #12 txpcks     : packets transmitted per second, rate
-  #13 txerrs     : errors transmitting packets per second, rate
+  #11 txpkt      : packets transmitted per second, rate
+  #11 txkbytes   : KBytes transmitted per second, rate
+  #13 txerr      : errors transmitting packets per second, rate
   #14 txdrop     : packets that were dropped per second, rate
   #15 txfifo     : FIFO overruns on transmitted packets per second, rate
-  #16 txcolls    : collisions that were detected per second, rate
+  #16 txcols     : collisions that were detected per second, rate
   #17 txcarr     : carrier errors on transmitted packets per second, rate
   #18 txcompr    : compressed packets transmitted per second, rate
-  #19 ttpcks     : total packets (received + transmitted) per second, rate 
-  #20 ttKB       : total KBytes (received + transmitted) per second, rate
+  #19 sumrxtxpkt : total packets (received + transmitted) per second, rate 
+  #20 sumrxtxkbs : total KBytes (received + transmitted) per second, rate
 END
     exit 0;
 }
+
 
 # revision - print revision and exit
 #
