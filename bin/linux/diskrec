@@ -216,8 +216,8 @@ OPTIONS:
   #04 rkbytes    : read KBytes per second, rate
   #05 writes     : write requests per second, rate
   #06 wkbytes    : write KBytes per second, rate
-  #07 requests   : total read + write requests per second, rate
-  #08 kbytes     : total read + write bytes per second, in KB, rate
+  #07 sumrws     : total read + write requests per second, rate
+  #08 sumrwkbs   : total read + write bytes per second, in KB, rate
 END
     exit 0;
 }
