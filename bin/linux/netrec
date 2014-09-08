@@ -192,7 +192,7 @@ sub get_netstat {
 # revision - print revision and exit
 sub revision {
     print STDERR <<END;
-netrec: 1.00 build14, 2014-05-04
+netrec: 1.0.0, 2014-05-04
 END
     exit 0;
 }

@@ -381,7 +381,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-sysrec: 1.00 build14, 2014-05-04
+sysrec: 1.0.0, 2014-05-04
 END
     exit 0;
 }

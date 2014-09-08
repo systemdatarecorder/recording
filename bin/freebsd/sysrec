@@ -544,17 +544,19 @@ USAGE: sysrec [-hV] | [interval [count]]
                      transactions outstanding, number
 
   NET
-   #32 rxkbytes   : received bytes per seccond, in KB, rate
-   #33 txkbytes   : transmitted bytes per second, in KB, rate 
-   #34 sumrxtxkbs : received + transmitted bytes per second, in KB, rate
-   #35 rxerr      : number of errors while received pkt per second, rate
-   #36 txerr      : number of errors while transmitting pkt per second, rate
-   #37 rxdrop     : number of rx packets that were dropped per second, rate
-   #38 txdrop     : number of tx packets that were dropped per second, rate
+   #32 rxpkt      : received packets per second, rate
+   #33 rxkbytes   : received Kbytes per seccond, rate
+   #34 rxerr      : number of errors while received pkt per second, rate
+   #35 rxdrop     : number of rx packets that were dropped per second, rate
+   #36 txpkt      : transmitted packets per second, rate
+   #37 txkbytes   : transmitted Kbytes per second, rate 
+   #38 txerr      : number of errors while transmitting pkt per second, rate
+   #39 cols       : number of collisions, rate
+   #40 drops      : number of dropped packets per second, rate
 
-   #39 avg1       : LA of the last minute, number
-   #40 avg5       : LA of the last 5 minutes, number
-   #41 avg15      : LA of the last 15 minutes, number
+   #41 avg1       : LA of the last minute, number
+   #42 avg5       : LA of the last 5 minutes, number
+   #43 avg15      : LA of the last 15 minutes, number
 END
     exit 0;
 }
@@ -563,7 +565,7 @@ END
 ## revision - print revision and exit
 sub revision {
     print STDERR <<END;
-sysrec: 1.00, 2014-09-01
+sysrec: 1.0.0, 2014-09-01
 END
     exit 0;
 }

@@ -112,6 +112,10 @@ while (1) {
     $swapmem = $bswapmem->get() if $bswapmem;
 
 
+    chop($arch);
+    chop($os);
+    chop($kernel);
+
     # hostname# hostname
     my $host = hostname;
     $host =~ s/\..*$// if $host =~ /\./;
@@ -122,6 +126,7 @@ while (1) {
         chomp($l);
         $l =~ s/[\h\v]+//g;
         $l =~ s/\#.*//;
+        $l =~ s/\-/_/g;
         $codename=$l;
         last;
     }
@@ -181,7 +186,7 @@ while (1) {
     my $pmem = convert ("$physmem");
     my $smem = convert ("$swapmem");
 
-    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%d:%s:%d:%s:%s:%s:%d:%d:%s:%s\n", 
+    printf "%.${tp}f:%s:%s:%s:%s:%s:%s:%s:%s:%s:%d:%s:%s:%s:%s:%s:%s:%s\n", 
         time, $host, $arch, $hypervisor, $os, $codename, $dist,
         $kernel, $pcpu, $ncores, $vcpu, $ht, $pmem, $smem, 
         $num_disk, $num_nic, $num_jvm, $uptime;
@@ -226,7 +231,7 @@ sub sec2human {
 sub convert {
     my( $size, $n ) = ( shift, 0 );
     ++$n and $size /= 1024 until $size < 1024;
-    return sprintf "%.2f %s", $size, ( qw[ bytes KB MB GB ] )[ $n ];
+    return sprintf "%.2f%s", $size, ( qw[ bytes KB MB GB ] )[ $n ];
 }
 
 
@@ -326,7 +331,7 @@ END
 ## revision - print revision and exit
 sub revision {
     print STDERR <<END;
-hdwrec: 1.00, 2014-09-01
+hdwrec: 1.0.0, 2014-09-01
 END
     exit 0;
 }

@@ -164,13 +164,6 @@ while (1) {
     my ( $nfound, $timeleft, @pending ) =
       File::Tail::select( undef, undef, undef, $timeout, @files );
 
-    if ( $verbose_flag == 1 ) {
-        for my $key ( keys %appliance ) {
-            my $value = $appliance{$key};
-            writelog("$key => $value");
-        }
-    }
-
     # timeout - do something else here, if you need to
     unless ($nfound) {
         writelog("info: main - no sdrd raw data found, checking...")
@@ -444,13 +437,9 @@ sub send_data {
     ## http://server:port/api/private/send_data
     my $url = "$proto://" . $dest . ":" . $port . "/api/private/send_data";
 
-    ## payload
-    # my $payload = sha256sdrd($delta);
-    # writelog("info: trans2http - id=$sid&h=$hostid&db=$dbid&$payload")
-    #   if ( $verbose_flag == 1 );
-
     my $header = "Token: $token";
-    my $post = "$dbid:$sid:$hid:$delta";
+    my $hash = sha256sdrd("$dbid:$sid:$hid:$delta");
+    my $post = "$dbid:$sid:$hid:$delta:$hash";
 
     $curl->setopt(CURLOPT_NOPROGRESS, 1);
     #$curl->setopt(CURLOPT_TIMEOUT, 30);
@@ -471,7 +460,7 @@ sub send_data {
 
     if ( $retcode == 0 ) {
         if ( $verbose_flag == 1 ) {
-            writelog("info: get_token - $dbid sdrd data delivered");
+            writelog("info: send_data - $dbid sdrd data delivered");
         }
     } else {
         writelog("error: send_data - cant send $dbid sdrd data, transport error");
@@ -484,30 +473,31 @@ sub send_data {
 
 ## NIST SHA-256 message digest for sdrd raw data
 sub sha256sdrd {
-    my ($sdrd) = @_;
+    my ($message) = @_;
 
     # idkey
-    my $tid = ':73:79:73:74:65:6d:64:61:74:61:72:65:63:6f:72:64:65:72';
+    # my $tid = ':73:79:73:74:65:6d:64:61:74:61:72:65:63:6f:72:64:65:72';
 
-    my $tsdrd = $sdrd . $tid;
+    # my $tsdrd = $sdrd . $tid;
 
-    writelog("info: sha256sdrd - payload=$tsdrd")
+    writelog("info: sha256sdrd - message=$message")
       if ( $verbose_flag == 1 );
 
     # split up the sdrd data
-    my @fields = split( /:/, $tsdrd );
+    # my @fields = split( /:/, $message );
 
     # compute SHA-256
     my $state = Digest::SHA->new(256);
-    for (@fields) {
-        $state->add($_);
-    }
+    # for (@fields) {
+    #     $state->add($_);
+    # }
 
+    $state->add($message);
     my $digest = $state->hexdigest;
 
-    $sdrd = "p=" . $sdrd . "&c=$digest";
+    writelog("disgest=$digest");
 
-    return $sdrd;
+    return $digest;
 }
 
 
@@ -534,7 +524,7 @@ END
 #
 sub revision {
     print STDERR <<END;
-sender: 1.00, 2014-05-04
+sender: 1.0.0, 2014-05-04
 END
     exit 0;
 }
