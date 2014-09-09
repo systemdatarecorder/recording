@@ -126,7 +126,7 @@ while (1) {
         my $total = $user + $nice + $sys + $intr;
 
         printf "%.${tp}f:%s:%.2f:%.2f:%.2f:%.2f:%.2f:%.2f\n",
-                time, $cid, $user, $nice, $sys, $intr, $idle, $total;
+                time, "cpu$cid", $user, $nice, $sys, $intr, $idle, $total;
 
         # save old data
         $old_cpudata{$cid} = "$u:$n:$s:$r:$i";
