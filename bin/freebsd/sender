@@ -520,12 +520,12 @@ sub send_data {
 
     if ( $retcode == 0 ) {
         if ( $verbose_flag == 1 ) {
-            writelog("info: send_data - $dbid sdrd data delivered");
+            writelog("info: send_data - $db_id sdrd data delivered");
         }
     }
     else {
         writelog(
-            "error: send_data - cant send $dbid sdrd data, transport error");
+            "error: send_data - cant send $db_id sdrd data, transport error");
     }
 
     return $retcode;
