@@ -508,8 +508,6 @@ sub sha256sdrd {
     $state->add($message);
     my $digest = $state->hexdigest;
 
-    # writelog("disgest=$digest");
-
     return $digest;
 }
 

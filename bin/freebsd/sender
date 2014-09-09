@@ -475,27 +475,14 @@ sub send_data {
 sub sha256sdrd {
     my ($message) = @_;
 
-    # idkey
-    # my $tid = ':73:79:73:74:65:6d:64:61:74:61:72:65:63:6f:72:64:65:72';
-
-    # my $tsdrd = $sdrd . $tid;
-
     writelog("info: sha256sdrd - message=$message")
       if ( $verbose_flag == 1 );
 
-    # split up the sdrd data
-    # my @fields = split( /:/, $message );
-
     # compute SHA-256
     my $state = Digest::SHA->new(256);
-    # for (@fields) {
-    #     $state->add($_);
-    # }
 
     $state->add($message);
     my $digest = $state->hexdigest;
-
-    writelog("disgest=$digest");
 
     return $digest;
 }
