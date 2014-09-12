@@ -177,52 +177,52 @@ while (1) {
             chomp($delta);
 
             # parse id
-            my $dbid;
+            my $msgid;
             my $devid;
 
             if ( $_->{"input"} =~ /sysrec/ ) {
                 $devid = 'system';
-                $dbid  = "cpd-$osname-sysrec";
+                $msgid  = "cpd-$osname-sysrec";
             }
             elsif ( $_->{"input"} =~ /cpurec/ ) {
                 $devid = get_devid( 1, $delta );
-                $dbid = "cpd-$osname-cpurec";
+                $msgid = "cpd-$osname-cpurec";
             }
             elsif ( $_->{"input"} =~ /diskrec/ ) {
                 $devid = get_devid( 1, $delta );
-                $dbid = "cpd-$osname-diskrec";
+                $msgid = "cpd-$osname-diskrec";
             }
             elsif ( $_->{"input"} =~ /nicrec/ ) {
                 $devid = get_devid( 1, $delta );
-                $dbid = "cpd-$osname-nicrec";
+                $msgid = "cpd-$osname-nicrec";
             }
             elsif ( $_->{"input"} =~ /netrec/ ) {
                 $devid = 'system';
-                $dbid  = "cpd-$osname-netrec";
+                $msgid  = "cpd-$osname-netrec";
             }
             elsif ( $_->{"input"} =~ /jvmrec/ ) {
                 $devid = 'system';
-                $dbid  = "cpd-$osname-jvmrec";
+                $msgid  = "cpd-$osname-jvmrec";
             }
             elsif ( $_->{"input"} =~ /procrec/ ) {
                 $devid = 'system';
-                $dbid  = "cpd-$osname-procrec";
+                $msgid  = "cpd-$osname-procrec";
             }
             elsif ( $_->{"input"} =~ /zonerec/ ) {
                 $devid = 'system';
-                $dbid  = "cpd-$osname-zonerec";
+                $msgid  = "cpd-$osname-zonerec";
             }
             elsif ( $_->{"input"} =~ /webrec/ ) {
                 $devid = 'system';
-                $dbid  = "cpd-$osname-webrec";
+                $msgid  = "cpd-$osname-webrec";
             }
             elsif ( $_->{"input"} =~ /hdwrec/ ) {
                 $devid = 'system';
-                $dbid  = "cpd-$osname-hdwrec";
+                $msgid  = "cpd-$osname-hdwrec";
             }
             elsif ( $_->{"input"} =~ /xenrec/ ) {
                 $devid = 'system';
-                $dbid  = "cpd-$osname-xenrec";
+                $msgid  = "cpd-$osname-xenrec";
             }
 
             # each appliance
@@ -239,7 +239,7 @@ while (1) {
 
                 send_data(
                     $http, $key,   $s,     $t,    $hostid,
-                    $dbid, $devid, $proto, $port, $delta
+                    $msgid, $devid, $proto, $port, $delta
                 );
 
             }
@@ -513,7 +513,7 @@ sub send_data {
 
     my (
         $curl,  $dest,   $sid,   $token, $hid,
-        $db_id, $dev_id, $proto, $port,  $delta
+        $msg_id, $dev_id, $proto, $port,  $delta
     ) = @_;
     my $response;
 
@@ -521,8 +521,17 @@ sub send_data {
     my $url = "$proto://" . $dest . ":" . $port . "/api/private/send_data";
 
     my $header = "Token: $token";
-    my $hash   = sha256sdrd("$db_id:$sid:$hid:$dev_id:$delta");
-    my $post   = "$db_id:$sid:$hid:$dev_id:$delta:$hash";
+    my ($hash, $post);
+
+    if ( $msg_id =~ /cpurec|diskrec|nicrec/ ) {
+        $hash   = sha256sdrd("$msg_id:$sid:$hid:$delta");
+        $post   = "$msg_id:$sid:$hid:$delta:$hash";
+    } else {
+        $hash   = sha256sdrd("$msg_id:$sid:$hid:$dev_id:$delta");
+        $post   = "$msg_id:$sid:$hid:$dev_id:$delta:$hash";
+    }
+    writelog("info: send_data - $post data to be delivered")
+        if ( $verbose_flag == 1 );
 
     $curl->setopt( CURLOPT_NOPROGRESS, 1 );
 
@@ -544,12 +553,12 @@ sub send_data {
 
     if ( $retcode == 0 ) {
         if ( $verbose_flag == 1 ) {
-            writelog("info: send_data - $db_id sdrd data delivered");
+            writelog("info: send_data - $msg_id sdrd data delivered");
         }
     }
     else {
         writelog(
-            "error: send_data - cant send $db_id sdrd data, transport error");
+            "error: send_data - cant send $msg_id sdrd data, transport error");
     }
 
     return $retcode;
@@ -558,9 +567,6 @@ sub send_data {
 # NIST SHA-256 message digest for sdrd raw data
 sub sha256sdrd {
     my ($message) = @_;
-
-    writelog("info: sha256sdrd - message=$message")
-      if ( $verbose_flag == 1 );
 
     # compute SHA-256
     my $state = Digest::SHA->new(256);
