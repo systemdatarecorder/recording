@@ -73,7 +73,7 @@ while (1) {
 
     # get new devstats
 
-    my $ts = $interval / 3;
+    my $ts = sprintf("%.2f", $interval / 3);
  
     get_diskstat($ts);
 
