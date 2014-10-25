@@ -378,7 +378,7 @@ sub get_devid {
 sub new_hostid {
 
     # machine-id
-    my $fdbus = '/xvar/lib/dbus/machine-id';
+    my $fdbus = '/var/lib/dbus/machine-id';
     my @machineid;
     my $hid;
 
@@ -408,6 +408,8 @@ sub new_hostid {
         $hid = lc $ug->create_str();
     }
 
+    chomp($hid);
+
     # return new host UUID
     return $hid;
 }
@@ -423,7 +425,7 @@ sub get_hostid {
     my $fh = $data->{'host_id'};
 
     if ( $fh ne $h ) {
-        $data->{'host_id'} = "$h";
+        $data->{'host_id'} = $h;
         write_config( $cfile, $data );
     }
 
