@@ -398,7 +398,7 @@ sub get_hostid {
     my $fh = $data->{'host_id'};
 
     if ( $fh ne $h ) {
-        $data->{'host_id'} = "$h";
+        $data->{'host_id'} = $h;
         write_config( $cfile, $data );
     }
 
