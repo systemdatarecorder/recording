@@ -542,7 +542,7 @@ sub send_data {
 
     my @myheaders;
     $myheaders[0] = "Token: $token";
-    $myheaders[1] = "User-Agent: Kronometrix Analytics Appliance";
+    $myheaders[1] = "User-Agent: Kronometrix/1.0.0";
 
     $curl->setopt( CURLOPT_HTTPHEADER, \@myheaders );
 
