@@ -496,7 +496,7 @@ sub send_data {
     ## http://server:port/api/private/send_data
     my $url = "$proto://" . $dest . ":" . $port . "/api/private/send_data";
 
-    my $header = "Token: $token";
+    #my $th = "Token: $token";
     my ($hash, $post);
 
     if ( $msg_id =~ /cpurec|diskrec|nicrec/ ) {
@@ -510,14 +510,14 @@ sub send_data {
         if ( $verbose_flag == 1 );
 
     $curl->setopt( CURLOPT_NOPROGRESS, 1 );
-
-    #$curl->setopt(CURLOPT_TIMEOUT, 30);
+    $curl->setopt(CURLOPT_TIMEOUT, 30);
     my $head = tempfile();
     $curl->setopt( CURLOPT_WRITEHEADER, $head );
     $curl->setopt( CURLOPT_URL,         $url );
 
     my @myheaders;
-    $myheaders[0] = $header;
+    $myheaders[0] = "Token: $token";
+    $myheaders[1] = "User-Agent: Kronometrix Analytics Appliance";
 
     $curl->setopt( CURLOPT_HTTPHEADER, \@myheaders );
 
