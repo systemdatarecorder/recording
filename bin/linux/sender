@@ -231,15 +231,16 @@ while (1) {
 
                 ## value format
                 # $url => $sid:$token:$proto:$port:$ka
-                my ( $s, $t, $proto, $port, $ka ) = split( /:/, $value );
+                my ( $da, $dp ) = split ( /:/, $key );
+                my ( $s, $t, $proto, $ka ) = split( /:/, $value );
 
                 writelog(
-"info: main - $key sid=$s token=$t protocol=$proto port=$port"
+"info: main - $da sid=$s token=$t protocol=$proto port=$dp"
                 ) if ( $verbose_flag == 1 );
 
                 send_data(
-                    $http, $key,   $s,     $t,    $hostid,
-                    $msgid, $devid, $proto, $port, $delta
+                    $http, $da,   $s,     $t,    $hostid,
+                    $msgid, $devid, $proto, $dp, $delta
                 );
 
             }
@@ -486,7 +487,8 @@ sub get_appliance {
             and defined($port)
             and defined($ka) )
         {
-            $appl{$url} = "$sid:$token:$proto:$port:$ka";
+            my $keyapp = $url . ":" . $port; 
+            $appl{$keyapp} = "$sid:$token:$proto:$ka";
         }
 
     }
