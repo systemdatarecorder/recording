@@ -12,7 +12,7 @@ All collected metrics are variable measured sequentially in time, called time se
 Time series let us understand what has happened in past and look in the future, using various statistical models. In addition , having access to these historical time series will help us to build a simple capacity planning model for our application or site. 
 
 
-## Standard Agents
+## Standard Recorders
 
  * sysrec overall system CPU, MEM, DISK, NIC utilization
 
